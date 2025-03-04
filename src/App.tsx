@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import DashboardPage from "./components/dashboard/DashboardPage";
 import JobForm from "./components/jobs/JobForm";
 import JobDetail from "./components/jobs/JobDetail";
+import PhaseForm from "./components/jobs/PhaseForm";
+import PhaseDetail from "./components/jobs/PhaseDetail";
 import { initSampleData } from "./lib/jobUtils";
 
 // Initialize query client
