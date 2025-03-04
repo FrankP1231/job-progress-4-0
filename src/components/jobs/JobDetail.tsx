@@ -60,8 +60,8 @@ const JobDetail: React.FC = () => {
       if (!jobId) throw new Error('Job ID is required');
       return markPhaseComplete(jobId, phaseId, !currentStatus);
     },
-    onMutate: ({ phaseId }) => {
-      setMarkingComplete(prev => ({ ...prev, [phaseId]: true }));
+    onMutate: (variables) => {
+      setMarkingComplete(prev => ({ ...prev, [variables.phaseId]: true }));
     },
     onSuccess: () => {
       // Invalidate and refetch job data
@@ -72,8 +72,8 @@ const JobDetail: React.FC = () => {
       console.error('Failed to update phase status:', error);
       toast.error('Failed to update phase status');
     },
-    onSettled: ({ phaseId }) => {
-      setMarkingComplete(prev => ({ ...prev, [phaseId]: false }));
+    onSettled: (data, error, variables) => {
+      setMarkingComplete(prev => ({ ...prev, [variables.phaseId]: false }));
     }
   });
 

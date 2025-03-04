@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Job, Phase } from './types';
+import { Job, Phase, Material, Labor, PowderCoat, Installation, RentalEquipment } from './types';
 
 // Get all jobs
 export const getAllJobs = async (): Promise<Job[]> => {
@@ -234,19 +233,19 @@ export const getPhasesForJob = async (jobId: string): Promise<Phase[]> => {
     throw error;
   }
   
-  // Transform the data to match our types
+  // Transform the data to match our types with proper type assertions
   return (data || []).map(phase => ({
     id: phase.id,
     jobId: phase.job_id,
     phaseName: phase.phase_name,
     phaseNumber: phase.phase_number,
-    weldingMaterials: phase.welding_materials,
-    sewingMaterials: phase.sewing_materials,
-    weldingLabor: phase.welding_labor,
-    sewingLabor: phase.sewing_labor,
-    installationMaterials: phase.installation_materials,
-    powderCoat: phase.powder_coat,
-    installation: phase.installation,
+    weldingMaterials: phase.welding_materials as unknown as Material,
+    sewingMaterials: phase.sewing_materials as unknown as Material,
+    weldingLabor: phase.welding_labor as unknown as Labor,
+    sewingLabor: phase.sewing_labor as unknown as Labor,
+    installationMaterials: phase.installation_materials as unknown as Material,
+    powderCoat: phase.powder_coat as unknown as PowderCoat,
+    installation: phase.installation as unknown as Installation,
     isComplete: phase.is_complete,
     createdAt: phase.created_at,
     updatedAt: phase.updated_at
@@ -273,19 +272,19 @@ export const getPhaseById = async (jobId: string, phaseId: string): Promise<Phas
   
   if (!data) return undefined;
   
-  // Transform the data to match our types
+  // Transform the data to match our types with proper type assertions
   return {
     id: data.id,
     jobId: data.job_id,
     phaseName: data.phase_name,
     phaseNumber: data.phase_number,
-    weldingMaterials: data.welding_materials,
-    sewingMaterials: data.sewing_materials,
-    weldingLabor: data.welding_labor,
-    sewingLabor: data.sewing_labor,
-    installationMaterials: data.installation_materials,
-    powderCoat: data.powder_coat,
-    installation: data.installation,
+    weldingMaterials: data.welding_materials as unknown as Material,
+    sewingMaterials: data.sewing_materials as unknown as Material,
+    weldingLabor: data.welding_labor as unknown as Labor,
+    sewingLabor: data.sewing_labor as unknown as Labor,
+    installationMaterials: data.installation_materials as unknown as Material,
+    powderCoat: data.powder_coat as unknown as PowderCoat,
+    installation: data.installation as unknown as Installation,
     isComplete: data.is_complete,
     createdAt: data.created_at,
     updatedAt: data.updated_at
@@ -409,19 +408,19 @@ export const updatePhase = async (jobId: string, phaseId: string, phaseData: Par
     .update({ updated_at: new Date().toISOString() })
     .eq('id', jobId);
   
-  // Transform the data to match our types
+  // Transform the data to match our types with proper type assertions
   return {
     id: data.id,
     jobId: data.job_id,
     phaseName: data.phase_name,
     phaseNumber: data.phase_number,
-    weldingMaterials: data.welding_materials,
-    sewingMaterials: data.sewing_materials,
-    weldingLabor: data.welding_labor,
-    sewingLabor: data.sewing_labor,
-    installationMaterials: data.installation_materials,
-    powderCoat: data.powder_coat,
-    installation: data.installation,
+    weldingMaterials: data.welding_materials as unknown as Material,
+    sewingMaterials: data.sewing_materials as unknown as Material,
+    weldingLabor: data.welding_labor as unknown as Labor,
+    sewingLabor: data.sewing_labor as unknown as Labor,
+    installationMaterials: data.installation_materials as unknown as Material,
+    powderCoat: data.powder_coat as unknown as PowderCoat,
+    installation: data.installation as unknown as Installation,
     isComplete: data.is_complete,
     createdAt: data.created_at,
     updatedAt: data.updated_at

@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getJobById, getPhaseById, updatePhase } from '@/lib/supabaseUtils';
-import { Phase, Job } from '@/lib/types';
+import { getJobById, getPhaseById } from '@/lib/supabaseUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -22,10 +21,12 @@ const PhaseDetail: React.FC = () => {
     queryKey: ['job', jobId],
     queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
     enabled: !!jobId,
-    onError: (error) => {
-      console.error('Error loading job:', error);
-      toast.error('Failed to load job data');
-      navigate('/dashboard');
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('Error loading job:', error);
+        toast.error('Failed to load job data');
+        navigate('/dashboard');
+      }
     }
   });
 
@@ -38,10 +39,12 @@ const PhaseDetail: React.FC = () => {
     queryKey: ['phase', jobId, phaseId],
     queryFn: () => jobId && phaseId ? getPhaseById(jobId, phaseId) : Promise.resolve(undefined),
     enabled: !!jobId && !!phaseId,
-    onError: (error) => {
-      console.error('Error loading phase:', error);
-      toast.error('Failed to load phase data');
-      if (jobId) navigate(`/jobs/${jobId}`);
+    onSettled: (data, error) => {
+      if (error) {
+        console.error('Error loading phase:', error);
+        toast.error('Failed to load phase data');
+        if (jobId) navigate(`/jobs/${jobId}`);
+      }
     }
   });
 
