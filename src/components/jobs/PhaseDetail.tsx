@@ -1,48 +1,53 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getJobById, getPhaseById, updatePhase } from '@/lib/jobUtils';
+import { getJobById, getPhaseById, updatePhase } from '@/lib/supabaseUtils';
 import { Phase, Job } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
   const navigate = useNavigate();
-  const [job, setJob] = useState<Job | null>(null);
-  const [phase, setPhase] = useState<Phase | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!jobId || !phaseId) return;
-    
-    setLoading(true);
-    
-    setTimeout(() => {
-      const foundJob = getJobById(jobId);
-      
-      if (foundJob) {
-        setJob(foundJob);
-        
-        const foundPhase = getPhaseById(jobId, phaseId);
-        if (foundPhase) {
-          setPhase(foundPhase);
-        } else {
-          toast.error('Phase not found');
-          navigate(`/jobs/${jobId}`);
-        }
-      } else {
-        toast.error('Job not found');
-        navigate('/dashboard');
-      }
-      
-      setLoading(false);
-    }, 300);
-  }, [jobId, phaseId, navigate]);
+  // Fetch job data
+  const { 
+    data: job,
+    isLoading: isLoadingJob,
+    error: jobError
+  } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
+    enabled: !!jobId,
+    onError: (error) => {
+      console.error('Error loading job:', error);
+      toast.error('Failed to load job data');
+      navigate('/dashboard');
+    }
+  });
 
-  if (loading) {
+  // Fetch phase data
+  const { 
+    data: phase,
+    isLoading: isLoadingPhase,
+    error: phaseError
+  } = useQuery({
+    queryKey: ['phase', jobId, phaseId],
+    queryFn: () => jobId && phaseId ? getPhaseById(jobId, phaseId) : Promise.resolve(undefined),
+    enabled: !!jobId && !!phaseId,
+    onError: (error) => {
+      console.error('Error loading phase:', error);
+      toast.error('Failed to load phase data');
+      if (jobId) navigate(`/jobs/${jobId}`);
+    }
+  });
+
+  const isLoading = isLoadingJob || isLoadingPhase;
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-opacity-20 border-t-primary rounded-full" />

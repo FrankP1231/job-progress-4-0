@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getJobById, markPhaseComplete } from '@/lib/jobUtils';
+import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
 import { Job, Phase } from '@/lib/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   ArrowLeft, 
   PlusCircle, 
@@ -31,48 +32,53 @@ import {
 const JobDetail: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [markingComplete, setMarkingComplete] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    loadJob();
-  }, [jobId]);
+  // Fetch job data
+  const { 
+    data: job,
+    isLoading, 
+    error
+  } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
+    enabled: !!jobId
+  });
 
-  const loadJob = () => {
-    if (!jobId) return;
-    
-    setLoading(true);
-    
-    setTimeout(() => {
-      const foundJob = getJobById(jobId);
-      if (foundJob) {
-        setJob(foundJob);
-      } else {
-        toast.error('Job not found');
-        navigate('/dashboard');
-      }
-      setLoading(false);
-    }, 300);
-  };
+  // Handle error
+  useEffect(() => {
+    if (error) {
+      console.error('Error loading job:', error);
+      toast.error('Failed to load job data');
+    }
+  }, [error]);
+
+  // Mutation to toggle phase completion
+  const togglePhaseMutation = useMutation({
+    mutationFn: ({ phaseId, currentStatus }: { phaseId: string, currentStatus: boolean }) => {
+      if (!jobId) throw new Error('Job ID is required');
+      return markPhaseComplete(jobId, phaseId, !currentStatus);
+    },
+    onMutate: ({ phaseId }) => {
+      setMarkingComplete(prev => ({ ...prev, [phaseId]: true }));
+    },
+    onSuccess: () => {
+      // Invalidate and refetch job data
+      queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+      queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
+    },
+    onError: (error) => {
+      console.error('Failed to update phase status:', error);
+      toast.error('Failed to update phase status');
+    },
+    onSettled: ({ phaseId }) => {
+      setMarkingComplete(prev => ({ ...prev, [phaseId]: false }));
+    }
+  });
 
   const handleTogglePhaseComplete = (phaseId: string, currentStatus: boolean) => {
-    if (!jobId) return;
-    
-    setMarkingComplete(prev => ({ ...prev, [phaseId]: true }));
-    
-    setTimeout(() => {
-      const success = markPhaseComplete(jobId, phaseId, !currentStatus);
-      
-      if (success) {
-        toast.success(`Phase ${currentStatus ? 'marked as incomplete' : 'marked as complete'}`);
-        loadJob();
-      } else {
-        toast.error('Failed to update phase status');
-      }
-      
-      setMarkingComplete(prev => ({ ...prev, [phaseId]: false }));
-    }, 300);
+    togglePhaseMutation.mutate({ phaseId, currentStatus });
   };
 
   const getProgressPercentage = (phase: Phase): number => {
@@ -112,7 +118,7 @@ const JobDetail: React.FC = () => {
     return Math.round((completedItems / totalItems) * 100);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-opacity-20 border-t-primary rounded-full" />

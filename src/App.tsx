@@ -15,7 +15,7 @@ import JobForm from "./components/jobs/JobForm";
 import JobDetail from "./components/jobs/JobDetail";
 import PhaseForm from "./components/jobs/PhaseForm";
 import PhaseDetail from "./components/jobs/PhaseDetail";
-import { initSampleData } from "./lib/jobUtils";
+import { initSampleData } from "./lib/supabaseUtils";
 
 // Initialize query client
 const queryClient = new QueryClient({
@@ -30,7 +30,9 @@ const queryClient = new QueryClient({
 const App = () => {
   // Initialize sample data for development purposes
   useEffect(() => {
-    initSampleData();
+    initSampleData().catch(error => {
+      console.error('Failed to initialize sample data:', error);
+    });
   }, []);
 
   return (

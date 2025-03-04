@@ -1,16 +1,18 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createJob } from '@/lib/jobUtils';
+import { createJob } from '@/lib/supabaseUtils';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const JobForm: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     jobNumber: '',
     projectName: '',
@@ -20,7 +22,24 @@ const JobForm: React.FC = () => {
     drawingsUrl: '',
     worksheetUrl: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createJobMutation = useMutation({
+    mutationFn: (data: typeof formData) => createJob(data),
+    onSuccess: (newJob) => {
+      toast.success('Job created successfully');
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      setTimeout(() => {
+        navigate(`/jobs/${newJob.id}`);
+      }, 500);
+    },
+    onError: (error: any) => {
+      let errorMessage = 'Failed to create job';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
+    }
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,25 +54,7 @@ const JobForm: React.FC = () => {
       return;
     }
     
-    setIsSubmitting(true);
-    
-    try {
-      const newJob = createJob(formData);
-      
-      toast.success('Job created successfully');
-      
-      // Navigate to the job detail page
-      setTimeout(() => {
-        navigate(`/jobs/${newJob.id}`);
-      }, 500);
-    } catch (error) {
-      let errorMessage = 'Failed to create job';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      toast.error(errorMessage);
-      setIsSubmitting(false);
-    }
+    createJobMutation.mutate(formData);
   };
 
   return (
@@ -164,13 +165,13 @@ const JobForm: React.FC = () => {
               type="button"
               variant="outline"
               onClick={() => navigate('/dashboard')}
-              disabled={isSubmitting}
+              disabled={createJobMutation.isPending}
             >
               Cancel
             </Button>
             
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
+            <Button type="submit" disabled={createJobMutation.isPending}>
+              {createJobMutation.isPending ? (
                 <>
                   <div className="animate-spin mr-2 h-4 w-4 border-2 border-t-transparent border-opacity-20 rounded-full" />
                   Creating Job...

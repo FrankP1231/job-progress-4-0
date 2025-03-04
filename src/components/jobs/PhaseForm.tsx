@@ -5,7 +5,7 @@ import {
   getJobById, 
   createNewPhase, 
   addPhaseToJob 
-} from '@/lib/jobUtils';
+} from '@/lib/supabaseUtils';
 import { Job } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,81 +13,75 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const PhaseForm: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
-  const [job, setJob] = useState<Job | null>(null);
+  const queryClient = useQueryClient();
   const [phaseName, setPhaseName] = useState('');
   const [phaseNumber, setPhaseNumber] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
 
+  // Fetch job data
+  const { 
+    data: job,
+    isLoading,
+    error
+  } = useQuery({
+    queryKey: ['job', jobId],
+    queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
+    enabled: !!jobId,
+    onError: (error) => {
+      console.error('Error loading job:', error);
+      toast.error('Failed to load job data');
+      navigate('/dashboard');
+    }
+  });
+
+  // Set default phase number
   useEffect(() => {
-    if (!jobId) return;
-    
-    setLoading(true);
-    
-    setTimeout(() => {
-      const foundJob = getJobById(jobId);
-      
-      if (foundJob) {
-        setJob(foundJob);
-        
-        // Set default phase number (next available)
-        const existingPhaseNumbers = foundJob.phases.map(p => p.phaseNumber);
-        const nextPhaseNumber = existingPhaseNumbers.length > 0 
-          ? Math.max(...existingPhaseNumbers) + 1 
-          : 1;
-        setPhaseNumber(nextPhaseNumber.toString());
-      } else {
-        toast.error('Job not found');
-        navigate('/dashboard');
+    if (job && job.phases) {
+      const existingPhaseNumbers = job.phases.map(p => p.phaseNumber);
+      const nextPhaseNumber = existingPhaseNumbers.length > 0 
+        ? Math.max(...existingPhaseNumbers) + 1 
+        : 1;
+      setPhaseNumber(nextPhaseNumber.toString());
+    }
+  }, [job]);
+
+  // Mutation for adding a phase
+  const addPhaseMutation = useMutation({
+    mutationFn: async () => {
+      if (!jobId || !job) throw new Error('Job ID is required');
+      if (!phaseName.trim()) throw new Error('Please enter a phase name');
+      if (!phaseNumber.trim() || isNaN(Number(phaseNumber)) || Number(phaseNumber) <= 0) {
+        throw new Error('Please enter a valid phase number');
       }
       
-      setLoading(false);
-    }, 300);
-  }, [jobId, navigate]);
+      const newPhase = createNewPhase(jobId, phaseName, Number(phaseNumber));
+      return addPhaseToJob(jobId, newPhase);
+    },
+    onSuccess: () => {
+      toast.success('Phase added successfully');
+      queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+      queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
+      navigate(`/jobs/${jobId}`);
+    },
+    onError: (error: any) => {
+      let errorMessage = 'Failed to add phase';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
+    }
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!jobId || !job) return;
-    
-    if (!phaseName.trim()) {
-      toast.error('Please enter a phase name');
-      return;
-    }
-    
-    if (!phaseNumber.trim() || isNaN(Number(phaseNumber)) || Number(phaseNumber) <= 0) {
-      toast.error('Please enter a valid phase number');
-      return;
-    }
-    
-    setSubmitting(true);
-    
-    try {
-      const newPhase = createNewPhase(jobId, phaseName, Number(phaseNumber));
-      const success = addPhaseToJob(jobId, newPhase);
-      
-      if (success) {
-        toast.success('Phase added successfully');
-        navigate(`/jobs/${jobId}`);
-      } else {
-        toast.error('Failed to add phase');
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('An unknown error occurred');
-      }
-    } finally {
-      setSubmitting(false);
-    }
+    addPhaseMutation.mutate();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-opacity-20 border-t-primary rounded-full" />
@@ -164,11 +158,12 @@ const PhaseForm: React.FC = () => {
                 type="button" 
                 variant="outline" 
                 onClick={() => navigate(`/jobs/${jobId}`)}
+                disabled={addPhaseMutation.isPending}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? 'Adding...' : 'Add Phase'}
+              <Button type="submit" disabled={addPhaseMutation.isPending}>
+                {addPhaseMutation.isPending ? 'Adding...' : 'Add Phase'}
               </Button>
             </div>
           </form>

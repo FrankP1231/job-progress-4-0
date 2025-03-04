@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getInProgressPhases, getAllJobs } from '@/lib/jobUtils';
+import { getInProgressPhases, getAllJobs } from '@/lib/supabaseUtils';
 import { Job, Phase } from '@/lib/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,30 +30,44 @@ import {
   Search,
   SlidersHorizontal
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 const DashboardPage: React.FC = () => {
-  const [inProgressPhases, setInProgressPhases] = useState<{job: Job, phase: Phase}[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch in-progress phases
+  const { 
+    data: inProgressPhases = [], 
+    isLoading: isLoadingPhases,
+    error: phasesError
+  } = useQuery({
+    queryKey: ['inProgressPhases'],
+    queryFn: getInProgressPhases
+  });
+
+  // Fetch all jobs
+  const { 
+    data: jobs = [], 
+    isLoading: isLoadingJobs,
+    error: jobsError
+  } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: getAllJobs
+  });
+
+  const isLoading = isLoadingPhases || isLoadingJobs;
+  
+  // Handle errors
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = () => {
-    setIsLoading(true);
-    // Simulate API request
-    setTimeout(() => {
-      const phases = getInProgressPhases();
-      const allJobs = getAllJobs();
-      setInProgressPhases(phases);
-      setJobs(allJobs);
-      setIsLoading(false);
-    }, 300);
-  };
+    if (phasesError) {
+      console.error('Error loading phases:', phasesError);
+    }
+    if (jobsError) {
+      console.error('Error loading jobs:', jobsError);
+    }
+  }, [phasesError, jobsError]);
 
   const filteredPhases = inProgressPhases.filter(({ job, phase }) => {
     // Apply search filter

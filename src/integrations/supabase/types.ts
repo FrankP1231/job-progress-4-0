@@ -9,7 +9,104 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      jobs: {
+        Row: {
+          buyer: string
+          created_at: string
+          drawings_url: string | null
+          id: string
+          job_number: string
+          project_name: string
+          salesman: string
+          title: string
+          updated_at: string
+          worksheet_url: string | null
+        }
+        Insert: {
+          buyer: string
+          created_at?: string
+          drawings_url?: string | null
+          id?: string
+          job_number: string
+          project_name: string
+          salesman: string
+          title: string
+          updated_at?: string
+          worksheet_url?: string | null
+        }
+        Update: {
+          buyer?: string
+          created_at?: string
+          drawings_url?: string | null
+          id?: string
+          job_number?: string
+          project_name?: string
+          salesman?: string
+          title?: string
+          updated_at?: string
+          worksheet_url?: string | null
+        }
+        Relationships: []
+      }
+      phases: {
+        Row: {
+          created_at: string
+          id: string
+          installation: Json
+          installation_materials: Json
+          is_complete: boolean
+          job_id: string
+          phase_name: string
+          phase_number: number
+          powder_coat: Json
+          sewing_labor: Json
+          sewing_materials: Json
+          updated_at: string
+          welding_labor: Json
+          welding_materials: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          installation?: Json
+          installation_materials?: Json
+          is_complete?: boolean
+          job_id: string
+          phase_name: string
+          phase_number: number
+          powder_coat?: Json
+          sewing_labor?: Json
+          sewing_materials?: Json
+          updated_at?: string
+          welding_labor?: Json
+          welding_materials?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          installation?: Json
+          installation_materials?: Json
+          is_complete?: boolean
+          job_id?: string
+          phase_name?: string
+          phase_number?: number
+          powder_coat?: Json
+          sewing_labor?: Json
+          sewing_materials?: Json
+          updated_at?: string
+          welding_labor?: Json
+          welding_materials?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phases_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
