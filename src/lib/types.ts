@@ -2,67 +2,57 @@
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
-export type RentalStatus = 'not-needed' | 'not-ordered' | 'ordered';
-export type PhaseStatus = 'pending' | 'in-progress' | 'complete';
+export type RentalEquipmentStatus = 'not-needed' | 'not-ordered' | 'ordered';
 
-export interface MaterialTracking {
+export interface Material {
   status: MaterialStatus;
+  notes?: string;
   eta?: string; // ISO date string
-  notes?: string;
 }
 
-export interface LaborTracking {
+export interface Labor {
   status: LaborStatus;
-  estimatedHours?: number;
-  actualHours?: number;
   notes?: string;
+  hours?: number;
 }
 
-export interface PowderCoatTracking {
+export interface PowderCoat {
   status: PowderCoatStatus;
-  startDate?: string; // ISO date string
-  estimatedCompletionDate?: string; // ISO date string
   notes?: string;
+  eta?: string; // ISO date string
 }
 
-export interface RentalTracking {
-  status: RentalStatus;
+export interface RentalEquipment {
+  status: RentalEquipmentStatus;
+  notes?: string;
   details?: string;
-  notes?: string;
 }
 
-export interface InstallationDetails {
+export interface Installation {
   crewMembersNeeded: number;
   crewHoursNeeded: number;
   siteReadyDate?: string; // ISO date string
   installDeadline?: string; // ISO date string
   installStartDate?: string; // ISO date string
   installFinishDate?: string; // ISO date string
-  rentalEquipment: RentalTracking;
+  rentalEquipment: RentalEquipment;
   notes?: string;
+  outlookEventId?: string;
 }
 
 export interface Phase {
   id: string;
+  jobId: string;
   phaseName: string;
   phaseNumber: number;
-  status: PhaseStatus;
-  
-  // Production tracking
-  weldingMaterials: MaterialTracking;
-  sewingMaterials: MaterialTracking;
-  weldingLabor: LaborTracking;
-  sewingLabor: LaborTracking;
-  installationMaterials: MaterialTracking;
-  powderCoat: PowderCoatTracking;
-  
-  // Installation details
-  installation: InstallationDetails;
-  
-  // Calendar/scheduling
-  outlookEventId?: string;
-  
-  // Timestamps
+  weldingMaterials: Material;
+  sewingMaterials: Material;
+  weldingLabor: Labor;
+  sewingLabor: Labor;
+  installationMaterials: Material;
+  powderCoat: PowderCoat;
+  installation: Installation;
+  isComplete: boolean;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
@@ -72,13 +62,15 @@ export interface Job {
   jobNumber: string;
   projectName: string;
   buyer: string;
-  title: string; // For Outlook Calendar
+  title: string;
   salesman: string;
   drawingsUrl?: string;
   worksheetUrl?: string;
   phases: Phase[];
-  
-  // Timestamps
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+}
+
+export interface User {
+  isAuthenticated: boolean;
 }

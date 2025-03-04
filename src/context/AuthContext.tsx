@@ -1,62 +1,53 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { User } from '@/lib/types';
 
 interface AuthContextType {
-  isAuthenticated: boolean;
+  user: User;
   login: (password: string) => boolean;
   logout: () => void;
 }
 
-const defaultContext: AuthContextType = {
-  isAuthenticated: false,
-  login: () => false,
-  logout: () => {},
-};
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AuthContext = createContext<AuthContextType>(defaultContext);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User>({ isAuthenticated: false });
 
-export const useAuth = () => useContext(AuthContext);
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Check if user is already authenticated (from session storage)
   useEffect(() => {
-    const storedAuth = sessionStorage.getItem('awning-auth');
-    if (storedAuth === 'true') {
-      setIsAuthenticated(true);
+    // Check if user is already authenticated
+    const authStatus = localStorage.getItem('auth_status');
+    if (authStatus === 'authenticated') {
+      setUser({ isAuthenticated: true });
     }
   }, []);
 
   const login = (password: string): boolean => {
-    // For simplicity, we're using a hard-coded password as requested
-    // In a real application, this should use a secure authentication method
+    // In a real application, this would validate against a server
+    // For simplicity, we're using a hardcoded password
     if (password === 'GardnerRoad') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('awning-auth', 'true');
+      setUser({ isAuthenticated: true });
+      localStorage.setItem('auth_status', 'authenticated');
       return true;
     }
     return false;
   };
 
   const logout = () => {
-    setIsAuthenticated(false);
-    sessionStorage.removeItem('awning-auth');
+    setUser({ isAuthenticated: false });
+    localStorage.removeItem('auth_status');
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

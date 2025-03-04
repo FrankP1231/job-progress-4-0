@@ -1,294 +1,305 @@
 
-import { Job, Phase, PhaseStatus } from './types';
+import { Job, Phase } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
-// Generate a unique ID
-export const generateId = (): string => {
-  return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-};
+// Mock database - in a real app, this would be replaced with an actual database
+const JOBS_STORAGE_KEY = 'awning_jobs';
 
-// Create a new job with default values
-export const createNewJob = (jobNumber: string, projectName: string, buyer: string, title: string, salesman: string): Job => {
-  const now = new Date().toISOString();
+// Load jobs from localStorage
+export const loadJobs = (): Job[] => {
+  const jobsJson = localStorage.getItem(JOBS_STORAGE_KEY);
+  if (!jobsJson) return [];
   
-  return {
-    id: generateId(),
-    jobNumber,
-    projectName,
-    buyer,
-    title,
-    salesman,
-    drawingsUrl: '',
-    worksheetUrl: '',
-    phases: [],
-    createdAt: now,
-    updatedAt: now,
-  };
+  try {
+    return JSON.parse(jobsJson);
+  } catch (e) {
+    console.error('Failed to parse jobs from localStorage:', e);
+    return [];
+  }
 };
 
-// Create a new phase with default values
-export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: number): Phase => {
-  const now = new Date().toISOString();
-  
-  return {
-    id: generateId(),
-    phaseName,
-    phaseNumber,
-    status: 'pending',
-    
-    weldingMaterials: {
-      status: 'not-ordered',
-    },
-    sewingMaterials: {
-      status: 'not-ordered',
-    },
-    weldingLabor: {
-      status: 'not-needed',
-    },
-    sewingLabor: {
-      status: 'not-needed',
-    },
-    installationMaterials: {
-      status: 'not-ordered',
-    },
-    powderCoat: {
-      status: 'not-needed',
-    },
-    
-    installation: {
-      crewMembersNeeded: 2,
-      crewHoursNeeded: 4,
-      rentalEquipment: {
-        status: 'not-needed',
-      },
-    },
-    
-    createdAt: now,
-    updatedAt: now,
-  };
-};
-
-// Get all jobs (normally would be from an API)
-export const getJobs = (): Job[] => {
-  const jobsStr = localStorage.getItem('awning-jobs');
-  return jobsStr ? JSON.parse(jobsStr) : [];
-};
-
-// Save all jobs (normally would be to an API)
+// Save jobs to localStorage
 export const saveJobs = (jobs: Job[]): void => {
-  localStorage.setItem('awning-jobs', JSON.stringify(jobs));
+  localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
 };
 
-// Get a specific job by ID
-export const getJobById = (jobId: string): Job | undefined => {
-  const jobs = getJobs();
-  return jobs.find(job => job.id === jobId);
+// Get all jobs
+export const getAllJobs = (): Job[] => {
+  return loadJobs();
 };
 
-// Save or update a job
-export const saveJob = (job: Job): void => {
-  const jobs = getJobs();
-  const index = jobs.findIndex(j => j.id === job.id);
+// Get job by ID
+export const getJobById = (id: string): Job | undefined => {
+  const jobs = loadJobs();
+  return jobs.find(job => job.id === id);
+};
+
+// Get job by job number
+export const getJobByNumber = (jobNumber: string): Job | undefined => {
+  const jobs = loadJobs();
+  return jobs.find(job => job.jobNumber === jobNumber);
+};
+
+// Create a new job
+export const createJob = (jobData: Partial<Job>): Job => {
+  const jobs = loadJobs();
   
-  if (index >= 0) {
-    jobs[index] = { ...job, updatedAt: new Date().toISOString() };
-  } else {
-    jobs.push(job);
+  // Check if job number already exists
+  if (jobData.jobNumber && jobs.some(job => job.jobNumber === jobData.jobNumber)) {
+    throw new Error(`Job number ${jobData.jobNumber} already exists`);
   }
   
+  const timestamp = new Date().toISOString();
+  
+  const newJob: Job = {
+    id: uuidv4(),
+    jobNumber: jobData.jobNumber || '',
+    projectName: jobData.projectName || '',
+    buyer: jobData.buyer || '',
+    title: jobData.title || '',
+    salesman: jobData.salesman || '',
+    drawingsUrl: jobData.drawingsUrl,
+    worksheetUrl: jobData.worksheetUrl,
+    phases: [],
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
+  
+  jobs.push(newJob);
   saveJobs(jobs);
+  
+  return newJob;
+};
+
+// Update a job
+export const updateJob = (id: string, jobData: Partial<Job>): Job | undefined => {
+  const jobs = loadJobs();
+  const jobIndex = jobs.findIndex(job => job.id === id);
+  
+  if (jobIndex === -1) return undefined;
+  
+  // Check if job number is being changed and already exists
+  if (jobData.jobNumber && 
+      jobData.jobNumber !== jobs[jobIndex].jobNumber &&
+      jobs.some((job, idx) => idx !== jobIndex && job.jobNumber === jobData.jobNumber)) {
+    throw new Error(`Job number ${jobData.jobNumber} already exists`);
+  }
+  
+  const updatedJob = {
+    ...jobs[jobIndex],
+    ...jobData,
+    updatedAt: new Date().toISOString()
+  };
+  
+  jobs[jobIndex] = updatedJob;
+  saveJobs(jobs);
+  
+  return updatedJob;
 };
 
 // Delete a job
-export const deleteJob = (jobId: string): void => {
-  const jobs = getJobs();
-  const filteredJobs = jobs.filter(job => job.id !== jobId);
+export const deleteJob = (id: string): boolean => {
+  const jobs = loadJobs();
+  const filteredJobs = jobs.filter(job => job.id !== id);
+  
+  if (filteredJobs.length === jobs.length) return false;
+  
   saveJobs(filteredJobs);
+  return true;
+};
+
+// Create a new phase
+export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: number): Phase => {
+  const timestamp = new Date().toISOString();
+  
+  return {
+    id: uuidv4(),
+    jobId,
+    phaseName,
+    phaseNumber,
+    weldingMaterials: { status: 'not-ordered' },
+    sewingMaterials: { status: 'not-ordered' },
+    weldingLabor: { status: 'not-needed' },
+    sewingLabor: { status: 'not-needed' },
+    installationMaterials: { status: 'not-ordered' },
+    powderCoat: { status: 'not-needed' },
+    installation: {
+      crewMembersNeeded: 2,
+      crewHoursNeeded: 4,
+      rentalEquipment: { status: 'not-needed' }
+    },
+    isComplete: false,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  };
 };
 
 // Add a phase to a job
 export const addPhaseToJob = (jobId: string, phase: Phase): boolean => {
-  const job = getJobById(jobId);
+  const jobs = loadJobs();
+  const jobIndex = jobs.findIndex(job => job.id === jobId);
   
-  if (!job) return false;
+  if (jobIndex === -1) return false;
   
-  job.phases.push(phase);
-  job.updatedAt = new Date().toISOString();
+  // Check if phase number already exists
+  if (jobs[jobIndex].phases.some(p => p.phaseNumber === phase.phaseNumber)) {
+    throw new Error(`Phase number ${phase.phaseNumber} already exists for this job`);
+  }
   
-  saveJob(job);
+  jobs[jobIndex].phases.push(phase);
+  jobs[jobIndex].updatedAt = new Date().toISOString();
+  
+  saveJobs(jobs);
   return true;
 };
 
-// Update a phase in a job
-export const updatePhase = (jobId: string, phase: Phase): boolean => {
-  const job = getJobById(jobId);
+// Update a phase
+export const updatePhase = (jobId: string, phaseId: string, phaseData: Partial<Phase>): Phase | undefined => {
+  const jobs = loadJobs();
+  const jobIndex = jobs.findIndex(job => job.id === jobId);
   
-  if (!job) return false;
+  if (jobIndex === -1) return undefined;
   
-  const phaseIndex = job.phases.findIndex(p => p.id === phase.id);
+  const phaseIndex = jobs[jobIndex].phases.findIndex(phase => phase.id === phaseId);
   
-  if (phaseIndex < 0) return false;
+  if (phaseIndex === -1) return undefined;
   
-  job.phases[phaseIndex] = { ...phase, updatedAt: new Date().toISOString() };
-  job.updatedAt = new Date().toISOString();
+  // Check if phase number is being changed and already exists
+  if (phaseData.phaseNumber && 
+      phaseData.phaseNumber !== jobs[jobIndex].phases[phaseIndex].phaseNumber &&
+      jobs[jobIndex].phases.some((p, idx) => idx !== phaseIndex && p.phaseNumber === phaseData.phaseNumber)) {
+    throw new Error(`Phase number ${phaseData.phaseNumber} already exists for this job`);
+  }
   
-  saveJob(job);
-  return true;
+  const updatedPhase = {
+    ...jobs[jobIndex].phases[phaseIndex],
+    ...phaseData,
+    updatedAt: new Date().toISOString()
+  };
+  
+  jobs[jobIndex].phases[phaseIndex] = updatedPhase;
+  jobs[jobIndex].updatedAt = new Date().toISOString();
+  
+  saveJobs(jobs);
+  
+  return updatedPhase;
 };
 
-// Delete a phase from a job
+// Delete a phase
 export const deletePhase = (jobId: string, phaseId: string): boolean => {
-  const job = getJobById(jobId);
+  const jobs = loadJobs();
+  const jobIndex = jobs.findIndex(job => job.id === jobId);
   
-  if (!job) return false;
+  if (jobIndex === -1) return false;
   
-  job.phases = job.phases.filter(phase => phase.id !== phaseId);
-  job.updatedAt = new Date().toISOString();
+  const filteredPhases = jobs[jobIndex].phases.filter(phase => phase.id !== phaseId);
   
-  saveJob(job);
+  if (filteredPhases.length === jobs[jobIndex].phases.length) return false;
+  
+  jobs[jobIndex].phases = filteredPhases;
+  jobs[jobIndex].updatedAt = new Date().toISOString();
+  
+  saveJobs(jobs);
   return true;
 };
 
-// Get all phases across all jobs
-export const getAllPhases = (): { job: Job, phase: Phase }[] => {
-  const jobs = getJobs();
-  const allPhases: { job: Job, phase: Phase }[] = [];
-  
-  jobs.forEach(job => {
-    job.phases.forEach(phase => {
-      allPhases.push({ job, phase });
-    });
-  });
-  
-  return allPhases;
+// Get all phases for a job
+export const getPhasesForJob = (jobId: string): Phase[] => {
+  const job = getJobById(jobId);
+  return job ? job.phases : [];
+};
+
+// Get phase by ID
+export const getPhaseById = (jobId: string, phaseId: string): Phase | undefined => {
+  const job = getJobById(jobId);
+  return job ? job.phases.find(phase => phase.id === phaseId) : undefined;
 };
 
 // Get all in-progress phases across all jobs
 export const getInProgressPhases = (): { job: Job, phase: Phase }[] => {
-  const allPhases = getAllPhases();
-  return allPhases.filter(({ phase }) => phase.status !== 'complete');
+  const jobs = loadJobs();
+  const inProgressPhases: { job: Job, phase: Phase }[] = [];
+  
+  jobs.forEach(job => {
+    job.phases.forEach(phase => {
+      if (!phase.isComplete) {
+        inProgressPhases.push({ job, phase });
+      }
+    });
+  });
+  
+  return inProgressPhases;
 };
 
-// Format date for display
-export const formatDate = (dateStr?: string): string => {
-  if (!dateStr) return 'Not set';
-  
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date);
+// Mark a phase as complete
+export const markPhaseComplete = (jobId: string, phaseId: string, isComplete: boolean = true): boolean => {
+  return updatePhase(jobId, phaseId, { isComplete }) !== undefined;
 };
 
-// Generate Outlook appointment title
-export const generateAppointmentTitle = (job: Job, phase: Phase): string => {
-  const { phaseNumber, installation } = phase;
-  const { jobNumber, projectName, buyer, salesman } = job;
-  
-  let title = `[Phase ${phaseNumber}]-[${jobNumber}] - ${projectName} - ${buyer} - ${salesman}`;
-  
-  if (installation.crewMembersNeeded) {
-    title += ` - ${installation.crewMembersNeeded} crew`;
-  }
-  
-  if (installation.siteReadyDate) {
-    title += `, ${formatDate(installation.siteReadyDate)}`;
-  }
-  
-  if (installation.installDeadline) {
-    title += ` - ${formatDate(installation.installDeadline)}`;
-  }
-  
-  return title;
+// Utility to create Outlook calendar appointment title
+export const createOutlookTitle = (job: Job, phase: Phase): string => {
+  return `[Phase ${phase.phaseNumber}]-[${job.jobNumber}] - ${job.projectName} - ${job.buyer} - ${job.salesman} - [Crew: ${phase.installation.crewMembersNeeded}], ${phase.installation.siteReadyDate ? new Date(phase.installation.siteReadyDate).toLocaleDateString() : 'N/A'} - ${phase.installation.installDeadline ? new Date(phase.installation.installDeadline).toLocaleDateString() : 'N/A'}`;
 };
 
-// Calculate next business day (skip weekends)
-export const getNextBusinessDay = (date: Date): Date => {
-  const nextDay = new Date(date);
-  nextDay.setDate(date.getDate() + 1);
-  
-  // Skip weekends
-  if (nextDay.getDay() === 0) { // Sunday
-    nextDay.setDate(nextDay.getDate() + 1);
-  } else if (nextDay.getDay() === 6) { // Saturday
-    nextDay.setDate(nextDay.getDate() + 2);
+// Calculate appointment dates based on crew hours needed
+export const calculateAppointmentDates = (phase: Phase): { startDate: Date, endDate: Date }[] => {
+  if (!phase.installation.installStartDate) {
+    throw new Error('Installation start date is required');
   }
   
-  return nextDay;
-};
-
-// Generate installation dates for a phase based on crew hours
-export const generateInstallationDates = (startDate: Date, crewHours: number): Date[] => {
-  const dates: Date[] = [];
-  let remainingHours = crewHours;
+  const startDate = new Date(phase.installation.installStartDate);
+  const hoursNeeded = phase.installation.crewHoursNeeded;
+  const appointments: { startDate: Date, endDate: Date }[] = [];
+  
+  let remainingHours = hoursNeeded;
   let currentDate = new Date(startDate);
   
   while (remainingHours > 0) {
-    const hoursForDay = Math.min(remainingHours, 10); // Max 10 hours per day
-    dates.push(new Date(currentDate));
+    // Skip weekends
+    const dayOfWeek = currentDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      currentDate = new Date(currentDate);
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
     
-    remainingHours -= hoursForDay;
+    const hoursForToday = Math.min(remainingHours, 10);
+    
+    const startDateTime = new Date(currentDate);
+    const endDateTime = new Date(currentDate);
+    endDateTime.setHours(endDateTime.getHours() + hoursForToday);
+    
+    appointments.push({
+      startDate: startDateTime,
+      endDate: endDateTime
+    });
+    
+    remainingHours -= hoursForToday;
     
     if (remainingHours > 0) {
-      currentDate = getNextBusinessDay(currentDate);
+      currentDate = new Date(currentDate);
+      currentDate.setDate(currentDate.getDate() + 1);
     }
   }
   
-  return dates;
+  return appointments;
 };
 
-// Get the status color class based on status
-export const getStatusColorClass = (status: string): string => {
-  switch (status) {
-    case 'not-needed':
-      return 'bg-status-not-needed text-gray-700';
-    case 'not-ordered':
-    case 'not-started':
-      return 'bg-status-not-ordered text-white';
-    case 'ordered':
-    case 'in-progress':
-    case 'estimated':
-      return 'bg-status-ordered text-gray-800';
-    case 'received':
-    case 'complete':
-      return 'bg-status-complete text-white';
-    default:
-      return 'bg-gray-200 text-gray-700';
+// Initialize with some sample data if needed (for development)
+export const initSampleData = (): void => {
+  if (loadJobs().length === 0) {
+    const sampleJob = createJob({
+      jobNumber: 'J2023-001',
+      projectName: 'Downtown Cafe Awnings',
+      buyer: 'Jane Smith',
+      title: 'Cafe Awning Installation',
+      salesman: 'Bob Johnson'
+    });
+    
+    const phase1 = createNewPhase(sampleJob.id, 'Front Entrance', 1);
+    const phase2 = createNewPhase(sampleJob.id, 'Side Patio', 2);
+    
+    addPhaseToJob(sampleJob.id, phase1);
+    addPhaseToJob(sampleJob.id, phase2);
   }
-};
-
-// Get a user-friendly label for status
-export const getStatusLabel = (status: string): string => {
-  // Convert 'not-ordered' to 'Not Ordered', etc.
-  return status
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
-
-// Update overall phase status based on component status
-export const updatePhaseStatus = (phase: Phase): PhaseStatus => {
-  // If everything is complete or not needed, phase is complete
-  const isComplete = 
-    (phase.weldingMaterials.status === 'received' || phase.weldingMaterials.status === 'not-needed') &&
-    (phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed') &&
-    (phase.weldingLabor.status === 'complete' || phase.weldingLabor.status === 'not-needed') &&
-    (phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed') &&
-    (phase.installationMaterials.status === 'received' || phase.installationMaterials.status === 'not-needed') &&
-    (phase.powderCoat.status === 'complete' || phase.powderCoat.status === 'not-needed') &&
-    (phase.installation.rentalEquipment.status === 'ordered' || phase.installation.rentalEquipment.status === 'not-needed') &&
-    phase.installation.installFinishDate !== undefined;
-
-  // If everything is still just in the default state, mark as pending
-  const isPending = 
-    phase.weldingMaterials.status === 'not-ordered' &&
-    phase.sewingMaterials.status === 'not-ordered' &&
-    phase.weldingLabor.status === 'not-needed' &&
-    phase.sewingLabor.status === 'not-needed' &&
-    phase.installationMaterials.status === 'not-ordered' &&
-    phase.powderCoat.status === 'not-needed' &&
-    phase.installation.rentalEquipment.status === 'not-needed' &&
-    phase.installation.installStartDate === undefined;
-
-  return isComplete ? 'complete' : (isPending ? 'pending' : 'in-progress');
 };

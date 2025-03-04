@@ -1,27 +1,27 @@
 
-import React, { ReactNode } from 'react';
+import React from 'react';
 import Navbar from './Navbar';
 import { useAuth } from '@/context/AuthContext';
-import { Navigate } from 'react-router-dom';
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-
-  // If not authenticated, redirect to login
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
+  const { user } = useAuth();
+  const isAuthenticated = user.isAuthenticated;
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 container py-6 px-4 sm:px-6 animate-fade-in">
+      {isAuthenticated && <Navbar />}
+      <main className="flex-1 container py-6">
         {children}
       </main>
+      <footer className="border-t py-4 text-center text-sm text-muted-foreground">
+        <div className="container">
+          Awning & Canopy Job Tracking System &copy; {new Date().getFullYear()}
+        </div>
+      </footer>
     </div>
   );
 };
