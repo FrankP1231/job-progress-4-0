@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Job, Phase, Material, Labor, PowderCoat, Installation, RentalEquipment } from './types';
 
@@ -325,21 +326,24 @@ export const addPhaseToJob = async (jobId: string, phase: Phase): Promise<boolea
     throw new Error(`Phase number ${phase.phaseNumber} already exists for this job`);
   }
   
+  // Define the data structure explicitly to match the database schema
+  const phaseData = {
+    job_id: jobId,
+    phase_name: phase.phaseName,
+    phase_number: phase.phaseNumber,
+    welding_materials: phase.weldingMaterials,
+    sewing_materials: phase.sewingMaterials,
+    welding_labor: phase.weldingLabor,
+    sewing_labor: phase.sewingLabor,
+    installation_materials: phase.installationMaterials,
+    powder_coat: phase.powderCoat,
+    installation: phase.installation,
+    is_complete: phase.isComplete
+  };
+  
   const { data, error } = await supabase
     .from('phases')
-    .insert({
-      job_id: jobId,
-      phase_name: phase.phaseName,
-      phase_number: phase.phaseNumber,
-      welding_materials: phase.weldingMaterials,
-      sewing_materials: phase.sewingMaterials,
-      welding_labor: phase.weldingLabor,
-      sewing_labor: phase.sewingLabor,
-      installation_materials: phase.installationMaterials,
-      powder_coat: phase.powderCoat,
-      installation: phase.installation,
-      is_complete: phase.isComplete
-    })
+    .insert(phaseData)
     .select()
     .single();
   
