@@ -21,12 +21,16 @@ const PhaseDetail: React.FC = () => {
     queryKey: ['job', jobId],
     queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
     enabled: !!jobId,
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error loading job:', error);
-        toast.error('Failed to load job data');
+    onSuccess: (data) => {
+      if (!data) {
+        toast.error('Job not found');
         navigate('/dashboard');
       }
+    },
+    onError: (error) => {
+      console.error('Error loading job:', error);
+      toast.error('Failed to load job data');
+      navigate('/dashboard');
     }
   });
 
@@ -39,12 +43,16 @@ const PhaseDetail: React.FC = () => {
     queryKey: ['phase', jobId, phaseId],
     queryFn: () => jobId && phaseId ? getPhaseById(jobId, phaseId) : Promise.resolve(undefined),
     enabled: !!jobId && !!phaseId,
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error loading phase:', error);
-        toast.error('Failed to load phase data');
+    onSuccess: (data) => {
+      if (!data) {
+        toast.error('Phase not found');
         if (jobId) navigate(`/jobs/${jobId}`);
       }
+    },
+    onError: (error) => {
+      console.error('Error loading phase:', error);
+      toast.error('Failed to load phase data');
+      if (jobId) navigate(`/jobs/${jobId}`);
     }
   });
 
