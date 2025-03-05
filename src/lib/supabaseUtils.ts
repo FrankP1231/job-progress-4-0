@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Job, Phase, Material, Labor, PowderCoat, Installation, RentalEquipment } from './types';
+import { Json } from "@/integrations/supabase/types";
 
 // Get all jobs
 export const getAllJobs = async (): Promise<Job[]> => {
@@ -327,17 +327,18 @@ export const addPhaseToJob = async (jobId: string, phase: Phase): Promise<boolea
   }
   
   // Define the data structure explicitly to match the database schema
+  // Use type assertion to convert our custom types to Json for Supabase
   const phaseData = {
     job_id: jobId,
     phase_name: phase.phaseName,
     phase_number: phase.phaseNumber,
-    welding_materials: phase.weldingMaterials,
-    sewing_materials: phase.sewingMaterials,
-    welding_labor: phase.weldingLabor,
-    sewing_labor: phase.sewingLabor,
-    installation_materials: phase.installationMaterials,
-    powder_coat: phase.powderCoat,
-    installation: phase.installation,
+    welding_materials: phase.weldingMaterials as unknown as Json,
+    sewing_materials: phase.sewingMaterials as unknown as Json,
+    welding_labor: phase.weldingLabor as unknown as Json,
+    sewing_labor: phase.sewingLabor as unknown as Json,
+    installation_materials: phase.installationMaterials as unknown as Json,
+    powder_coat: phase.powderCoat as unknown as Json,
+    installation: phase.installation as unknown as Json,
     is_complete: phase.isComplete
   };
   
