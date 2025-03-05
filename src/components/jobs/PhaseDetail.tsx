@@ -20,19 +20,22 @@ const PhaseDetail: React.FC = () => {
   } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
-    enabled: !!jobId,
-    onSuccess: (data) => {
-      if (!data) {
-        toast.error('Job not found');
-        navigate('/dashboard');
-      }
-    },
-    onError: (error) => {
-      console.error('Error loading job:', error);
+    enabled: !!jobId
+  });
+
+  // Handle job loading errors or not found
+  React.useEffect(() => {
+    if (jobError) {
+      console.error('Error loading job:', jobError);
       toast.error('Failed to load job data');
       navigate('/dashboard');
     }
-  });
+    
+    if (job === undefined && !isLoadingJob) {
+      toast.error('Job not found');
+      navigate('/dashboard');
+    }
+  }, [job, jobError, isLoadingJob, navigate]);
 
   // Fetch phase data
   const { 
@@ -42,19 +45,22 @@ const PhaseDetail: React.FC = () => {
   } = useQuery({
     queryKey: ['phase', jobId, phaseId],
     queryFn: () => jobId && phaseId ? getPhaseById(jobId, phaseId) : Promise.resolve(undefined),
-    enabled: !!jobId && !!phaseId,
-    onSuccess: (data) => {
-      if (!data) {
-        toast.error('Phase not found');
-        if (jobId) navigate(`/jobs/${jobId}`);
-      }
-    },
-    onError: (error) => {
-      console.error('Error loading phase:', error);
+    enabled: !!jobId && !!phaseId
+  });
+
+  // Handle phase loading errors or not found
+  React.useEffect(() => {
+    if (phaseError) {
+      console.error('Error loading phase:', phaseError);
       toast.error('Failed to load phase data');
       if (jobId) navigate(`/jobs/${jobId}`);
     }
-  });
+    
+    if (phase === undefined && !isLoadingPhase) {
+      toast.error('Phase not found');
+      if (jobId) navigate(`/jobs/${jobId}`);
+    }
+  }, [phase, phaseError, isLoadingPhase, jobId, navigate]);
 
   const isLoading = isLoadingJob || isLoadingPhase;
 

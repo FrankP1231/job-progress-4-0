@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
@@ -29,15 +30,17 @@ const PhaseForm: React.FC = () => {
   } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
-    enabled: !!jobId,
-    onSettled: (data, error) => {
-      if (error) {
-        console.error('Error loading job:', error);
-        toast.error('Failed to load job data');
-        navigate('/dashboard');
-      }
-    }
+    enabled: !!jobId
   });
+
+  // Handle job loading errors
+  React.useEffect(() => {
+    if (error) {
+      console.error('Error loading job:', error);
+      toast.error('Failed to load job data');
+      navigate('/dashboard');
+    }
+  }, [error, navigate]);
 
   // Set default phase number
   useEffect(() => {
