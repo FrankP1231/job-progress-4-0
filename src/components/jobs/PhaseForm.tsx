@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   getJobById, 
   createNewPhase, 
   addPhaseToJob 
-} from '@/lib/supabaseUtils';
+} from '@/lib/supabase';
 import { Job } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +21,6 @@ const PhaseForm: React.FC = () => {
   const [phaseName, setPhaseName] = useState('');
   const [phaseNumber, setPhaseNumber] = useState('');
 
-  // Fetch job data
   const { 
     data: job,
     isLoading,
@@ -33,7 +31,6 @@ const PhaseForm: React.FC = () => {
     enabled: !!jobId
   });
 
-  // Handle job loading errors
   React.useEffect(() => {
     if (error) {
       console.error('Error loading job:', error);
@@ -42,7 +39,6 @@ const PhaseForm: React.FC = () => {
     }
   }, [error, navigate]);
 
-  // Set default phase number
   useEffect(() => {
     if (job && job.phases) {
       const existingPhaseNumbers = job.phases.map(p => p.phaseNumber);
@@ -53,7 +49,6 @@ const PhaseForm: React.FC = () => {
     }
   }, [job]);
 
-  // Mutation for adding a phase
   const addPhaseMutation = useMutation({
     mutationFn: async () => {
       if (!jobId || !job) throw new Error('Job ID is required');

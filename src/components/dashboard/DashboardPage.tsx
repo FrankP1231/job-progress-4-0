@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getInProgressPhases, getAllJobs } from '@/lib/supabaseUtils';
+import { getInProgressPhases, getAllJobs } from '@/lib/supabase';
 import { Job, Phase } from '@/lib/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
