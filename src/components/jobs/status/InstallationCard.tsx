@@ -8,64 +8,72 @@ interface InstallationCardProps {
   installation: Installation;
   materials: Material;
   rental?: React.ReactNode; // Pass in status update button
+  materialStatus?: React.ReactNode; // Add materialStatus prop for the materials status button
 }
 
 const InstallationCard: React.FC<InstallationCardProps> = ({ 
   installation, 
   materials,
-  rental
+  rental,
+  materialStatus
 }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
+      {/* Materials Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">Materials</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status</span>
-            <StatusBadge status={materials.status} />
-          </div>
-          
-          {materials.eta && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">ETA</span>
-              <span className="text-sm">{new Date(materials.eta).toLocaleDateString()}</span>
-            </div>
-          )}
-          
-          {materials.notes && (
-            <div>
-              <span className="text-sm text-muted-foreground">Notes</span>
-              <p className="text-sm mt-1">{materials.notes}</p>
-            </div>
-          )}
+          {materialStatus}
         </div>
         
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Rental Equipment</h3>
-            {rental}
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status</span>
-            <StatusBadge status={installation.rentalEquipment.status} />
-          </div>
-          
-          {installation.rentalEquipment.details && (
-            <div>
-              <span className="text-sm text-muted-foreground">Details</span>
-              <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
-            </div>
-          )}
-          
-          {installation.rentalEquipment.notes && (
-            <div>
-              <span className="text-sm text-muted-foreground">Notes</span>
-              <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
-            </div>
-          )}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Status</span>
+          <StatusBadge status={materials.status} />
         </div>
+        
+        {materials.eta && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">ETA</span>
+            <span className="text-sm">{new Date(materials.eta).toLocaleDateString()}</span>
+          </div>
+        )}
+        
+        {materials.notes && (
+          <div>
+            <span className="text-sm text-muted-foreground">Notes</span>
+            <p className="text-sm mt-1">{materials.notes}</p>
+          </div>
+        )}
       </div>
       
+      {/* Rental Equipment Section */}
+      <div className="pt-4 border-t space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Rental Equipment</h3>
+          {rental}
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Status</span>
+          <StatusBadge status={installation.rentalEquipment.status} />
+        </div>
+        
+        {installation.rentalEquipment.details && (
+          <div>
+            <span className="text-sm text-muted-foreground">Details</span>
+            <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
+          </div>
+        )}
+        
+        {installation.rentalEquipment.notes && (
+          <div>
+            <span className="text-sm text-muted-foreground">Notes</span>
+            <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
+          </div>
+        )}
+      </div>
+      
+      {/* Installation Details Section */}
       <div className="pt-4 border-t">
         <h3 className="text-sm font-medium mb-4">Installation Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -218,27 +218,24 @@ const PhaseDetail: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg">Installation</CardTitle>
-              <div>
-                {jobId && phaseId && (
-                  <StatusUpdateButton
-                    jobId={jobId}
-                    phaseId={phaseId}
-                    statusType="material"
-                    fieldPath="installationMaterials.status"
-                    currentStatus={phase.installationMaterials.status}
-                    currentEta={phase.installationMaterials.eta}
-                    options={materialStatusOptions}
-                  />
-                )}
-              </div>
             </CardHeader>
             <CardContent>
               <InstallationCard
                 installation={phase.installation}
-                materials={{
-                  ...phase.installationMaterials,
-                  status: undefined as any
-                }}
+                materials={phase.installationMaterials}
+                materialStatus={
+                  jobId && phaseId ? (
+                    <StatusUpdateButton
+                      jobId={jobId}
+                      phaseId={phaseId}
+                      statusType="material"
+                      fieldPath="installationMaterials.status"
+                      currentStatus={phase.installationMaterials.status}
+                      currentEta={phase.installationMaterials.eta}
+                      options={materialStatusOptions}
+                    />
+                  ) : undefined
+                }
                 rental={
                   jobId && phaseId ? (
                     <StatusUpdateButton
