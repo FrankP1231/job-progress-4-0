@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 import { logActivity } from "./activityLogUtils";
 
@@ -56,7 +55,8 @@ export const updatePhaseStatus = async (
     
     // Apply updates to the specific field
     if (pathSegments.length === 1) {
-      // Direct update to the full object
+      // Direct update to the top level object - PRESERVE existing fields
+      // This is critical for fields that have both status and eta
       Object.assign(updatedField, updateData);
     } else {
       // Nested update (e.g., 'installation.rentalEquipment')
@@ -79,11 +79,18 @@ export const updatePhaseStatus = async (
       // Convert the last segment if needed
       const dbLastSegment = lastSegment === 'rentalEquipment' ? 'rental_equipment' : lastSegment;
       
-      if (typeof target[dbLastSegment] !== 'object' || target[dbLastSegment] === null) {
-        target[dbLastSegment] = {};
+      // Key fix: Check if the target exists and is an object, but preserve its structure
+      if (typeof target[dbLastSegment] === 'object' && target[dbLastSegment] !== null) {
+        // Merge with existing object instead of overwriting
+        Object.assign(target[dbLastSegment], updateData);
+      } else {
+        // If it's not an object (e.g., string status), we need to create a new object
+        // but keep any existing status property if available
+        target[dbLastSegment] = {
+          ...(typeof target[dbLastSegment] === 'string' ? { status: target[dbLastSegment] } : {}),
+          ...updateData
+        };
       }
-      
-      Object.assign(target[dbLastSegment], updateData);
     }
     
     // Check if installation status is being set to complete

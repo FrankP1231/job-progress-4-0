@@ -92,50 +92,34 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         updateData.status = statusString;
       }
 
-      if (statusType === 'material' || statusType === 'powderCoat') {
-        updateData = { ...updateData, eta: eta };
+      // Only include eta if it's relevant for this status type AND has a value
+      if ((statusType === 'material' || statusType === 'powderCoat') && eta) {
+        updateData.eta = eta;
       }
 
-      if (statusType === 'labor') {
-        updateData = { ...updateData, hours: hours };
+      // Only include hours if it's relevant for this status type AND has a value
+      if (statusType === 'labor' && hours > 0) {
+        updateData.hours = hours;
       }
-
-      // Store previous values before update for activity log
-      const previousValue = {
-        status: statusString,
-        ...(statusType === 'material' || statusType === 'powderCoat' ? { eta: currentEta } : {}),
-        ...(statusType === 'labor' ? { hours: currentHours } : {})
-      };
 
       console.log(`Updating ${fieldPath} with data:`, updateData);
       await updatePhaseStatus(jobId, phaseId, fieldPath, updateData);
       
-      // Log the activity
-      const statusTypeName = {
-        'material': 'Material',
-        'labor': 'Labor',
-        'powderCoat': 'Powder Coat',
-        'rental': 'Rental Equipment',
-        'installation': 'Installation'
-      }[statusType];
-      
-      const newStatusString = typeof updateData.status === 'string' ? updateData.status : 'not-started';
-      const description = `${statusTypeName} status updated from ${getDisplayStatusLabel(statusString)} to ${getDisplayStatusLabel(newStatusString)}`;
-      
+      // Properly invalidate all relevant queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['phase', jobId, phaseId] });
       queryClient.invalidateQueries({ queryKey: ['activities', jobId, phaseId] });
       queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
       
-      toast.success(`Phase ${statusType} status updated successfully.`);
+      toast.success(`Status updated successfully.`);
       setOpen(false);
 
       if (onStatusChange) {
-        onStatusChange(newStatusString);
+        onStatusChange(updateData.status);
       }
     } catch (error) {
       console.error("Error updating phase status:", error);
-      toast.error("Failed to update phase status.");
+      toast.error("Failed to update status. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
