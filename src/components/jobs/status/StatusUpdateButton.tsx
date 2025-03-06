@@ -29,6 +29,7 @@ import {
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Edit } from 'lucide-react';
 
 export type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental' | 'installation';
 
@@ -41,7 +42,6 @@ export interface StatusUpdateButtonProps {
   currentEta?: string;
   currentHours?: number;
   options: { value: string; label: string }[];
-  // Add onStatusChange callback prop
   onStatusChange?: (newStatus: string) => Record<string, any> | void;
 }
 
@@ -92,8 +92,15 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <StatusBadge status={currentStatus} />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full relative group hover:shadow-sm transition-all"
+        >
+          <StatusBadge status={currentStatus} className="w-full justify-center" />
+          <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
+            <Edit className="h-3 w-3 text-foreground" />
+          </div>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
