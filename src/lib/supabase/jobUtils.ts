@@ -114,6 +114,40 @@ export const getJobByNumber = async (jobNumber: string): Promise<Job | undefined
   };
 };
 
+// Search jobs
+export const searchJobs = async (query: string): Promise<Job[]> => {
+  if (!query.trim()) return [];
+  
+  const searchTerm = `%${query.trim().toLowerCase()}%`;
+  
+  // Search in job_number, project_name, buyer, title, and salesman fields
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('*')
+    .or(`job_number.ilike.${searchTerm},project_name.ilike.${searchTerm},buyer.ilike.${searchTerm},title.ilike.${searchTerm},salesman.ilike.${searchTerm}`)
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.error('Error searching jobs:', error);
+    throw error;
+  }
+  
+  // Transform the data to match our types
+  const jobs = (data || []).map(job => ({
+    ...job,
+    id: job.id,
+    jobNumber: job.job_number,
+    projectName: job.project_name,
+    drawingsUrl: job.drawings_url,
+    worksheetUrl: job.worksheet_url,
+    createdAt: job.created_at,
+    updatedAt: job.updated_at,
+    phases: [] // We don't need to fetch phases for search results
+  }));
+  
+  return jobs;
+};
+
 // Create a new job
 export const createJob = async (jobData: Partial<Job>): Promise<Job> => {
   // Check if job number already exists

@@ -5,17 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
 import { Job } from '@/lib/types';
-
-// This is a placeholder function - in a real app, this would query your database
-const searchJobs = async (query: string): Promise<Job[]> => {
-  // This is a mock implementation. In a real app, you would:
-  // 1. Call your Supabase or API endpoint
-  // 2. Return the search results
-  console.log('Searching for:', query);
-  
-  // For now, we'll return an empty array
-  return [];
-};
+import { searchJobs } from '@/lib/supabase/jobUtils';
 
 const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -46,7 +36,7 @@ const SearchResults: React.FC = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {results.map((job) => (
             <div key={job.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
-              <h3 className="font-medium">{job.title}</h3>
+              <h3 className="font-medium">{job.title || job.jobNumber}</h3>
               <p className="text-sm text-muted-foreground">{job.projectName}</p>
               <Button asChild className="mt-2" variant="outline" size="sm">
                 <Link to={`/jobs/${job.id}`}>View Details</Link>

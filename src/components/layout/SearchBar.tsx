@@ -18,6 +18,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
     if (searchQuery.trim()) {
       // Navigate to search results page
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // Clear the search input after submission
+      setSearchQuery('');
     }
   };
 
@@ -26,16 +28,18 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
       <div className="relative flex w-full items-center">
         <Input
           type="text"
-          placeholder="Search jobs or projects..."
+          placeholder="Search jobs..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pr-10"
+          aria-label="Search"
         />
         <Button 
           type="submit" 
           variant="ghost" 
           size="icon"
           className="absolute right-0 h-full"
+          aria-label="Submit search"
         >
           <Search className="h-4 w-4" />
           <span className="sr-only">Search</span>
