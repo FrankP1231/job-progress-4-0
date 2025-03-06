@@ -46,12 +46,12 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({
     <div className="space-y-4">
       {!hideStatus && powderCoat.status !== undefined && (
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
+          <Label htmlFor="status" className="text-sm text-muted-foreground">PC Status</Label>
           <StatusBadge status={powderCoat.status} />
         </div>
       )}
       
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2">
         <Label htmlFor="color" className="text-sm text-muted-foreground">Color</Label>
         {isEditing ? (
           <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({
               id="color"
               value={color}
               onChange={(e) => setColor(e.target.value)}
-              className="w-[200px] h-8 text-sm"
+              className="w-full h-8 text-sm"
               maxLength={30}
               placeholder="Enter color"
             />
@@ -73,7 +73,7 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between">
             <span className="text-sm">{powderCoat.color || 'Not specified'}</span>
             <Button 
               size="icon" 
