@@ -55,28 +55,6 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
         </div>
       </div>
       
-      {/* Rental Equipment Section */}
-      <div className="pt-6 border-t space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium">Rental Equipment</h3>
-          {rental}
-        </div>
-        
-        {installation.rentalEquipment.details && (
-          <div>
-            <span className="text-sm text-muted-foreground">Details</span>
-            <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
-          </div>
-        )}
-        
-        {installation.rentalEquipment.notes && (
-          <div>
-            <span className="text-sm text-muted-foreground">Notes</span>
-            <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
-          </div>
-        )}
-      </div>
-      
       {/* Installation Details Section */}
       <div className="pt-6 border-t">
         <h3 className="text-sm font-medium mb-4">Installation Details</h3>
@@ -142,6 +120,28 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
             <p className="text-sm mt-1">{installation.notes}</p>
           </div>
         )}
+        
+        {/* Moved Rental Equipment Section here */}
+        <div className="mt-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">Rental Equipment</h3>
+            {rental}
+          </div>
+          
+          {installation.rentalEquipment.details && (
+            <div>
+              <span className="text-sm text-muted-foreground">Details</span>
+              <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
+            </div>
+          )}
+          
+          {installation.rentalEquipment.notes && (
+            <div>
+              <span className="text-sm text-muted-foreground">Notes</span>
+              <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
