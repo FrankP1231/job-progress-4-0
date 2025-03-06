@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
@@ -185,11 +186,7 @@ const JobDetail: React.FC = () => {
         />
         
         <div className="md:col-span-1">
-          <ActivityLogCard 
-            activities={activities || []} 
-            maxHeight="300px"
-            job={job}
-          />
+          {/* Intentionally left empty - removing Activity log from here */}
         </div>
       </div>
       
@@ -203,6 +200,13 @@ const JobDetail: React.FC = () => {
           installationStatusOptions={installationStatusOptions}
         />
       )}
+      
+      {/* Activity log moved below Phase status overview */}
+      <ActivityLogCard 
+        activities={activities || []} 
+        maxHeight="300px"
+        job={job}
+      />
     </div>
   );
 };
