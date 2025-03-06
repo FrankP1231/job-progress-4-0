@@ -3,5 +3,11 @@
 export * from './jobUtils';
 export * from './phaseUtils';
 export * from './dashboardUtils';
-export * from './initUtils';
+
+// Export initUtils specific functions with explicit naming
+export { 
+  createNewPhase as initCreateNewPhase, 
+  addPhaseToJob as initAddPhaseToJob 
+} from './initUtils';
+
 export * from './statusUtils';

@@ -2,6 +2,7 @@
 import { supabase } from "./client";
 import { v4 as uuidv4 } from 'uuid';
 import { Phase } from '../types';
+import { Json } from './client';
 
 export const createNewPhase = (
   jobId: string, 
@@ -35,7 +36,7 @@ export const createNewPhase = (
       status: 'not-needed'
     },
     installation: {
-      status: 'not-started', // Add the missing status property
+      status: 'not-started', // Added missing status property
       crewMembersNeeded: 2,
       crewHoursNeeded: 4,
       rentalEquipment: {
@@ -50,18 +51,19 @@ export const createNewPhase = (
 
 export const addPhaseToJob = async (jobId: string, phase: Partial<Phase>): Promise<Phase> => {
   // Prepare the phase data for insertion into the database
+  // Convert our typed objects to Json for Supabase
   const phaseData = {
     id: phase.id,
     job_id: jobId,
     phase_name: phase.phaseName,
     phase_number: phase.phaseNumber,
-    welding_materials: phase.weldingMaterials,
-    sewing_materials: phase.sewingMaterials,
-    installation_materials: phase.installationMaterials,
-    welding_labor: phase.weldingLabor,
-    sewing_labor: phase.sewingLabor,
-    powder_coat: phase.powderCoat,
-    installation: phase.installation,
+    welding_materials: phase.weldingMaterials as unknown as Json,
+    sewing_materials: phase.sewingMaterials as unknown as Json,
+    installation_materials: phase.installationMaterials as unknown as Json,
+    welding_labor: phase.weldingLabor as unknown as Json,
+    sewing_labor: phase.sewingLabor as unknown as Json,
+    powder_coat: phase.powderCoat as unknown as Json,
+    installation: phase.installation as unknown as Json,
     is_complete: phase.isComplete || false,
     created_at: phase.createdAt || new Date().toISOString(),
     updated_at: phase.updatedAt || new Date().toISOString()
@@ -78,19 +80,19 @@ export const addPhaseToJob = async (jobId: string, phase: Partial<Phase>): Promi
     throw error;
   }
   
-  // Transform the data to match our Phase type
+  // Transform the data from Supabase to match our Phase type with proper type assertions
   return {
     id: data.id,
     jobId: data.job_id,
     phaseName: data.phase_name,
     phaseNumber: data.phase_number,
-    weldingMaterials: data.welding_materials,
-    sewingMaterials: data.sewing_materials,
-    installationMaterials: data.installation_materials,
-    weldingLabor: data.welding_labor,
-    sewingLabor: data.sewing_labor,
-    powderCoat: data.powder_coat,
-    installation: data.installation,
+    weldingMaterials: data.welding_materials as unknown as Phase['weldingMaterials'],
+    sewingMaterials: data.sewing_materials as unknown as Phase['sewingMaterials'],
+    installationMaterials: data.installation_materials as unknown as Phase['installationMaterials'],
+    weldingLabor: data.welding_labor as unknown as Phase['weldingLabor'],
+    sewingLabor: data.sewing_labor as unknown as Phase['sewingLabor'],
+    powderCoat: data.powder_coat as unknown as Phase['powderCoat'],
+    installation: data.installation as unknown as Phase['installation'],
     isComplete: data.is_complete,
     createdAt: data.created_at,
     updatedAt: data.updated_at
