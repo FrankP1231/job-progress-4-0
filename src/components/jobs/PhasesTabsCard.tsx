@@ -55,7 +55,7 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Phase</TableHead>
-                    <TableHead>Progress</TableHead>
+                    <TableHead>Production Progress</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -114,7 +114,7 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead>Phase</TableHead>
-                    <TableHead>Progress</TableHead>
+                    <TableHead>Production Progress</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
