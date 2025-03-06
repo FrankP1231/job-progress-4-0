@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
-import { Job, Phase } from '@/lib/types';
+import { Job, Phase, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +27,7 @@ import {
   Palette,
   Truck
 } from 'lucide-react';
+import StatusUpdateButton from './status/StatusUpdateButton';
 
 const JobDetail: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -35,7 +35,32 @@ const JobDetail: React.FC = () => {
   const queryClient = useQueryClient();
   const [markingComplete, setMarkingComplete] = useState<Record<string, boolean>>({});
 
-  // Fetch job data
+  const materialStatusOptions: { value: MaterialStatus; label: string }[] = [
+    { value: 'not-needed', label: 'Not Needed' },
+    { value: 'not-ordered', label: 'Not Ordered' },
+    { value: 'ordered', label: 'Ordered' },
+    { value: 'received', label: 'Received' },
+  ];
+
+  const laborStatusOptions: { value: LaborStatus; label: string }[] = [
+    { value: 'not-needed', label: 'Not Needed' },
+    { value: 'estimated', label: 'Estimated' },
+    { value: 'complete', label: 'Complete' },
+  ];
+
+  const powderCoatStatusOptions: { value: PowderCoatStatus; label: string }[] = [
+    { value: 'not-needed', label: 'Not Needed' },
+    { value: 'not-started', label: 'Not Started' },
+    { value: 'in-progress', label: 'In Progress' },
+    { value: 'complete', label: 'Complete' },
+  ];
+
+  const rentalEquipmentStatusOptions: { value: RentalEquipmentStatus; label: string }[] = [
+    { value: 'not-needed', label: 'Not Needed' },
+    { value: 'not-ordered', label: 'Not Ordered' },
+    { value: 'ordered', label: 'Ordered' },
+  ];
+
   const { 
     data: job,
     isLoading, 
@@ -46,7 +71,6 @@ const JobDetail: React.FC = () => {
     enabled: !!jobId
   });
 
-  // Handle error
   useEffect(() => {
     if (error) {
       console.error('Error loading job:', error);
@@ -54,7 +78,6 @@ const JobDetail: React.FC = () => {
     }
   }, [error]);
 
-  // Mutation to toggle phase completion
   const togglePhaseMutation = useMutation({
     mutationFn: ({ phaseId, currentStatus }: { phaseId: string, currentStatus: boolean }) => {
       if (!jobId) throw new Error('Job ID is required');
@@ -64,7 +87,6 @@ const JobDetail: React.FC = () => {
       setMarkingComplete(prev => ({ ...prev, [variables.phaseId]: true }));
     },
     onSuccess: () => {
-      // Invalidate and refetch job data
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
     },
@@ -82,35 +104,29 @@ const JobDetail: React.FC = () => {
   };
 
   const getProgressPercentage = (phase: Phase): number => {
-    let totalItems = 6; // Total number of status items
+    let totalItems = 6;
     let completedItems = 0;
     
-    // Check welding materials
     if (phase.weldingMaterials.status === 'received' || phase.weldingMaterials.status === 'not-needed') {
       completedItems++;
     }
     
-    // Check sewing materials
     if (phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed') {
       completedItems++;
     }
     
-    // Check welding labor
     if (phase.weldingLabor.status === 'complete' || phase.weldingLabor.status === 'not-needed') {
       completedItems++;
     }
     
-    // Check sewing labor
-    if (phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed') {
+    if (phase.sewingLabor.status === 'complete' || phase.seewingLabor.status === 'not-needed') {
       completedItems++;
     }
     
-    // Check installation materials
     if (phase.installationMaterials.status === 'received' || phase.installationMaterials.status === 'not-needed') {
       completedItems++;
     }
     
-    // Check powder coat
     if (phase.powderCoat.status === 'complete' || phase.powderCoat.status === 'not-needed') {
       completedItems++;
     }
@@ -503,33 +519,88 @@ const JobDetail: React.FC = () => {
                       <TableCell>
                         <div className="flex flex-col items-center gap-1">
                           <div className="font-medium text-sm">Materials</div>
-                          <StatusBadge status={phase.weldingMaterials.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="material"
+                            fieldPath="weldingMaterials.status"
+                            currentStatus={phase.weldingMaterials.status}
+                            currentEta={phase.weldingMaterials.eta}
+                            options={materialStatusOptions}
+                          />
                           
                           <div className="font-medium text-sm mt-2">Labor</div>
-                          <StatusBadge status={phase.weldingLabor.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="labor"
+                            fieldPath="weldingLabor.status"
+                            currentStatus={phase.weldingLabor.status}
+                            currentHours={phase.weldingLabor.hours}
+                            options={laborStatusOptions}
+                          />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col items-center gap-1">
                           <div className="font-medium text-sm">Materials</div>
-                          <StatusBadge status={phase.sewingMaterials.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="material"
+                            fieldPath="sewingMaterials.status"
+                            currentStatus={phase.sewingMaterials.status}
+                            currentEta={phase.sewingMaterials.eta}
+                            options={materialStatusOptions}
+                          />
                           
                           <div className="font-medium text-sm mt-2">Labor</div>
-                          <StatusBadge status={phase.sewingLabor.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="labor"
+                            fieldPath="sewingLabor.status"
+                            currentStatus={phase.sewingLabor.status}
+                            currentHours={phase.sewingLabor.hours}
+                            options={laborStatusOptions}
+                          />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col items-center gap-1">
                           <div className="font-medium text-sm">Materials</div>
-                          <StatusBadge status={phase.installationMaterials.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="material"
+                            fieldPath="installationMaterials.status"
+                            currentStatus={phase.installationMaterials.status}
+                            currentEta={phase.installationMaterials.eta}
+                            options={materialStatusOptions}
+                          />
                           
                           <div className="font-medium text-sm mt-2">Rental</div>
-                          <StatusBadge status={phase.installation.rentalEquipment.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="rental"
+                            fieldPath="installation.rentalEquipment.status"
+                            currentStatus={phase.installation.rentalEquipment.status}
+                            options={rentalEquipmentStatusOptions}
+                          />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col items-center gap-1">
-                          <StatusBadge status={phase.powderCoat.status} />
+                          <StatusUpdateButton
+                            jobId={job.id}
+                            phaseId={phase.id}
+                            statusType="powderCoat"
+                            fieldPath="powderCoat.status"
+                            currentStatus={phase.powderCoat.status}
+                            currentEta={phase.powderCoat.eta}
+                            options={powderCoatStatusOptions}
+                          />
                         </div>
                       </TableCell>
                       <TableCell>
