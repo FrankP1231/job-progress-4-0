@@ -2,7 +2,7 @@
 import React from 'react';
 import { TableCell } from '@/components/ui/table';
 import StatusUpdateButton from '@/components/jobs/status/StatusUpdateButton';
-import { MaterialStatus, InstallationStatus, RentalEquipmentStatus } from '@/lib/types';
+import { MaterialStatus, InstallationStatus } from '@/lib/types';
 
 interface InstallationColumnProps {
   jobId: string;
@@ -10,10 +10,8 @@ interface InstallationColumnProps {
   materialStatus: MaterialStatus;
   materialEta?: string;
   installationStatus: InstallationStatus;
-  rentalStatus: RentalEquipmentStatus;
   materialStatusOptions: { value: MaterialStatus; label: string }[];
   installationStatusOptions: { value: InstallationStatus; label: string }[];
-  rentalEquipmentStatusOptions: { value: RentalEquipmentStatus; label: string }[];
 }
 
 const InstallationColumn: React.FC<InstallationColumnProps> = ({
@@ -22,10 +20,8 @@ const InstallationColumn: React.FC<InstallationColumnProps> = ({
   materialStatus,
   materialEta,
   installationStatus,
-  rentalStatus,
   materialStatusOptions,
   installationStatusOptions,
-  rentalEquipmentStatusOptions,
 }) => {
   return (
     <TableCell className="border-t border-gray-200 py-4">
@@ -52,18 +48,6 @@ const InstallationColumn: React.FC<InstallationColumnProps> = ({
             fieldPath="installation.status"
             currentStatus={installationStatus}
             options={installationStatusOptions}
-          />
-        </div>
-        
-        <div className="w-full">
-          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Rental Equipment</div>
-          <StatusUpdateButton
-            jobId={jobId}
-            phaseId={phaseId}
-            statusType="rental"
-            fieldPath="installation.rentalEquipment.status"
-            currentStatus={rentalStatus}
-            options={rentalEquipmentStatusOptions}
           />
         </div>
       </div>
