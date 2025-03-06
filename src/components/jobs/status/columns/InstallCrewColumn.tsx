@@ -2,13 +2,24 @@
 import React from 'react';
 import { TableCell } from '@/components/ui/table';
 import { Calendar } from 'lucide-react';
-import { Installation } from '@/lib/types';
+import { Installation, RentalEquipmentStatus } from '@/lib/types';
+import StatusUpdateButton from '../StatusUpdateButton';
 
 interface InstallCrewColumnProps {
+  jobId: string;
+  phaseId: string;
   installation: Installation;
+  rentalStatus: RentalEquipmentStatus;
+  rentalEquipmentStatusOptions: { value: RentalEquipmentStatus; label: string }[];
 }
 
-const InstallCrewColumn: React.FC<InstallCrewColumnProps> = ({ installation }) => {
+const InstallCrewColumn: React.FC<InstallCrewColumnProps> = ({ 
+  jobId,
+  phaseId,
+  installation,
+  rentalStatus,
+  rentalEquipmentStatusOptions
+}) => {
   return (
     <TableCell className="border-t border-gray-200 py-4">
       <div className="flex flex-col gap-3">
@@ -25,6 +36,18 @@ const InstallCrewColumn: React.FC<InstallCrewColumnProps> = ({ installation }) =
               {installation.crewHoursNeeded}
             </div>
           </div>
+        </div>
+        
+        <div className="w-full">
+          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Rental</div>
+          <StatusUpdateButton
+            jobId={jobId}
+            phaseId={phaseId}
+            statusType="rental"
+            fieldPath="installation.rentalEquipment.status"
+            currentStatus={rentalStatus}
+            options={rentalEquipmentStatusOptions}
+          />
         </div>
         
         {(installation.siteReadyDate || installation.installDeadline) && (

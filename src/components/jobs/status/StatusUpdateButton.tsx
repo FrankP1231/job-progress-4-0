@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   MaterialStatus,
@@ -60,14 +61,18 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [hours, setHours] = useState(currentHours || 0);
   const queryClient = useQueryClient();
 
-  // Ensure currentStatus is a string - fixed the type checking
+  // Convert complex status objects to string
   const statusString = typeof currentStatus === 'string' 
     ? currentStatus 
-    : 'not-started'; // Default fallback if not a string
+    : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
+      ? currentStatus.status
+      : 'not-started';
 
   const handleStatusChange = async () => {
     try {
-      let updateData: Record<string, any> = { status: newStatus };
+      let updateData: Record<string, any> = { 
+        status: typeof newStatus === 'string' ? newStatus : newStatus 
+      };
 
       if (statusType === 'material' || statusType === 'powderCoat') {
         updateData = { ...updateData, eta: eta };
@@ -84,7 +89,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       setOpen(false);
 
       if (onStatusChange) {
-        onStatusChange(newStatus as string);
+        onStatusChange(typeof newStatus === 'string' ? newStatus : 'not-started');
       }
     } catch (error) {
       console.error("Error updating phase status:", error);
@@ -109,7 +114,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
               Status
             </Label>
             <Select 
-              value={typeof newStatus === 'string' ? newStatus : 'not-started'} 
+              value={typeof newStatus === 'string' ? newStatus : statusString} 
               onValueChange={(value) => setNewStatus(value as any)}
             >
               <SelectTrigger className="col-span-3">
