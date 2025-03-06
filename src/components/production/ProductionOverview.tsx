@@ -53,6 +53,15 @@ const ProductionOverview: React.FC = () => {
     });
   });
 
+  // Calculate total estimated hours for each department
+  const totalWeldingHours = weldingPhases.reduce((total, { phase }) => {
+    return total + (phase.weldingLabor.hours || 0);
+  }, 0);
+
+  const totalSewingHours = sewingPhases.reduce((total, { phase }) => {
+    return total + (phase.sewingLabor.hours || 0);
+  }, 0);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -73,11 +82,15 @@ const ProductionOverview: React.FC = () => {
 
         <TabsContent value="welding" className="mt-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center">
                 <Wrench className="mr-2 h-5 w-5 text-blue-500" />
                 Welding Tasks
               </CardTitle>
+              <div className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-md">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="font-medium">Total Est. Hours: {totalWeldingHours}</span>
+              </div>
             </CardHeader>
             <CardContent>
               {weldingPhases.length === 0 ? (
@@ -154,11 +167,15 @@ const ProductionOverview: React.FC = () => {
 
         <TabsContent value="sewing" className="mt-6">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center">
                 <Scissors className="mr-2 h-5 w-5 text-purple-500" />
                 Sewing Tasks
               </CardTitle>
+              <div className="flex items-center bg-purple-50 text-purple-700 px-3 py-1 rounded-md">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="font-medium">Total Est. Hours: {totalSewingHours}</span>
+              </div>
             </CardHeader>
             <CardContent>
               {sewingPhases.length === 0 ? (
