@@ -36,7 +36,7 @@ export const createNewPhase = (
       status: 'not-needed'
     },
     installation: {
-      status: 'not-started', // Added missing status property
+      status: 'not-started',
       crewMembersNeeded: 2,
       crewHoursNeeded: 4,
       rentalEquipment: {
