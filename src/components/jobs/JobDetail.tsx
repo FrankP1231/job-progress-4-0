@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
@@ -8,6 +7,7 @@ import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import JobDetailHeader from './JobDetailHeader';
 import JobDetailsCard from './JobDetailsCard';
+import JobDetailsEditCard from './JobDetailsEditCard';
 import PhasesTabsCard from './PhasesTabsCard';
 import PhaseStatusOverview from './PhaseStatusOverview';
 
@@ -16,6 +16,7 @@ const JobDetail: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [markingComplete, setMarkingComplete] = useState<Record<string, boolean>>({});
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
   const materialStatusOptions: { value: MaterialStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
@@ -122,6 +123,10 @@ const JobDetail: React.FC = () => {
     return Math.round((completedItems / totalItems) * 100);
   };
 
+  const handleToggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -144,10 +149,21 @@ const JobDetail: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <JobDetailHeader job={job} />
+      <JobDetailHeader 
+        job={job} 
+        onToggleEdit={handleToggleEdit} 
+        isEditing={isEditing} 
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <JobDetailsCard job={job} />
+        {isEditing ? (
+          <JobDetailsEditCard 
+            job={job} 
+            onCancelEdit={() => setIsEditing(false)} 
+          />
+        ) : (
+          <JobDetailsCard job={job} />
+        )}
         
         <PhasesTabsCard
           job={job}

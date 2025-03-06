@@ -1,15 +1,17 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Job } from '@/lib/types';
 import { ArrowLeft, PlusCircle, FileEdit } from 'lucide-react';
 
 interface JobDetailHeaderProps {
   job: Job;
+  onToggleEdit: () => void;
+  isEditing: boolean;
 }
 
-const JobDetailHeader: React.FC<JobDetailHeaderProps> = ({ job }) => {
+const JobDetailHeader: React.FC<JobDetailHeaderProps> = ({ job, onToggleEdit, isEditing }) => {
   const navigate = useNavigate();
 
   return (
@@ -29,17 +31,18 @@ const JobDetailHeader: React.FC<JobDetailHeaderProps> = ({ job }) => {
       </div>
       
       <div className="flex gap-2">
-        <Button asChild variant="outline">
-          <Link to={`/jobs/${job.id}/edit`}>
-            <FileEdit className="mr-2 h-4 w-4" />
-            Edit Job
-          </Link>
+        <Button 
+          variant={isEditing ? "secondary" : "outline"} 
+          onClick={onToggleEdit}
+        >
+          <FileEdit className="mr-2 h-4 w-4" />
+          {isEditing ? "Cancel Editing" : "Edit Job"}
         </Button>
         <Button asChild>
-          <Link to={`/jobs/${job.id}/phases/new`}>
+          <div onClick={() => navigate(`/jobs/${job.id}/phases/new`)}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Phase
-          </Link>
+          </div>
         </Button>
       </div>
     </div>
