@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, getPhaseById } from '@/lib/supabase';
@@ -7,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Wrench, Scissors } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
 import MaterialStatusCard from './status/MaterialStatusCard';
 import LaborStatusCard from './status/LaborStatusCard';
 import PowderCoatCard from './status/PowderCoatCard';
@@ -74,28 +74,28 @@ const PhaseDetail: React.FC = () => {
     navigate(-1);
   };
 
-  // Define status options
-  const materialStatusOptions = [
+  // Define status options with correct typings
+  const materialStatusOptions: { value: MaterialStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'not-ordered', label: 'Not Ordered' },
     { value: 'ordered', label: 'Ordered' },
     { value: 'received', label: 'Received' },
   ];
 
-  const laborStatusOptions = [
+  const laborStatusOptions: { value: LaborStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'estimated', label: 'Estimated' },
     { value: 'complete', label: 'Complete' },
   ];
 
-  const powderCoatStatusOptions = [
+  const powderCoatStatusOptions: { value: PowderCoatStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'not-started', label: 'Not Started' },
     { value: 'in-progress', label: 'In Progress' },
     { value: 'complete', label: 'Complete' },
   ];
 
-  const rentalEquipmentStatusOptions = [
+  const rentalEquipmentStatusOptions: { value: RentalEquipmentStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'not-ordered', label: 'Not Ordered' },
     { value: 'ordered', label: 'Ordered' },

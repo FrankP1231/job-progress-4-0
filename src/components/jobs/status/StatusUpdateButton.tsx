@@ -20,9 +20,10 @@ import {
 } from '@/lib/types';
 
 type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental';
+type StatusValue = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
 
 interface StatusOption {
-  value: MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
+  value: StatusValue;
   label: string;
 }
 
@@ -31,7 +32,7 @@ interface StatusUpdateButtonProps {
   phaseId: string;
   statusType: StatusType;
   fieldPath: string;
-  currentStatus: MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
+  currentStatus: StatusValue;
   options: StatusOption[];
   onSuccess?: () => void;
 }
@@ -48,7 +49,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const queryClient = useQueryClient();
 
-  const handleStatusUpdate = async (newStatus: MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus) => {
+  const handleStatusUpdate = async (newStatus: StatusValue) => {
     if (newStatus === currentStatus) return;
     
     setIsUpdating(true);
@@ -97,7 +98,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   };
   
   const getStatusLabel = (
-    status: MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus,
+    status: StatusValue,
     options: StatusOption[]
   ) => {
     return options.find(option => option.value === status)?.label || status;
