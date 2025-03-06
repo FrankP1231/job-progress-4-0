@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
@@ -119,7 +120,7 @@ const JobDetail: React.FC = () => {
       completedItems++;
     }
     
-    if (phase.sewingLabor.status === 'complete' || phase.seewingLabor.status === 'not-needed') {
+    if (phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed') {
       completedItems++;
     }
     
