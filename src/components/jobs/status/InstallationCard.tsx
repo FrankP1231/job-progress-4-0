@@ -3,11 +3,11 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Calendar, Users } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Installation } from '@/lib/types';
+import { Installation, MaterialStatus } from '@/lib/types';
 
 interface InstallationCardProps {
   installation: Installation;
-  materials: { status: string; eta?: string; notes?: string; };
+  materials: { status: MaterialStatus; eta?: string; notes?: string; };
 }
 
 const InstallationCard: React.FC<InstallationCardProps> = ({ installation, materials }) => {
