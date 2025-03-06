@@ -17,7 +17,7 @@ const JobForm: React.FC = () => {
     jobNumber: '',
     projectName: '',
     buyer: '',
-    title: '',
+    title: '', // Keeping this in state but removing from UI
     salesman: '',  // We'll keep the field name the same to maintain database compatibility
     drawingsUrl: '',
     worksheetUrl: ''
@@ -110,17 +110,6 @@ const JobForm: React.FC = () => {
                   onChange={handleChange}
                   placeholder="e.g., John Smith"
                   required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="title">Calendar Title</Label>
-                <Input
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  placeholder="e.g., Cafe Awning Installation"
                 />
               </div>
               

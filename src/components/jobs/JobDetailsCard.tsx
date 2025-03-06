@@ -28,9 +28,6 @@ const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ job }) => {
           
           <div className="text-sm font-medium">Project Manager</div>
           <div>{job.salesman}</div>
-          
-          <div className="text-sm font-medium">Calendar Title</div>
-          <div>{job.title || 'Not specified'}</div>
         </div>
         
         {(job.drawingsUrl || job.worksheetUrl) && (

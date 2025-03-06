@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Job } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -20,7 +21,7 @@ const JobDetailsEditCard: React.FC<JobDetailsEditCardProps> = ({ job, onCancelEd
     jobNumber: job.jobNumber,
     projectName: job.projectName,
     buyer: job.buyer,
-    title: job.title || '',
+    title: job.title || '', // Keeping this in state but removing from UI
     salesman: job.salesman,
     drawingsUrl: job.drawingsUrl || '',
     worksheetUrl: job.worksheetUrl || '',
@@ -118,16 +119,6 @@ const JobDetailsEditCard: React.FC<JobDetailsEditCardProps> = ({ job, onCancelEd
                 value={formData.salesman}
                 onChange={handleChange}
                 required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="title">Calendar Title</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
               />
             </div>
             
