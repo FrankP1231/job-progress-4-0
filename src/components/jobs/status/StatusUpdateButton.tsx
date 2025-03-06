@@ -16,7 +16,6 @@ import {
   PowderCoatStatus,
   RentalEquipmentStatus,
 } from '@/lib/types';
-import StatusBadge from '@/components/ui/StatusBadge';
 
 type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental';
 type StatusValue = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
@@ -116,43 +115,62 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
 
   // Get the current status label
   const currentStatusLabel = getStatusLabel(status, options);
+  
+  // Get status color class based on status value
+  const getStatusColorClass = (status: StatusValue): string => {
+    switch (status) {
+      case 'not-needed':
+        return 'bg-gray-200 hover:bg-gray-300 text-gray-800';
+      case 'not-ordered':
+      case 'not-started':
+        return 'bg-red-500 hover:bg-red-600 text-white';
+      case 'ordered':
+        return 'bg-amber-300 hover:bg-amber-400 text-amber-900';
+      case 'received':
+      case 'complete':
+        return 'bg-green-500 hover:bg-green-600 text-white';
+      case 'estimated':
+      case 'in-progress':
+        return 'bg-blue-500 hover:bg-blue-600 text-white';
+      default:
+        return 'bg-gray-200 hover:bg-gray-300 text-gray-800';
+    }
+  };
 
   return (
-    <div className="flex flex-col items-end space-y-1">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="flex items-center cursor-pointer">
-            <div className="bg-gray-200 text-gray-800 rounded-md px-3 py-1 text-sm font-medium flex items-center">
-              {isUpdating ? (
-                <span className="flex items-center">
-                  <div className="animate-spin h-3 w-3 mr-2 border-2 border-primary border-opacity-20 border-t-primary rounded-full" />
-                  Updating...
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  {currentStatusLabel}
-                  <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-                </span>
-              )}
-            </div>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-white">
-          {options.map((option) => (
-            <DropdownMenuItem
-              key={option.value}
-              onClick={() => handleStatusUpdate(option.value)}
-              className="flex justify-between items-center"
-              disabled={isUpdating}
-            >
-              {option.label}
-              {status === option.value && <Check className="ml-2 h-4 w-4" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <StatusBadge status={status} />
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button 
+          className={`rounded-md px-3 py-1 text-sm font-medium flex items-center transition-colors ${getStatusColorClass(status)}`}
+          disabled={isUpdating}
+        >
+          {isUpdating ? (
+            <span className="flex items-center">
+              <div className="animate-spin h-3 w-3 mr-2 border-2 border-current border-opacity-20 border-t-current rounded-full" />
+              Updating...
+            </span>
+          ) : (
+            <span className="flex items-center gap-1">
+              {currentStatusLabel}
+              <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+            </span>
+          )}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-white">
+        {options.map((option) => (
+          <DropdownMenuItem
+            key={option.value}
+            onClick={() => handleStatusUpdate(option.value)}
+            className="flex justify-between items-center"
+            disabled={isUpdating}
+          >
+            {option.label}
+            {status === option.value && <Check className="ml-2 h-4 w-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

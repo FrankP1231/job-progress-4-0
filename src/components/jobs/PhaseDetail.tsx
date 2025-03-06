@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, getPhaseById } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Wrench, Scissors } from 'lucide-react';
+import { ArrowLeft, Wrench, Scissors, Palette } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
 import MaterialStatusCard from './status/MaterialStatusCard';
@@ -161,7 +160,6 @@ const PhaseDetail: React.FC = () => {
                 icon={<Wrench className="h-4 w-4" />}
                 labor={{
                   ...phase.weldingLabor,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any 
                 }}
                 hideStatus={true}
@@ -195,7 +193,6 @@ const PhaseDetail: React.FC = () => {
                 icon={<Wrench className="h-4 w-4" />}
                 material={{
                   ...phase.weldingMaterials,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any
                 }}
                 hideStatus={true}
@@ -231,7 +228,6 @@ const PhaseDetail: React.FC = () => {
                 icon={<Scissors className="h-4 w-4" />}
                 labor={{
                   ...phase.sewingLabor,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any
                 }}
                 hideStatus={true}
@@ -265,7 +261,6 @@ const PhaseDetail: React.FC = () => {
                 icon={<Scissors className="h-4 w-4" />}
                 material={{
                   ...phase.sewingMaterials,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any
                 }}
                 hideStatus={true}
@@ -296,10 +291,8 @@ const PhaseDetail: React.FC = () => {
                 installation={phase.installation}
                 materials={{
                   ...phase.installationMaterials,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any
                 }}
-                hideStatus={true}
                 rental={
                   jobId && phaseId ? (
                     <StatusUpdateButton
@@ -320,7 +313,10 @@ const PhaseDetail: React.FC = () => {
         <div className="md:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg">Powder Coat</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Palette className="h-4 w-4" />
+                <span>Powder Coat</span>
+              </CardTitle>
               <div>
                 {jobId && phaseId && (
                   <StatusUpdateButton
@@ -338,7 +334,6 @@ const PhaseDetail: React.FC = () => {
               <PowderCoatCard 
                 powderCoat={{
                   ...phase.powderCoat,
-                  // We exclude status as it's now shown by the StatusUpdateButton
                   status: undefined as any
                 }}
                 hideStatus={true}
