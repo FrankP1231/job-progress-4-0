@@ -1,5 +1,6 @@
-import { supabase, Json } from "./client";
-import { Job } from '../types';
+
+import { supabase, Json } from "./supabase/client";
+import { Job } from './types';
 
 // Get all jobs
 export const getAllJobs = async (): Promise<Job[]> => {
@@ -28,7 +29,7 @@ export const getAllJobs = async (): Promise<Job[]> => {
 
   // Fetch phases for each job
   for (const job of jobs) {
-    const { getPhasesForJob } = await import('./phaseUtils');
+    const { getPhasesForJob } = await import('./supabase/phaseUtils');
     job.phases = await getPhasesForJob(job.id);
   }
   
@@ -55,7 +56,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
   if (!data) return undefined;
   
   // Get phases for this job
-  const { getPhasesForJob } = await import('./phaseUtils');
+  const { getPhasesForJob } = await import('./supabase/phaseUtils');
   const phases = await getPhasesForJob(id);
   
   // Transform the data to match our types
@@ -94,7 +95,7 @@ export const getJobByNumber = async (jobNumber: string): Promise<Job | undefined
   if (!data) return undefined;
   
   // Get phases for this job
-  const { getPhasesForJob } = await import('./phaseUtils');
+  const { getPhasesForJob } = await import('./supabase/phaseUtils');
   const phases = await getPhasesForJob(data.id);
   
   // Transform the data to match our types
@@ -197,7 +198,7 @@ export const updateJob = async (id: string, jobData: Partial<Job>): Promise<Job 
   if (!data) return undefined;
   
   // Get phases for this job
-  const { getPhasesForJob } = await import('./phaseUtils');
+  const { getPhasesForJob } = await import('./supabase/phaseUtils');
   const phases = await getPhasesForJob(id);
   
   // Transform the data to match our types
