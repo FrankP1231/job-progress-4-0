@@ -64,16 +64,20 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [eta, setEta] = useState<string>(currentEta || '');
   const [showHoursDialog, setShowHoursDialog] = useState(false);
   const [showEtaDialog, setShowEtaDialog] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState<StatusValue>(currentStatus);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setStatus(currentStatus);
+    setPreviousStatus(currentStatus);
     setHours(currentHours?.toString() || '');
     setEta(currentEta || '');
   }, [currentStatus, currentHours, currentEta]);
 
   const handleStatusUpdate = async (newStatus: StatusValue) => {
     if (newStatus === status) return;
+    
+    setPreviousStatus(status);
     
     if (statusType === 'labor' && newStatus === 'estimated') {
       setStatus(newStatus);
@@ -142,7 +146,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
       
-      setStatus(currentStatus);
+      setStatus(previousStatus);
     } finally {
       setIsUpdating(false);
     }
@@ -167,6 +171,20 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     
     await updateStatusInDatabase(status, undefined, eta);
     setShowEtaDialog(false);
+  };
+
+  const handleDialogClose = (dialogType: 'hours' | 'eta') => {
+    if (dialogType === 'hours') {
+      setShowHoursDialog(false);
+    } else {
+      setShowEtaDialog(false);
+    }
+    
+    setStatus(previousStatus);
+    console.log("Dialog cancelled, reverting status back to:", previousStatus);
+    
+    setHours(currentHours?.toString() || '');
+    setEta(currentEta || '');
   };
   
   const getStatusLabel = (status: StatusValue, options: StatusOption[]) => {
@@ -245,7 +263,13 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         </DropdownMenuContent>
       </DropdownMenu>
       
-      <Dialog open={showHoursDialog} onOpenChange={setShowHoursDialog}>
+      <Dialog 
+        open={showHoursDialog} 
+        onOpenChange={(open) => {
+          if (!open) handleDialogClose('hours');
+          else setShowHoursDialog(open);
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Enter Labor Hours</DialogTitle>
@@ -268,7 +292,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setShowHoursDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => handleDialogClose('hours')}>
               Cancel
             </Button>
             <Button type="submit" onClick={handleHoursSubmit}>
@@ -279,7 +303,13 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         </DialogContent>
       </Dialog>
       
-      <Dialog open={showEtaDialog} onOpenChange={setShowEtaDialog}>
+      <Dialog 
+        open={showEtaDialog} 
+        onOpenChange={(open) => {
+          if (!open) handleDialogClose('eta');
+          else setShowEtaDialog(open);
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Enter Expected Arrival Date</DialogTitle>
@@ -300,7 +330,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setShowEtaDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => handleDialogClose('eta')}>
               Cancel
             </Button>
             <Button type="submit" onClick={handleEtaSubmit}>
