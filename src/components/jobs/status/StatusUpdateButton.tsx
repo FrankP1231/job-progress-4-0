@@ -67,10 +67,10 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   if (typeof currentStatus === 'string') {
     statusString = currentStatus;
   } else if (currentStatus && typeof currentStatus === 'object') {
-    if ('status' in currentStatus && currentStatus.status !== undefined) {
-      // Type assertion to tell TypeScript that status exists
-      const typedStatus = currentStatus as { status: string };
-      statusString = String(typedStatus.status);
+    // Safe type check and access
+    const statusObject = currentStatus as any;
+    if (statusObject && 'status' in statusObject && statusObject.status !== undefined) {
+      statusString = String(statusObject.status);
     }
   }
 
