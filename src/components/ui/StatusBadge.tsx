@@ -23,7 +23,14 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
-  const config = statusConfig[status] || { label: status, className: '' };
+  // Make sure status is a string and is one of the valid status types
+  const statusKey = typeof status === 'string' ? status : 'not-started';
+  
+  // Get config for the status or use a default
+  const config = statusConfig[statusKey as StatusType] || { 
+    label: String(statusKey), 
+    className: 'bg-gray-100 text-gray-600 border-gray-200' 
+  };
   
   return (
     <Badge 

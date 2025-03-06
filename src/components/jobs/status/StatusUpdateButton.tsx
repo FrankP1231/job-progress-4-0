@@ -61,6 +61,13 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [hours, setHours] = useState(currentHours || 0);
   const queryClient = useQueryClient();
 
+  // Ensure currentStatus is a string
+  const statusString = typeof currentStatus === 'string' 
+    ? currentStatus 
+    : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
+      ? String(currentStatus.status)
+      : 'not-started';
+
   const handleStatusChange = async () => {
     try {
       let updateData: Record<string, any> = { status: newStatus };
@@ -92,7 +99,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="cursor-pointer transition-opacity hover:opacity-90 inline-block">
-          <StatusBadge status={currentStatus} className="w-full justify-center" />
+          <StatusBadge status={statusString as any} className="w-full justify-center" />
         </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -104,7 +111,10 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
             <Label htmlFor="status" className="text-right">
               Status
             </Label>
-            <Select value={newStatus as string} onValueChange={(value) => setNewStatus(value as MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus | InstallationStatus)}>
+            <Select 
+              value={typeof newStatus === 'string' ? newStatus : String(newStatus)} 
+              onValueChange={(value) => setNewStatus(value as any)}
+            >
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select a status" />
               </SelectTrigger>
