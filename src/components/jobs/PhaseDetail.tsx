@@ -148,6 +148,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="labor"
                     fieldPath="weldingLabor.status"
                     currentStatus={phase.weldingLabor.status}
+                    currentHours={phase.weldingLabor.hours}
                     options={laborStatusOptions}
                   />
                 )}
@@ -181,6 +182,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="material"
                     fieldPath="weldingMaterials.status"
                     currentStatus={phase.weldingMaterials.status}
+                    currentEta={phase.weldingMaterials.eta}
                     options={materialStatusOptions}
                   />
                 )}
@@ -216,6 +218,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="labor"
                     fieldPath="sewingLabor.status"
                     currentStatus={phase.sewingLabor.status}
+                    currentHours={phase.sewingLabor.hours}
                     options={laborStatusOptions}
                   />
                 )}
@@ -249,6 +252,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="material"
                     fieldPath="sewingMaterials.status"
                     currentStatus={phase.sewingMaterials.status}
+                    currentEta={phase.sewingMaterials.eta}
                     options={materialStatusOptions}
                   />
                 )}
@@ -281,6 +285,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="material"
                     fieldPath="installationMaterials.status"
                     currentStatus={phase.installationMaterials.status}
+                    currentEta={phase.installationMaterials.eta}
                     options={materialStatusOptions}
                   />
                 )}
@@ -325,6 +330,7 @@ const PhaseDetail: React.FC = () => {
                     statusType="powderCoat"
                     fieldPath="powderCoat.status"
                     currentStatus={phase.powderCoat.status}
+                    currentEta={phase.powderCoat.eta}
                     options={powderCoatStatusOptions}
                   />
                 )}
