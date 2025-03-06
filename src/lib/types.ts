@@ -20,6 +20,7 @@ export interface PowderCoat {
   status: PowderCoatStatus;
   notes?: string;
   eta?: string; // ISO date string
+  color?: string; // Add color field to the PowderCoat interface
 }
 
 export interface RentalEquipment {
