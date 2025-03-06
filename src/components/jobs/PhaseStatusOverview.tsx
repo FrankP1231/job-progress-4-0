@@ -59,7 +59,7 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
               <TableHead className="text-center">
                 <div className="flex items-center justify-center">
                   <Palette className="mr-1 h-4 w-4" />
-                  <span>PC Status</span>
+                  <span>Powder Coat</span>
                 </div>
               </TableHead>
               <TableHead className="text-center">
@@ -159,6 +159,7 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col items-center gap-1">
+                      <div className="font-medium text-sm">PC Status</div>
                       <StatusUpdateButton
                         jobId={job.id}
                         phaseId={phase.id}
