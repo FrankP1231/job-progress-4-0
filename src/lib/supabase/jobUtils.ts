@@ -1,4 +1,3 @@
-
 import { supabase, Json } from "./client";
 import { Job } from '../types';
 
@@ -15,7 +14,7 @@ export const getAllJobs = async (): Promise<Job[]> => {
   }
   
   // Transform the data to match our types
-  return (data || []).map(job => ({
+  const jobs = (data || []).map(job => ({
     ...job,
     id: job.id,
     jobNumber: job.job_number,
@@ -26,6 +25,14 @@ export const getAllJobs = async (): Promise<Job[]> => {
     updatedAt: job.updated_at,
     phases: [] // We'll fetch phases separately
   }));
+
+  // Fetch phases for each job
+  for (const job of jobs) {
+    const { getPhasesForJob } = await import('./phaseUtils');
+    job.phases = await getPhasesForJob(job.id);
+  }
+  
+  return jobs;
 };
 
 // Get job by ID

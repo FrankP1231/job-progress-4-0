@@ -16,8 +16,11 @@ const ProjectsPage = () => {
 
   // Filter jobs that have at least one phase in progress (not complete)
   const activeJobs = jobs?.filter(job => 
-    job.phases.some(phase => !phase.isComplete)
+    job.phases?.some(phase => !phase.isComplete)
   ) || [];
+
+  console.log('All jobs:', jobs);
+  console.log('Active jobs:', activeJobs);
 
   if (isLoading) {
     return (
@@ -58,7 +61,7 @@ const ProjectsPage = () => {
   }
 
   const getCompletionPercentage = (job) => {
-    if (!job.phases.length) return 0;
+    if (!job.phases || !job.phases.length) return 0;
     const completedPhases = job.phases.filter(phase => phase.isComplete).length;
     return Math.round((completedPhases / job.phases.length) * 100);
   };
@@ -81,7 +84,7 @@ const ProjectsPage = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {activeJobs.map(job => {
-            const inProgressPhases = job.phases.filter(phase => !phase.isComplete);
+            const inProgressPhases = job.phases?.filter(phase => !phase.isComplete) || [];
             const completionPercentage = getCompletionPercentage(job);
             
             return (
