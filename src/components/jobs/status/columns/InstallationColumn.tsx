@@ -22,8 +22,10 @@ const InstallationColumn: React.FC<InstallationColumnProps> = ({
   materialStatus,
   materialEta,
   installationStatus,
+  rentalStatus,
   materialStatusOptions,
   installationStatusOptions,
+  rentalEquipmentStatusOptions,
 }) => {
   return (
     <TableCell className="border-t border-gray-200 py-4">
@@ -50,6 +52,18 @@ const InstallationColumn: React.FC<InstallationColumnProps> = ({
             fieldPath="installation.status"
             currentStatus={installationStatus}
             options={installationStatusOptions}
+          />
+        </div>
+        
+        <div className="w-full">
+          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Rental Equipment</div>
+          <StatusUpdateButton
+            jobId={jobId}
+            phaseId={phaseId}
+            statusType="rental"
+            fieldPath="installation.rentalEquipment.status"
+            currentStatus={rentalStatus}
+            options={rentalEquipmentStatusOptions}
           />
         </div>
       </div>
