@@ -27,11 +27,19 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({
     if (!jobId || !phaseId) return;
     
     try {
+      // If color is entered and status is "not-needed", update status to "not-started"
+      const updatedPowderCoat = {
+        ...powderCoat,
+        color
+      };
+      
+      // If a color is provided and status is currently "not-needed", update it to "not-started"
+      if (color.trim() && powderCoat.status === 'not-needed') {
+        updatedPowderCoat.status = 'not-started';
+      }
+      
       await updatePhase(jobId, phaseId, {
-        powderCoat: {
-          ...powderCoat,
-          color
-        }
+        powderCoat: updatedPowderCoat
       });
       
       setIsEditing(false);
