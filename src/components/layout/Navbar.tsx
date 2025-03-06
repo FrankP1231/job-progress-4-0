@@ -5,11 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { 
   Home, 
-  ClipboardList, 
   PlusCircle, 
   LogOut,
   Menu,
-  X
 } from 'lucide-react';
 import {
   Sheet,
@@ -62,12 +60,6 @@ const Navbar: React.FC = () => {
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Link to="/jobs" className="flex items-center py-2">
-                    <ClipboardList className="mr-2 h-5 w-5" />
-                    All Jobs
-                  </Link>
-                </SheetClose>
-                <SheetClose asChild>
                   <Link to="/jobs/new" className="flex items-center py-2">
                     <PlusCircle className="mr-2 h-5 w-5" />
                     New Job
@@ -93,12 +85,6 @@ const Navbar: React.FC = () => {
             className="text-sm font-medium transition-colors hover:text-primary"
           >
             Dashboard
-          </Link>
-          <Link
-            to="/jobs"
-            className="text-sm font-medium transition-colors hover:text-primary"
-          >
-            All Jobs
           </Link>
           <Link
             to="/jobs/new"
