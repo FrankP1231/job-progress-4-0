@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Calendar, Check, Wrench, Scissors, Package, Palette, Truck 
+  Calendar, Wrench, Scissors, Package, Palette, Truck 
 } from 'lucide-react';
 import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import StatusUpdateButton from './status/StatusUpdateButton';
@@ -28,46 +28,46 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
   installationStatusOptions
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Phase Status Overview</CardTitle>
-        <CardDescription>
+    <Card className="overflow-hidden border-gray-200">
+      <CardHeader className="bg-white pb-2">
+        <CardTitle className="text-xl font-semibold text-gray-800">Phase Status Overview</CardTitle>
+        <CardDescription className="text-gray-500">
           Production and installation status for all phases
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/40">
-                <TableHead className="font-semibold text-primary">Phase</TableHead>
-                <TableHead className="text-center font-semibold text-primary">
+              <TableRow className="bg-gray-50 border-y border-gray-200">
+                <TableHead className="font-semibold text-gray-700 py-3">Phase</TableHead>
+                <TableHead className="text-center font-semibold text-gray-700 py-3">
                   <div className="flex items-center justify-center">
-                    <Wrench className="mr-1.5 h-4 w-4" />
+                    <Wrench className="mr-1.5 h-4 w-4 text-gray-500" />
                     <span>Welding</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center font-semibold text-primary">
+                <TableHead className="text-center font-semibold text-gray-700 py-3">
                   <div className="flex items-center justify-center">
-                    <Scissors className="mr-1.5 h-4 w-4" />
+                    <Scissors className="mr-1.5 h-4 w-4 text-gray-500" />
                     <span>Sewing</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center font-semibold text-primary">
+                <TableHead className="text-center font-semibold text-gray-700 py-3">
                   <div className="flex items-center justify-center">
-                    <Package className="mr-1.5 h-4 w-4" />
+                    <Package className="mr-1.5 h-4 w-4 text-gray-500" />
                     <span>Installation</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center font-semibold text-primary">
+                <TableHead className="text-center font-semibold text-gray-700 py-3">
                   <div className="flex items-center justify-center">
-                    <Palette className="mr-1.5 h-4 w-4" />
+                    <Palette className="mr-1.5 h-4 w-4 text-gray-500" />
                     <span>Powder Coat</span>
                   </div>
                 </TableHead>
-                <TableHead className="text-center font-semibold text-primary">
+                <TableHead className="text-center font-semibold text-gray-700 py-3">
                   <div className="flex items-center justify-center">
-                    <Truck className="mr-1.5 h-4 w-4" />
+                    <Truck className="mr-1.5 h-4 w-4 text-gray-500" />
                     <span>Install Crew</span>
                   </div>
                 </TableHead>
@@ -79,22 +79,22 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                 .map(phase => (
                   <TableRow 
                     key={phase.id} 
-                    className={phase.isComplete ? "bg-muted/20" : "hover:bg-muted/10 transition-colors"}
+                    className={phase.isComplete ? "bg-gray-50/50" : "hover:bg-gray-50/30 transition-colors"}
                   >
-                    <TableCell className="font-medium">
-                      <div className="font-medium">
+                    <TableCell className="font-medium border-t border-gray-200 align-top py-4">
+                      <div className="font-medium text-gray-800">
                         Phase {phase.phaseNumber}: {phase.phaseName}
                       </div>
-                      <Badge variant={phase.isComplete ? "outline" : "default"} className={phase.isComplete ? "bg-status-complete text-white mt-1" : "mt-1"}>
+                      <Badge variant={phase.isComplete ? "outline" : "default"} className={phase.isComplete ? "bg-green-100 text-green-700 border-green-200 mt-2" : "mt-2"}>
                         {phase.isComplete ? 'Complete' : 'In Progress'}
                       </Badge>
                     </TableCell>
                     
                     {/* Welding Column */}
-                    <TableCell>
-                      <div className="flex flex-col items-center gap-2 p-0.5">
+                    <TableCell className="border-t border-gray-200 py-4">
+                      <div className="flex flex-col gap-3">
                         <div className="w-full">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Materials</div>
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Materials</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -106,8 +106,8 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                           />
                         </div>
                         
-                        <div className="w-full mt-1">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Labor</div>
+                        <div className="w-full">
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Labor</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -122,10 +122,10 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                     </TableCell>
                     
                     {/* Sewing Column */}
-                    <TableCell>
-                      <div className="flex flex-col items-center gap-2 p-0.5">
+                    <TableCell className="border-t border-gray-200 py-4">
+                      <div className="flex flex-col gap-3">
                         <div className="w-full">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Materials</div>
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Materials</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -137,8 +137,8 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                           />
                         </div>
                         
-                        <div className="w-full mt-1">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Labor</div>
+                        <div className="w-full">
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Labor</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -153,10 +153,10 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                     </TableCell>
                     
                     {/* Installation Column */}
-                    <TableCell>
-                      <div className="flex flex-col items-center gap-2 p-0.5">
+                    <TableCell className="border-t border-gray-200 py-4">
+                      <div className="flex flex-col gap-3">
                         <div className="w-full">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Materials</div>
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Materials</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -168,8 +168,8 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                           />
                         </div>
                         
-                        <div className="w-full mt-1">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Status</div>
+                        <div className="w-full">
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Status</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -180,8 +180,8 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                           />
                         </div>
                         
-                        <div className="w-full mt-1">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Rental</div>
+                        <div className="w-full">
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Rental</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -195,10 +195,10 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                     </TableCell>
                     
                     {/* Powder Coat Column */}
-                    <TableCell>
-                      <div className="flex flex-col items-center gap-2 p-0.5">
+                    <TableCell className="border-t border-gray-200 py-4">
+                      <div className="flex flex-col gap-3">
                         <div className="w-full">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">PC Status</div>
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">PC Status</div>
                           <StatusUpdateButton
                             jobId={job.id}
                             phaseId={phase.id}
@@ -210,9 +210,9 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                           />
                         </div>
                         
-                        <div className="w-full mt-1">
-                          <div className="text-xs uppercase font-medium text-muted-foreground mb-1 text-center">Color</div>
-                          <div className="text-center bg-muted/20 rounded-md py-1 px-2 text-sm">
+                        <div className="w-full">
+                          <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Color</div>
+                          <div className="text-center bg-gray-50 border border-gray-200 rounded-md py-1.5 px-2 text-sm text-gray-700">
                             {phase.powderCoat.color || 'Not specified'}
                           </div>
                         </div>
@@ -220,35 +220,35 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                     </TableCell>
                     
                     {/* Install Crew Column */}
-                    <TableCell>
-                      <div className="flex flex-col items-center gap-1 p-0.5">
+                    <TableCell className="border-t border-gray-200 py-4">
+                      <div className="flex flex-col gap-3">
                         <div className="grid grid-cols-2 gap-x-2 w-full text-center">
                           <div>
-                            <div className="text-xs uppercase font-medium text-muted-foreground mb-1">Crew Size</div>
-                            <div className="bg-muted/20 rounded-md py-1 text-sm">
+                            <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Crew Size</div>
+                            <div className="bg-gray-50 border border-gray-200 rounded-md py-1.5 text-sm text-gray-700">
                               {phase.installation.crewMembersNeeded}
                             </div>
                           </div>
                           <div>
-                            <div className="text-xs uppercase font-medium text-muted-foreground mb-1">Hours</div>
-                            <div className="bg-muted/20 rounded-md py-1 text-sm">
+                            <div className="text-xs uppercase font-medium text-gray-500 mb-1.5">Hours</div>
+                            <div className="bg-gray-50 border border-gray-200 rounded-md py-1.5 text-sm text-gray-700">
                               {phase.installation.crewHoursNeeded}
                             </div>
                           </div>
                         </div>
                         
                         {(phase.installation.siteReadyDate || phase.installation.installDeadline) && (
-                          <div className="w-full mt-2 space-y-1">
+                          <div className="w-full mt-1 space-y-1.5">
                             {phase.installation.siteReadyDate && (
-                              <div className="flex items-center justify-center gap-1 text-xs">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                <Calendar className="h-3 w-3 text-gray-400" />
                                 <span>Site Ready: {new Date(phase.installation.siteReadyDate).toLocaleDateString()}</span>
                               </div>
                             )}
                             
                             {phase.installation.installDeadline && (
-                              <div className="flex items-center justify-center gap-1 text-xs">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                                <Calendar className="h-3 w-3 text-gray-400" />
                                 <span>Deadline: {new Date(phase.installation.installDeadline).toLocaleDateString()}</span>
                               </div>
                             )}
