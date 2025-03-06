@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Job } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
@@ -6,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Save, X } from 'lucide-react';
-import { updateJob } from '@/lib/supabaseUtils';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateJob } from '@/lib/supabase/jobUtils';
 
 interface JobDetailsEditCardProps {
   job: Job;

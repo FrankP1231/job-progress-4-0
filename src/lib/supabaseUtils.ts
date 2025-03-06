@@ -1,12 +1,12 @@
-
 import { supabase } from "./supabase/client";
 import { createJob } from "./supabase/jobUtils";
 import { createNewPhase, addPhaseToJob } from "./supabase/phaseUtils";
 import { getJobById } from "./supabase/jobUtils";
 import { markPhaseComplete } from "./supabase/phaseUtils";
+import { updateJob } from "./supabase/jobUtils";
 
 // Re-export needed functions for components
-export { getJobById, markPhaseComplete };
+export { getJobById, markPhaseComplete, updateJob };
 
 // Initialize with some sample data if needed (for development)
 export const initSampleData = async (): Promise<void> => {
