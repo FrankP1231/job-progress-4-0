@@ -273,7 +273,15 @@ const DashboardPage: React.FC = () => {
                   <TableBody>
                     {filteredPhases.map(({ job, phase }) => (
                       <TableRow key={phase.id}>
-                        <TableCell className="font-medium">{job.jobNumber}</TableCell>
+                        <TableCell className="font-medium">
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-primary font-medium hover:text-primary/80"
+                            asChild
+                          >
+                            <Link to={`/jobs/${job.id}`}>{job.jobNumber}</Link>
+                          </Button>
+                        </TableCell>
                         <TableCell>{job.projectName}</TableCell>
                         <TableCell>
                           Phase {phase.phaseNumber}: {phase.phaseName}
