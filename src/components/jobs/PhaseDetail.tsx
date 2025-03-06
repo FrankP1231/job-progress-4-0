@@ -68,6 +68,11 @@ const PhaseDetail: React.FC = () => {
 
   const isLoading = isLoadingJob || isLoadingPhase;
 
+  // Handle back button click - uses browser history
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -91,8 +96,9 @@ const PhaseDetail: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center">
-        <Button variant="outline" size="icon" className="mr-2" onClick={() => navigate(`/jobs/${jobId}`)}>
+        <Button variant="outline" size="icon" className="mr-2" onClick={handleBackClick}>
           <ArrowLeft className="h-4 w-4" />
+          <span className="sr-only">Back</span>
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
