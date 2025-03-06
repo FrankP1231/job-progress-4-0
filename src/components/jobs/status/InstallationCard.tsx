@@ -41,7 +41,7 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
       </div>
       
       {/* Rental Equipment Section */}
-      <div className="pt-4 border-t space-y-4">
+      <div className="pt-6 border-t space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">Rental Equipment</h3>
           {rental}
@@ -63,7 +63,7 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
       </div>
       
       {/* Installation Details Section */}
-      <div className="pt-4 border-t">
+      <div className="pt-6 border-t">
         <h3 className="text-sm font-medium mb-4">Installation Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
