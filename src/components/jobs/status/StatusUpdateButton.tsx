@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Check, ChevronDown } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -11,7 +10,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import {
   MaterialStatus,
   LaborStatus,
@@ -84,7 +82,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       queryClient.invalidateQueries({ queryKey: ['phase', jobId, phaseId] });
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       
-      toast.success(`Status updated successfully to ${getStatusLabel(newStatus, options)}`);
+      toast.success(`Status updated to ${getStatusLabel(newStatus, options)}`);
       
       if (onSuccess) {
         onSuccess();
@@ -104,33 +102,35 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     return options.find(option => option.value === status)?.label || status;
   };
 
+  // Get the current status label
+  const currentStatusLabel = getStatusLabel(currentStatus, options);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          disabled={isUpdating}
-        >
-          {isUpdating ? (
-            <span className="flex items-center">
-              <div className="animate-spin h-4 w-4 mr-2 border-2 border-primary border-opacity-20 border-t-primary rounded-full" />
-              Updating...
-            </span>
-          ) : (
-            <span className="flex items-center">
-              Change Status
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </span>
-          )}
-        </Button>
+        <div className="flex items-center cursor-pointer">
+          <div className="bg-gray-200 text-gray-800 rounded-md px-3 py-1 text-sm font-medium flex items-center">
+            {isUpdating ? (
+              <span className="flex items-center">
+                <div className="animate-spin h-3 w-3 mr-2 border-2 border-primary border-opacity-20 border-t-primary rounded-full" />
+                Updating...
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                {currentStatusLabel}
+                <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+              </span>
+            )}
+          </div>
+        </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="start" className="bg-white">
         {options.map((option) => (
           <DropdownMenuItem
             key={option.value}
             onClick={() => handleStatusUpdate(option.value)}
             className="flex justify-between items-center"
+            disabled={isUpdating}
           >
             {option.label}
             {currentStatus === option.value && <Check className="ml-2 h-4 w-4" />}

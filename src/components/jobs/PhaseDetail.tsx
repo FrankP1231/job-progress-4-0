@@ -17,7 +17,6 @@ const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
   const navigate = useNavigate();
 
-  // Fetch job data
   const { 
     data: job,
     isLoading: isLoadingJob,
@@ -28,7 +27,6 @@ const PhaseDetail: React.FC = () => {
     enabled: !!jobId
   });
 
-  // Handle job loading errors or not found
   React.useEffect(() => {
     if (jobError) {
       console.error('Error loading job:', jobError);
@@ -42,7 +40,6 @@ const PhaseDetail: React.FC = () => {
     }
   }, [job, jobError, isLoadingJob, navigate]);
 
-  // Fetch phase data
   const { 
     data: phase,
     isLoading: isLoadingPhase,
@@ -53,7 +50,6 @@ const PhaseDetail: React.FC = () => {
     enabled: !!jobId && !!phaseId
   });
 
-  // Handle phase loading errors or not found
   React.useEffect(() => {
     if (phaseError) {
       console.error('Error loading phase:', phaseError);
@@ -69,12 +65,10 @@ const PhaseDetail: React.FC = () => {
 
   const isLoading = isLoadingJob || isLoadingPhase;
 
-  // Handle back button click - uses browser history
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  // Define status options with correct typings
   const materialStatusOptions: { value: MaterialStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'not-ordered', label: 'Not Ordered' },
@@ -146,16 +140,18 @@ const PhaseDetail: React.FC = () => {
                 <Wrench className="h-4 w-4" />
                 <span>Welding Labor</span>
               </CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="labor"
-                  fieldPath="weldingLabor.status"
-                  currentStatus={phase.weldingLabor.status}
-                  options={laborStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="labor"
+                    fieldPath="weldingLabor.status"
+                    currentStatus={phase.weldingLabor.status}
+                    options={laborStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <LaborStatusCard
@@ -173,16 +169,18 @@ const PhaseDetail: React.FC = () => {
                 <Wrench className="h-4 w-4" />
                 <span>Welding Materials</span>
               </CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="material"
-                  fieldPath="weldingMaterials.status"
-                  currentStatus={phase.weldingMaterials.status}
-                  options={materialStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="material"
+                    fieldPath="weldingMaterials.status"
+                    currentStatus={phase.weldingMaterials.status}
+                    options={materialStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <MaterialStatusCard
@@ -202,16 +200,18 @@ const PhaseDetail: React.FC = () => {
                 <Scissors className="h-4 w-4" />
                 <span>Sewing Labor</span>
               </CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="labor"
-                  fieldPath="sewingLabor.status"
-                  currentStatus={phase.sewingLabor.status}
-                  options={laborStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="labor"
+                    fieldPath="sewingLabor.status"
+                    currentStatus={phase.sewingLabor.status}
+                    options={laborStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <LaborStatusCard
@@ -229,16 +229,18 @@ const PhaseDetail: React.FC = () => {
                 <Scissors className="h-4 w-4" />
                 <span>Sewing Materials</span>
               </CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="material"
-                  fieldPath="sewingMaterials.status"
-                  currentStatus={phase.sewingMaterials.status}
-                  options={materialStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="material"
+                    fieldPath="sewingMaterials.status"
+                    currentStatus={phase.sewingMaterials.status}
+                    options={materialStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <MaterialStatusCard
@@ -255,16 +257,18 @@ const PhaseDetail: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg">Installation</CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="material"
-                  fieldPath="installationMaterials.status"
-                  currentStatus={phase.installationMaterials.status}
-                  options={materialStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="material"
+                    fieldPath="installationMaterials.status"
+                    currentStatus={phase.installationMaterials.status}
+                    options={materialStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <InstallationCard
@@ -291,16 +295,18 @@ const PhaseDetail: React.FC = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg">Powder Coat</CardTitle>
-              {jobId && phaseId && (
-                <StatusUpdateButton
-                  jobId={jobId}
-                  phaseId={phaseId}
-                  statusType="powderCoat"
-                  fieldPath="powderCoat.status"
-                  currentStatus={phase.powderCoat.status}
-                  options={powderCoatStatusOptions}
-                />
-              )}
+              <div>
+                {jobId && phaseId && (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="powderCoat"
+                    fieldPath="powderCoat.status"
+                    currentStatus={phase.powderCoat.status}
+                    options={powderCoatStatusOptions}
+                  />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <PowderCoatCard powderCoat={phase.powderCoat} />
