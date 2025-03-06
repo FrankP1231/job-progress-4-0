@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -57,6 +58,7 @@ const ProductionOverview: React.FC = () => {
       const areSewingMaterialsReceived = phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed';
       const areInstallMaterialsReceived = phase.installationMaterials.status === 'received' || phase.installationMaterials.status === 'not-needed';
       
+      // Fix: Use phase.installation.status for checking installation status
       if (isWeldingComplete && isSewingComplete && isPowderCoatComplete && 
           areWeldingMaterialsReceived && areSewingMaterialsReceived && areInstallMaterialsReceived && 
           phase.installation.status !== 'complete') {
