@@ -1,9 +1,9 @@
 
-
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
 export type RentalEquipmentStatus = 'not-needed' | 'not-ordered' | 'ordered';
+export type InstallationStatus = 'not-started' | 'in-progress' | 'complete';
 
 export interface Material {
   status: MaterialStatus;
@@ -31,6 +31,7 @@ export interface RentalEquipment {
 }
 
 export interface Installation {
+  status: InstallationStatus;
   crewMembersNeeded: number;
   crewHoursNeeded: number;
   siteReadyDate?: string; // ISO date string

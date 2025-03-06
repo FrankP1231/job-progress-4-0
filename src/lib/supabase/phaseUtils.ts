@@ -1,4 +1,3 @@
-
 import { supabase, Json } from "./client";
 import { Phase, Material, Labor, PowderCoat, Installation } from '../types';
 
@@ -89,6 +88,7 @@ export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: nu
     installationMaterials: { status: 'not-ordered' },
     powderCoat: { status: 'not-needed' },
     installation: {
+      status: 'not-started',
       crewMembersNeeded: 2,
       crewHoursNeeded: 4,
       rentalEquipment: { status: 'not-needed' }
@@ -160,6 +160,12 @@ export const updatePhase = async (jobId: string, phaseId: string, phaseData: Par
   
   const updateData: any = {};
   
+  // Check if we're updating installation status to 'complete'
+  let shouldMarkPhaseComplete = false;
+  if (phaseData.installation?.status === 'complete') {
+    shouldMarkPhaseComplete = true;
+  }
+  
   if (phaseData.phaseName !== undefined) updateData.phase_name = phaseData.phaseName;
   if (phaseData.phaseNumber !== undefined) updateData.phase_number = phaseData.phaseNumber;
   if (phaseData.weldingMaterials !== undefined) updateData.welding_materials = phaseData.weldingMaterials;
@@ -170,6 +176,11 @@ export const updatePhase = async (jobId: string, phaseId: string, phaseData: Par
   if (phaseData.powderCoat !== undefined) updateData.powder_coat = phaseData.powderCoat;
   if (phaseData.installation !== undefined) updateData.installation = phaseData.installation;
   if (phaseData.isComplete !== undefined) updateData.is_complete = phaseData.isComplete;
+  
+  // Auto-mark phase as complete when installation is complete
+  if (shouldMarkPhaseComplete) {
+    updateData.is_complete = true;
+  }
   
   updateData.updated_at = new Date().toISOString();
   

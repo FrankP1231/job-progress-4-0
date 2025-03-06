@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Calendar, Check, Wrench, Scissors, Package, Palette, Truck 
 } from 'lucide-react';
-import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
+import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import StatusUpdateButton from './status/StatusUpdateButton';
 
 interface PhaseStatusOverviewProps {
@@ -16,6 +16,7 @@ interface PhaseStatusOverviewProps {
   laborStatusOptions: { value: LaborStatus; label: string }[];
   powderCoatStatusOptions: { value: PowderCoatStatus; label: string }[];
   rentalEquipmentStatusOptions: { value: RentalEquipmentStatus; label: string }[];
+  installationStatusOptions: { value: InstallationStatus; label: string }[];
 }
 
 const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
@@ -23,7 +24,8 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
   materialStatusOptions,
   laborStatusOptions,
   powderCoatStatusOptions,
-  rentalEquipmentStatusOptions
+  rentalEquipmentStatusOptions,
+  installationStatusOptions
 }) => {
   return (
     <Card>
@@ -144,6 +146,16 @@ const PhaseStatusOverview: React.FC<PhaseStatusOverviewProps> = ({
                         currentStatus={phase.installationMaterials.status}
                         currentEta={phase.installationMaterials.eta}
                         options={materialStatusOptions}
+                      />
+                      
+                      <div className="font-medium text-sm mt-2">Status</div>
+                      <StatusUpdateButton
+                        jobId={job.id}
+                        phaseId={phase.id}
+                        statusType="installation"
+                        fieldPath="installation.status"
+                        currentStatus={phase.installation.status}
+                        options={installationStatusOptions}
                       />
                       
                       <div className="font-medium text-sm mt-2">Rental</div>

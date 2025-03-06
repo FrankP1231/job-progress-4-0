@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Check, ChevronDown, Calendar, Clock, Palette } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -26,10 +25,11 @@ import {
   LaborStatus,
   PowderCoatStatus,
   RentalEquipmentStatus,
+  InstallationStatus,
 } from '@/lib/types';
 
-type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental';
-type StatusValue = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
+type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental' | 'installation';
+type StatusValue = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus | InstallationStatus;
 
 interface StatusOption {
   value: StatusValue;

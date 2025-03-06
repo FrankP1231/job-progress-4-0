@@ -8,13 +8,15 @@ interface InstallationCardProps {
   materials: Material;
   rental?: React.ReactNode; // Pass in status update button
   materialStatus?: React.ReactNode; // Add materialStatus prop for the materials status button
+  installationStatus?: React.ReactNode; // Add installationStatus prop for the installation status button
 }
 
 const InstallationCard: React.FC<InstallationCardProps> = ({ 
   installation, 
   materials,
   rental,
-  materialStatus
+  materialStatus,
+  installationStatus
 }) => {
   return (
     <div className="space-y-6">
@@ -38,6 +40,14 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
             <p className="text-sm mt-1">{materials.notes}</p>
           </div>
         )}
+      </div>
+      
+      {/* Installation Status Section */}
+      <div className="pt-6 border-t space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">Installation Status</h3>
+          {installationStatus}
+        </div>
       </div>
       
       {/* Rental Equipment Section */}

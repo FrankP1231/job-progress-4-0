@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
-import { Job, Phase, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
+import { Job, Phase, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -41,6 +40,12 @@ const JobDetail: React.FC = () => {
     { value: 'not-needed', label: 'Not Needed' },
     { value: 'not-ordered', label: 'Not Ordered' },
     { value: 'ordered', label: 'Ordered' },
+  ];
+
+  const installationStatusOptions: { value: InstallationStatus; label: string }[] = [
+    { value: 'not-started', label: 'Not Started' },
+    { value: 'in-progress', label: 'In Progress' },
+    { value: 'complete', label: 'Complete' },
   ];
 
   const { 
@@ -158,6 +163,7 @@ const JobDetail: React.FC = () => {
           laborStatusOptions={laborStatusOptions}
           powderCoatStatusOptions={powderCoatStatusOptions}
           rentalEquipmentStatusOptions={rentalEquipmentStatusOptions}
+          installationStatusOptions={installationStatusOptions}
         />
       )}
     </div>
