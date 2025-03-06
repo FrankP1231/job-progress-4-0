@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -7,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Wrench, Scissors, ArrowRight, Clock } from 'lucide-react';
+import { Wrench, Scissors, ArrowRight, Clock, PackageCheck } from 'lucide-react';
 import { Job, Phase } from '@/lib/types';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 const ProductionOverview: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'welding' | 'sewing'>('welding');
+  const [activeTab, setActiveTab] = useState<'welding' | 'sewing' | 'readyForInstall'>('welding');
   
   const { data: jobs, isLoading, error } = useQuery({
     queryKey: ['jobs'],
@@ -30,7 +29,6 @@ const ProductionOverview: React.FC = () => {
     return <div className="text-red-500">Error loading jobs</div>;
   }
 
-  // Filter jobs that have phases with welding or sewing labor
   const productionJobs = jobs?.filter(job => 
     job.phases.some(phase => 
       phase.weldingLabor.status !== 'not-needed' || 
@@ -38,9 +36,9 @@ const ProductionOverview: React.FC = () => {
     )
   ) || [];
 
-  // Extract all welding and sewing phases across all jobs
   const weldingPhases: { phase: Phase, job: Job }[] = [];
   const sewingPhases: { phase: Phase, job: Job }[] = [];
+  const readyForInstallPhases: { phase: Phase, job: Job }[] = [];
   
   productionJobs.forEach(job => {
     job.phases.forEach(phase => {
@@ -50,16 +48,32 @@ const ProductionOverview: React.FC = () => {
       if (phase.sewingLabor.status !== 'not-needed') {
         sewingPhases.push({ phase, job });
       }
+      
+      const isWeldingReady = phase.weldingLabor.status === 'complete' || phase.weldingLabor.status === 'not-needed';
+      const isSewingReady = phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed';
+      const isPowderCoatReady = phase.powderCoat.status === 'complete' || phase.powderCoat.status === 'not-needed';
+      
+      const areWeldingMaterialsReady = phase.weldingMaterials.status === 'received' || phase.weldingMaterials.status === 'not-needed';
+      const areSewingMaterialsReady = phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed';
+      
+      if (isWeldingReady && isSewingReady && isPowderCoatReady && 
+          areWeldingMaterialsReady && areSewingMaterialsReady &&
+          phase.installation.status !== 'complete') {
+        readyForInstallPhases.push({ phase, job });
+      }
     });
   });
 
-  // Calculate total estimated hours for each department
   const totalWeldingHours = weldingPhases.reduce((total, { phase }) => {
     return total + (phase.weldingLabor.hours || 0);
   }, 0);
 
   const totalSewingHours = sewingPhases.reduce((total, { phase }) => {
     return total + (phase.sewingLabor.hours || 0);
+  }, 0);
+  
+  const totalInstallHours = readyForInstallPhases.reduce((total, { phase }) => {
+    return total + (phase.installation.crewHoursNeeded || 0);
   }, 0);
 
   return (
@@ -68,8 +82,8 @@ const ProductionOverview: React.FC = () => {
         <h1 className="text-3xl font-bold">Production Overview</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'welding' | 'sewing')} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'welding' | 'sewing' | 'readyForInstall')} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="welding" className="flex items-center">
             <Wrench className="mr-2 h-4 w-4" />
             Welding ({weldingPhases.length})
@@ -77,6 +91,10 @@ const ProductionOverview: React.FC = () => {
           <TabsTrigger value="sewing" className="flex items-center">
             <Scissors className="mr-2 h-4 w-4" />
             Sewing ({sewingPhases.length})
+          </TabsTrigger>
+          <TabsTrigger value="readyForInstall" className="flex items-center">
+            <PackageCheck className="mr-2 h-4 w-4" />
+            Ready for Install ({readyForInstallPhases.length})
           </TabsTrigger>
         </TabsList>
 
@@ -249,9 +267,89 @@ const ProductionOverview: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="readyForInstall" className="mt-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center">
+                <PackageCheck className="mr-2 h-5 w-5 text-green-500" />
+                Ready for Installation
+              </CardTitle>
+              <div className="flex items-center bg-green-50 text-green-700 px-3 py-1 rounded-md">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="font-medium">Total Est. Hours: {totalInstallHours}</span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {readyForInstallPhases.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  No phases ready for installation
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Phase</TableHead>
+                      <TableHead>Production Status</TableHead>
+                      <TableHead>Install Crew</TableHead>
+                      <TableHead>Est. Hours</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {readyForInstallPhases.map(({ phase, job }) => (
+                      <TableRow key={`${job.id}-${phase.id}`}>
+                        <TableCell className="font-medium">
+                          <Link to={`/jobs/${job.id}`} className="hover:underline">
+                            {job.projectName || job.jobNumber}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Link to={`/jobs/${job.id}/phases/${phase.id}`} className="hover:underline">
+                            {phase.phaseNumber}: {phase.phaseName}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                              <Wrench className="h-3 w-3 text-blue-500" />
+                              <StatusBadge status={phase.weldingLabor.status} />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Scissors className="h-3 w-3 text-purple-500" />
+                              <StatusBadge status={phase.sewingLabor.status} />
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {phase.installation.crewMembersNeeded} crew members
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                            {phase.installation.crewHoursNeeded} hrs
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Button asChild variant="outline" size="sm">
+                            <Link to={`/production/${job.id}`}>
+                              View Details <ArrowRight className="ml-2 h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
 };
 
 export default ProductionOverview;
+
