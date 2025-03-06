@@ -1,36 +1,80 @@
 import { supabase, Json } from "./client";
-import { Job } from '../types';
+import { Job, Phase, Material, Labor, PowderCoat, Installation } from '../types';
 import { logActivity } from "./activityLogUtils";
 
-// Get all jobs
+// Get all jobs (with their phases)
 export const getAllJobs = async (): Promise<Job[]> => {
-  const { data, error } = await supabase
+  // Fetch all jobs
+  const { data: jobsData, error: jobsError } = await supabase
     .from('jobs')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('updated_at', { ascending: false });
   
-  if (error) {
-    console.error('Error fetching jobs:', error);
-    throw error;
+  if (jobsError) {
+    console.error('Error fetching jobs:', jobsError);
+    throw jobsError;
   }
   
-  // Transform the data to match our types
-  const jobs = (data || []).map(job => ({
-    ...job,
+  // Transform jobs data
+  const jobs: Job[] = (jobsData || []).map(job => ({
     id: job.id,
     jobNumber: job.job_number,
     projectName: job.project_name,
+    buyer: job.buyer,
+    title: job.title,
+    salesman: job.salesman,
     drawingsUrl: job.drawings_url,
     worksheetUrl: job.worksheet_url,
+    phases: [], // Will be populated later
     createdAt: job.created_at,
-    updatedAt: job.updated_at,
-    phases: [] // We'll fetch phases separately
+    updatedAt: job.updated_at
   }));
-
-  // Fetch phases for each job
-  for (const job of jobs) {
-    const { getPhasesForJob } = await import('./phaseUtils');
-    job.phases = await getPhasesForJob(job.id);
+  
+  // Fetch phases for all jobs
+  if (jobs.length > 0) {
+    const jobIds = jobs.map(job => job.id);
+    
+    const { data: phasesData, error: phasesError } = await supabase
+      .from('phases')
+      .select('*')
+      .in('job_id', jobIds)
+      .order('phase_number', { ascending: true });
+    
+    if (phasesError) {
+      console.error('Error fetching phases:', phasesError);
+      throw phasesError;
+    }
+    
+    // Group phases by job_id
+    const phasesByJobId: { [key: string]: Phase[] } = {};
+    
+    (phasesData || []).forEach(phase => {
+      if (!phasesByJobId[phase.job_id]) {
+        phasesByJobId[phase.job_id] = [];
+      }
+      
+      phasesByJobId[phase.job_id].push({
+        id: phase.id,
+        jobId: phase.job_id,
+        phaseName: phase.phase_name,
+        phaseNumber: phase.phase_number,
+        weldingMaterials: phase.welding_materials as unknown as Material,
+        sewingMaterials: phase.sewing_materials as unknown as Material,
+        weldingLabor: phase.welding_labor as unknown as Labor,
+        sewingLabor: phase.sewing_labor as unknown as Labor,
+        installationMaterials: phase.installation_materials as unknown as Material,
+        powderCoat: phase.powder_coat as unknown as PowderCoat,
+        installation: phase.installation as unknown as Installation,
+        isComplete: phase.is_complete,
+        createdAt: phase.created_at,
+        updatedAt: phase.updated_at
+      });
+    });
+    
+    // Assign phases to jobs
+    jobs.forEach(job => {
+      job.phases = phasesByJobId[job.id] || [];
+    });
   }
   
   return jobs;

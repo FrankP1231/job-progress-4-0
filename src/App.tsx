@@ -17,6 +17,8 @@ import JobDetail from "./components/jobs/JobDetail";
 import PhaseForm from "./components/jobs/PhaseForm";
 import PhaseDetail from "./components/jobs/PhaseDetail";
 import SearchResults from "./components/search/SearchResults";
+import ProductionOverview from "./components/production/ProductionOverview";
+import ProductionLaborView from "./components/production/ProductionLaborView";
 import { initSampleData } from "./lib/supabaseUtils";
 
 // Initialize query client
@@ -59,6 +61,10 @@ const App = () => {
                 <Route path="/jobs/:jobId/phases/new" element={<PhaseForm />} />
                 <Route path="/jobs/:jobId/phases/:phaseId" element={<PhaseDetail />} />
                 <Route path="/search" element={<SearchResults />} />
+                
+                {/* Production routes */}
+                <Route path="/production" element={<ProductionOverview />} />
+                <Route path="/production/:jobId" element={<ProductionLaborView />} />
                 
                 {/* Catch-all route */}
                 <Route path="*" element={<NotFound />} />

@@ -4,6 +4,7 @@ export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
 export type RentalEquipmentStatus = 'not-needed' | 'not-ordered' | 'ordered';
 export type InstallationStatus = 'not-started' | 'in-progress' | 'complete';
+export type ProductionStatus = 'not-started' | 'in-progress' | 'complete'; // Added for Production Labor view
 
 export interface Material {
   status: MaterialStatus;
