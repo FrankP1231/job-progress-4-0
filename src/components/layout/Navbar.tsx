@@ -9,6 +9,7 @@ import {
   LogOut,
   Menu,
   Briefcase,
+  Wrench,
 } from 'lucide-react';
 import {
   Sheet,
@@ -84,6 +85,12 @@ const Navbar: React.FC = () => {
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
+                  <Link to="/production" className="flex items-center py-2">
+                    <Wrench className="mr-2 h-5 w-5" />
+                    Production
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
                   <Button variant="ghost" className="justify-start px-2" onClick={handleLogout}>
                     <LogOut className="mr-2 h-5 w-5" />
                     Sign Out
@@ -119,6 +126,12 @@ const Navbar: React.FC = () => {
             className="text-sm font-medium transition-colors hover:text-primary"
           >
             New Job
+          </Link>
+          <Link
+            to="/production"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            Production
           </Link>
         </nav>
         
