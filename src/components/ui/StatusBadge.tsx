@@ -27,7 +27,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
   
   return (
     <Badge 
-      className={cn(config.className, "font-normal py-1 h-auto rounded-md", className)}
+      className={cn(
+        config.className, 
+        "font-normal py-1 h-auto rounded-md transition-all hover:opacity-90",
+        className
+      )}
       variant="outline"
     >
       {config.label}

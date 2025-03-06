@@ -29,7 +29,6 @@ import {
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ChevronDown } from 'lucide-react';
 
 export type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental' | 'installation';
 
@@ -92,14 +91,9 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full bg-white hover:bg-gray-50 relative transition-all shadow-sm border rounded-md px-3 py-2 text-sm font-medium flex items-center justify-between"
-        >
+        <div className="cursor-pointer transition-opacity hover:opacity-90 inline-block">
           <StatusBadge status={currentStatus} className="w-full justify-center" />
-          <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-        </Button>
+        </div>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
