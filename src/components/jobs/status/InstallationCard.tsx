@@ -48,6 +48,11 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
           <h3 className="text-sm font-medium">Installation Status</h3>
           {installationStatus}
         </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Status</span>
+          <span className="text-sm capitalize">{installation.status.replace('-', ' ')}</span>
+        </div>
       </div>
       
       {/* Rental Equipment Section */}

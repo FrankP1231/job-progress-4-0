@@ -1,4 +1,4 @@
-
+importtypescript
 import { supabase, Json } from "./client";
 import { Job } from '../types';
 

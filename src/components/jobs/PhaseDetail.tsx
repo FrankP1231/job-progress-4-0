@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, getPhaseById } from '@/lib/supabase';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Wrench, Scissors, Palette } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
+import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import PowderCoatCard from './status/PowderCoatCard';
 import InstallationCard from './status/InstallationCard';
 import StatusUpdateButton from './status/StatusUpdateButton';
@@ -83,6 +84,12 @@ const PhaseDetail: React.FC = () => {
 
   const powderCoatStatusOptions: { value: PowderCoatStatus; label: string }[] = [
     { value: 'not-needed', label: 'Not Needed' },
+    { value: 'not-started', label: 'Not Started' },
+    { value: 'in-progress', label: 'In Progress' },
+    { value: 'complete', label: 'Complete' },
+  ];
+
+  const installationStatusOptions: { value: InstallationStatus; label: string }[] = [
     { value: 'not-started', label: 'Not Started' },
     { value: 'in-progress', label: 'In Progress' },
     { value: 'complete', label: 'Complete' },
@@ -236,6 +243,26 @@ const PhaseDetail: React.FC = () => {
                     currentStatus={phase.installationMaterials.status}
                     currentEta={phase.installationMaterials.eta}
                     options={materialStatusOptions}
+                  />
+                ) : undefined
+              }
+              installationStatus={
+                jobId && phaseId ? (
+                  <StatusUpdateButton
+                    jobId={jobId}
+                    phaseId={phaseId}
+                    statusType="installation"
+                    fieldPath="installation.status"
+                    currentStatus={phase.installation.status}
+                    options={installationStatusOptions}
+                    onStatusChange={(newStatus) => {
+                      // If installation is complete, mark the phase as complete
+                      if (newStatus === 'complete') {
+                        // This will be handled in the updatePhaseStatus function
+                        return { isComplete: true };
+                      }
+                      return {};
+                    }}
                   />
                 ) : undefined
               }
