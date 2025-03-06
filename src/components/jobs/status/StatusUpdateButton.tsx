@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   MaterialStatus,
@@ -91,7 +92,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="xs">
+        <Button variant="outline" size="sm">
           <StatusBadge status={currentStatus} />
         </Button>
       </DialogTrigger>

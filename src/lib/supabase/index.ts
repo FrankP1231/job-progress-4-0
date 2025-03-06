@@ -4,3 +4,4 @@ export * from './jobUtils';
 export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './initUtils';
+export * from './statusUtils';
