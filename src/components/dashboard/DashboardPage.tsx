@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getInProgressPhases, getAllJobs } from '@/lib/supabase';
@@ -352,9 +353,15 @@ const DashboardPage: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Link to={`/jobs/${job.id}/phases/${phase.id}`}>
-                            <Button variant="outline" size="sm">View</Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            asChild
+                          >
+                            <Link to={`/jobs/${job.id}/phases/${phase.id}`}>
+                              View
+                            </Link>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
