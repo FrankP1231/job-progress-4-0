@@ -49,15 +49,16 @@ const ProductionOverview: React.FC = () => {
         sewingPhases.push({ phase, job });
       }
       
-      const isWeldingReady = phase.weldingLabor.status === 'complete' || phase.weldingLabor.status === 'not-needed';
-      const isSewingReady = phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed';
-      const isPowderCoatReady = phase.powderCoat.status === 'complete' || phase.powderCoat.status === 'not-needed';
+      const isWeldingComplete = phase.weldingLabor.status === 'complete' || phase.weldingLabor.status === 'not-needed';
+      const isSewingComplete = phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed';
+      const isPowderCoatComplete = phase.powderCoat.status === 'complete' || phase.powderCoat.status === 'not-needed';
       
-      const areWeldingMaterialsReady = phase.weldingMaterials.status === 'received' || phase.weldingMaterials.status === 'not-needed';
-      const areSewingMaterialsReady = phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed';
+      const areWeldingMaterialsReceived = phase.weldingMaterials.status === 'received' || phase.weldingMaterials.status === 'not-needed';
+      const areSewingMaterialsReceived = phase.sewingMaterials.status === 'received' || phase.sewingMaterials.status === 'not-needed';
+      const areInstallMaterialsReceived = phase.installationMaterials.status === 'received' || phase.installationMaterials.status === 'not-needed';
       
-      if (isWeldingReady && isSewingReady && isPowderCoatReady && 
-          areWeldingMaterialsReady && areSewingMaterialsReady &&
+      if (isWeldingComplete && isSewingComplete && isPowderCoatComplete && 
+          areWeldingMaterialsReceived && areSewingMaterialsReceived && areInstallMaterialsReceived && 
           phase.installation.status !== 'complete') {
         readyForInstallPhases.push({ phase, job });
       }
@@ -352,4 +353,3 @@ const ProductionOverview: React.FC = () => {
 };
 
 export default ProductionOverview;
-
