@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,6 +61,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [newStatus, setNewStatus] = useState(currentStatus);
   const [eta, setEta] = useState(currentEta || '');
   const [hours, setHours] = useState(currentHours || 0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
   // Enhanced check for status string that handles all edge cases
@@ -77,9 +79,18 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
 
   const handleStatusChange = async () => {
     try {
-      let updateData: Record<string, any> = { 
-        status: typeof newStatus === 'string' ? newStatus : newStatus 
-      };
+      setIsSubmitting(true);
+      
+      // Create update data object based on status type
+      let updateData: Record<string, any> = {};
+      
+      if (typeof newStatus === 'string') {
+        updateData.status = newStatus;
+      } else if (newStatus && typeof newStatus === 'object' && 'status' in newStatus) {
+        updateData.status = (newStatus as any).status;
+      } else {
+        updateData.status = statusString;
+      }
 
       if (statusType === 'material' || statusType === 'powderCoat') {
         updateData = { ...updateData, eta: eta };
@@ -96,6 +107,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         ...(statusType === 'labor' ? { hours: currentHours } : {})
       };
 
+      console.log(`Updating ${fieldPath} with data:`, updateData);
       await updatePhaseStatus(jobId, phaseId, fieldPath, updateData);
       
       // Log the activity
@@ -107,29 +119,25 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         'installation': 'Installation'
       }[statusType];
       
-      const description = `${statusTypeName} status updated from ${getDisplayStatusLabel(statusString)} to ${getDisplayStatusLabel(typeof newStatus === 'string' ? newStatus : 'not-started')}`;
+      const newStatusString = typeof updateData.status === 'string' ? updateData.status : 'not-started';
+      const description = `${statusTypeName} status updated from ${getDisplayStatusLabel(statusString)} to ${getDisplayStatusLabel(newStatusString)}`;
       
-      await logActivity({
-        jobId,
-        phaseId,
-        activityType: 'status_update',
-        description,
-        fieldName: fieldPath,
-        previousValue,
-        newValue: updateData
-      });
-
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+      queryClient.invalidateQueries({ queryKey: ['phase', jobId, phaseId] });
+      queryClient.invalidateQueries({ queryKey: ['activities', jobId, phaseId] });
       queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
+      
       toast.success(`Phase ${statusType} status updated successfully.`);
       setOpen(false);
 
       if (onStatusChange) {
-        onStatusChange(typeof newStatus === 'string' ? newStatus : 'not-started');
+        onStatusChange(newStatusString);
       }
     } catch (error) {
       console.error("Error updating phase status:", error);
       toast.error("Failed to update phase status.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -149,6 +157,9 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Update {statusType} Status</DialogTitle>
+          <DialogDescription>
+            Change the status and related details below.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -203,8 +214,12 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
           )}
         </div>
         <DialogFooter>
-          <Button type="button" onClick={handleStatusChange}>
-            Update Status
+          <Button 
+            type="button" 
+            onClick={handleStatusChange} 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Updating...' : 'Update Status'}
           </Button>
         </DialogFooter>
       </DialogContent>

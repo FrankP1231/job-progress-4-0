@@ -79,9 +79,10 @@ export const updatePhaseStatus = async (
       // Convert the last segment if needed
       const dbLastSegment = lastSegment === 'rentalEquipment' ? 'rental_equipment' : lastSegment;
       
-      if (!target[dbLastSegment]) {
+      if (typeof target[dbLastSegment] !== 'object' || target[dbLastSegment] === null) {
         target[dbLastSegment] = {};
       }
+      
       Object.assign(target[dbLastSegment], updateData);
     }
     
@@ -110,6 +111,12 @@ export const updatePhaseStatus = async (
       }
     }
     
+    console.log('Updating phase with data:', {
+      [dbColumnName]: updatedField,
+      is_complete: isComplete,
+      updated_at: new Date().toISOString()
+    });
+    
     // Update the phase with the modified field
     const { error: updateError } = await supabase
       .from('phases')
@@ -125,6 +132,17 @@ export const updatePhaseStatus = async (
       console.error('Error updating phase status:', updateError);
       throw updateError;
     }
+    
+    // Log the activity
+    await logActivity({
+      jobId,
+      phaseId,
+      activityType: 'status_update',
+      description: `${fieldPath} status updated`,
+      fieldName: fieldPath,
+      previousValue,
+      newValue: updatedField
+    });
     
     // Update the job's updated_at timestamp
     await supabase
