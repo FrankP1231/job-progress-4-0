@@ -28,7 +28,14 @@ import {
   ClipboardList,
   Plus,
   Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Calendar, 
+  Check, 
+  Wrench, 
+  Scissors, 
+  Package, 
+  Palette, 
+  Truck
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -262,57 +269,97 @@ const DashboardPage: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Job #</TableHead>
-                      <TableHead>Project</TableHead>
-                      <TableHead>Phase</TableHead>
-                      <TableHead className="hidden md:table-cell">Materials</TableHead>
-                      <TableHead className="hidden lg:table-cell">Labor</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead>Job/Phase</TableHead>
+                      <TableHead className="text-center">
+                        <div className="flex items-center justify-center">
+                          <Wrench className="mr-1 h-4 w-4" />
+                          <span>Welding</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-center">
+                        <div className="flex items-center justify-center">
+                          <Scissors className="mr-1 h-4 w-4" />
+                          <span>Sewing</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-center">
+                        <div className="flex items-center justify-center">
+                          <Package className="mr-1 h-4 w-4" />
+                          <span>Installation</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-center">
+                        <div className="flex items-center justify-center">
+                          <Palette className="mr-1 h-4 w-4" />
+                          <span>Powder Coat</span>
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredPhases.map(({ job, phase }) => (
                       <TableRow key={phase.id}>
-                        <TableCell className="font-medium">
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto text-primary font-medium hover:text-primary/80"
-                            asChild
-                          >
-                            <Link to={`/jobs/${job.id}`}>{job.jobNumber}</Link>
-                          </Button>
-                        </TableCell>
-                        <TableCell>{job.projectName}</TableCell>
                         <TableCell>
-                          Phase {phase.phaseNumber}: {phase.phaseName}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs">Welding:</span>
-                              <StatusBadge status={phase.weldingMaterials.status} />
+                          <div className="space-y-1">
+                            <div>
+                              <Button
+                                variant="link"
+                                className="p-0 h-auto text-primary font-medium hover:text-primary/80"
+                                asChild
+                              >
+                                <Link to={`/jobs/${job.id}`}>{job.jobNumber}</Link>
+                              </Button>
+                              <span className="ml-2 text-muted-foreground">{job.projectName}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs">Sewing:</span>
-                              <StatusBadge status={phase.sewingMaterials.status} />
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs">Welding:</span>
-                              <StatusBadge status={phase.weldingLabor.status} />
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs">Sewing:</span>
-                              <StatusBadge status={phase.sewingLabor.status} />
+                            <div className="font-medium">
+                              Phase {phase.phaseNumber}: {phase.phaseName}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs text-muted-foreground">Materials</div>
+                            <StatusBadge status={phase.weldingMaterials.status} />
+                            
+                            <div className="text-xs text-muted-foreground mt-2">Labor</div>
+                            <StatusBadge status={phase.weldingLabor.status} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs text-muted-foreground">Materials</div>
+                            <StatusBadge status={phase.sewingMaterials.status} />
+                            
+                            <div className="text-xs text-muted-foreground mt-2">Labor</div>
+                            <StatusBadge status={phase.sewingLabor.status} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs text-muted-foreground">Materials</div>
+                            <StatusBadge status={phase.installationMaterials.status} />
+                            
+                            <div className="text-xs text-muted-foreground mt-2">Status</div>
+                            <StatusBadge status={phase.installation.status} />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs text-muted-foreground">Status</div>
+                            <StatusBadge status={phase.powderCoat.status} />
+                            
+                            {phase.powderCoat.color && (
+                              <>
+                                <div className="text-xs text-muted-foreground mt-2">Color</div>
+                                <div className="text-xs">{phase.powderCoat.color}</div>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Link to={`/jobs/${job.id}/phases/${phase.id}`}>
-                            <Button variant="outline" size="sm">View Details</Button>
+                            <Button variant="outline" size="sm">View</Button>
                           </Link>
                         </TableCell>
                       </TableRow>
