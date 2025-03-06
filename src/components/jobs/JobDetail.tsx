@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
@@ -120,7 +119,7 @@ const JobDetail: React.FC = () => {
       completedItems++;
     }
     
-    if (phase.sewingLabor.status === 'complete' || phase.sewingLabor.status === 'not-needed') {
+    if (phase.sewingLabor.status === 'complete' || phase.seewingLabor.status === 'not-needed') {
       completedItems++;
     }
     
@@ -493,7 +492,7 @@ const JobDetail: React.FC = () => {
                   <TableHead className="text-center">
                     <div className="flex items-center justify-center">
                       <Palette className="mr-1 h-4 w-4" />
-                      <span>Powder Coat</span>
+                      <span>PC Status</span>
                     </div>
                   </TableHead>
                   <TableHead className="text-center">
@@ -603,9 +602,14 @@ const JobDetail: React.FC = () => {
                             options={powderCoatStatusOptions}
                           />
                           
-                          {phase.powderCoat.color && (
-                            <div className="mt-2 text-sm">
-                              <span className="font-medium">Color:</span> {phase.powderCoat.color}
+                          <div className="font-medium text-sm mt-2">Color</div>
+                          {phase.powderCoat.color ? (
+                            <div className="text-sm">
+                              {phase.powderCoat.color}
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">
+                              Not specified
                             </div>
                           )}
                         </div>
