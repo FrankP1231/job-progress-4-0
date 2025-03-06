@@ -10,13 +10,15 @@ interface LaborStatusCardProps {
   icon?: React.ReactNode;
   labor: Labor;
   hideTitle?: boolean;
+  hideStatus?: boolean;
 }
 
 const LaborStatusCard: React.FC<LaborStatusCardProps> = ({
   title,
   icon = <Users className="h-4 w-4" />,
   labor,
-  hideTitle = false
+  hideTitle = false,
+  hideStatus = false
 }) => {
   return (
     <>
@@ -29,10 +31,12 @@ const LaborStatusCard: React.FC<LaborStatusCardProps> = ({
         </CardHeader>
       )}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <StatusBadge status={labor.status} />
-        </div>
+        {!hideStatus && labor.status !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <StatusBadge status={labor.status} />
+          </div>
+        )}
         
         {labor.hours !== undefined && (
           <div className="flex items-center justify-between">

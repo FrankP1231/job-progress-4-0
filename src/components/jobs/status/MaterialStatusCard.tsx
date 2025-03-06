@@ -10,13 +10,15 @@ interface MaterialStatusCardProps {
   icon?: React.ReactNode;
   material: Material;
   hideTitle?: boolean;
+  hideStatus?: boolean;
 }
 
 const MaterialStatusCard: React.FC<MaterialStatusCardProps> = ({
   title,
   icon = <Package className="h-4 w-4" />,
   material,
-  hideTitle = false
+  hideTitle = false,
+  hideStatus = false
 }) => {
   return (
     <>
@@ -29,10 +31,12 @@ const MaterialStatusCard: React.FC<MaterialStatusCardProps> = ({
         </CardHeader>
       )}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <StatusBadge status={material.status} />
-        </div>
+        {!hideStatus && material.status !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <StatusBadge status={material.status} />
+          </div>
+        )}
         
         {material.eta && (
           <div className="flex items-center justify-between">

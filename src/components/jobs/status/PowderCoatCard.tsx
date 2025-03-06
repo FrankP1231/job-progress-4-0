@@ -7,9 +7,13 @@ import { PowderCoat } from '@/lib/types';
 
 interface PowderCoatCardProps {
   powderCoat: PowderCoat;
+  hideStatus?: boolean;
 }
 
-const PowderCoatCard: React.FC<PowderCoatCardProps> = ({ powderCoat }) => {
+const PowderCoatCard: React.FC<PowderCoatCardProps> = ({ 
+  powderCoat,
+  hideStatus = false
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -19,10 +23,12 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({ powderCoat }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <StatusBadge status={powderCoat.status} />
-        </div>
+        {!hideStatus && powderCoat.status !== undefined && (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <StatusBadge status={powderCoat.status} />
+          </div>
+        )}
         
         {powderCoat.eta && (
           <div className="flex items-center justify-between">

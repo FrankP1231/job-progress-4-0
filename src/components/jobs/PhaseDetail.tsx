@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, getPhaseById } from '@/lib/supabase';
@@ -158,7 +159,12 @@ const PhaseDetail: React.FC = () => {
                 title=""
                 hideTitle
                 icon={<Wrench className="h-4 w-4" />}
-                labor={phase.weldingLabor}
+                labor={{
+                  ...phase.weldingLabor,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any 
+                }}
+                hideStatus={true}
               />
             </CardContent>
           </Card>
@@ -187,7 +193,12 @@ const PhaseDetail: React.FC = () => {
                 title=""
                 hideTitle
                 icon={<Wrench className="h-4 w-4" />}
-                material={phase.weldingMaterials}
+                material={{
+                  ...phase.weldingMaterials,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any
+                }}
+                hideStatus={true}
               />
             </CardContent>
           </Card>
@@ -218,7 +229,12 @@ const PhaseDetail: React.FC = () => {
                 title=""
                 hideTitle
                 icon={<Scissors className="h-4 w-4" />}
-                labor={phase.sewingLabor}
+                labor={{
+                  ...phase.sewingLabor,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any
+                }}
+                hideStatus={true}
               />
             </CardContent>
           </Card>
@@ -247,7 +263,12 @@ const PhaseDetail: React.FC = () => {
                 title=""
                 hideTitle
                 icon={<Scissors className="h-4 w-4" />}
-                material={phase.sewingMaterials}
+                material={{
+                  ...phase.sewingMaterials,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any
+                }}
+                hideStatus={true}
               />
             </CardContent>
           </Card>
@@ -273,7 +294,12 @@ const PhaseDetail: React.FC = () => {
             <CardContent>
               <InstallationCard
                 installation={phase.installation}
-                materials={phase.installationMaterials}
+                materials={{
+                  ...phase.installationMaterials,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any
+                }}
+                hideStatus={true}
                 rental={
                   jobId && phaseId ? (
                     <StatusUpdateButton
@@ -309,7 +335,14 @@ const PhaseDetail: React.FC = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <PowderCoatCard powderCoat={phase.powderCoat} />
+              <PowderCoatCard 
+                powderCoat={{
+                  ...phase.powderCoat,
+                  // We exclude status as it's now shown by the StatusUpdateButton
+                  status: undefined as any
+                }}
+                hideStatus={true}
+              />
             </CardContent>
           </Card>
         </div>

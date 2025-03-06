@@ -16,6 +16,7 @@ import {
   PowderCoatStatus,
   RentalEquipmentStatus,
 } from '@/lib/types';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 type StatusType = 'material' | 'labor' | 'powderCoat' | 'rental';
 type StatusValue = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus;
@@ -45,10 +46,16 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   onSuccess,
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [status, setStatus] = useState<StatusValue>(currentStatus);
   const queryClient = useQueryClient();
 
+  // Update local state when currentStatus changes (from parent)
+  React.useEffect(() => {
+    setStatus(currentStatus);
+  }, [currentStatus]);
+
   const handleStatusUpdate = async (newStatus: StatusValue) => {
-    if (newStatus === currentStatus) return;
+    if (newStatus === status) return;
     
     setIsUpdating(true);
     try {
@@ -78,6 +85,9 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       
       await updatePhase(jobId, phaseId, updateData);
       
+      // Immediately update the local state
+      setStatus(newStatus);
+      
       // Invalidate both phase and job queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['phase', jobId, phaseId] });
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
@@ -90,6 +100,8 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Failed to update status');
+      // Revert to original status on error
+      setStatus(currentStatus);
     } finally {
       setIsUpdating(false);
     }
@@ -103,41 +115,44 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   };
 
   // Get the current status label
-  const currentStatusLabel = getStatusLabel(currentStatus, options);
+  const currentStatusLabel = getStatusLabel(status, options);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex items-center cursor-pointer">
-          <div className="bg-gray-200 text-gray-800 rounded-md px-3 py-1 text-sm font-medium flex items-center">
-            {isUpdating ? (
-              <span className="flex items-center">
-                <div className="animate-spin h-3 w-3 mr-2 border-2 border-primary border-opacity-20 border-t-primary rounded-full" />
-                Updating...
-              </span>
-            ) : (
-              <span className="flex items-center gap-1">
-                {currentStatusLabel}
-                <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
-              </span>
-            )}
+    <div className="flex flex-col items-end space-y-1">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="flex items-center cursor-pointer">
+            <div className="bg-gray-200 text-gray-800 rounded-md px-3 py-1 text-sm font-medium flex items-center">
+              {isUpdating ? (
+                <span className="flex items-center">
+                  <div className="animate-spin h-3 w-3 mr-2 border-2 border-primary border-opacity-20 border-t-primary rounded-full" />
+                  Updating...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  {currentStatusLabel}
+                  <ChevronDown className="h-3 w-3 ml-1 opacity-70" />
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="bg-white">
-        {options.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => handleStatusUpdate(option.value)}
-            className="flex justify-between items-center"
-            disabled={isUpdating}
-          >
-            {option.label}
-            {currentStatus === option.value && <Check className="ml-2 h-4 w-4" />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-white">
+          {options.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => handleStatusUpdate(option.value)}
+              className="flex justify-between items-center"
+              disabled={isUpdating}
+            >
+              {option.label}
+              {status === option.value && <Check className="ml-2 h-4 w-4" />}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <StatusBadge status={status} />
+    </div>
   );
 };
 
