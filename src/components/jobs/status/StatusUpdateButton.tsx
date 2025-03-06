@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   MaterialStatus,
@@ -61,12 +60,10 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [hours, setHours] = useState(currentHours || 0);
   const queryClient = useQueryClient();
 
-  // Ensure currentStatus is a string
+  // Ensure currentStatus is a string - fixed the type checking
   const statusString = typeof currentStatus === 'string' 
     ? currentStatus 
-    : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
-      ? String(currentStatus.status)
-      : 'not-started';
+    : 'not-started'; // Default fallback if not a string
 
   const handleStatusChange = async () => {
     try {
@@ -112,7 +109,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
               Status
             </Label>
             <Select 
-              value={typeof newStatus === 'string' ? newStatus : String(newStatus)} 
+              value={typeof newStatus === 'string' ? newStatus : 'not-started'} 
               onValueChange={(value) => setNewStatus(value as any)}
             >
               <SelectTrigger className="col-span-3">
