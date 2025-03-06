@@ -31,7 +31,9 @@ export const updatePhaseStatus = async (
     const fieldToUpdate = pathSegments[0]; // e.g., 'welding_materials', 'installation', etc.
     
     // Deep clone the current field value to avoid mutating the original
-    const updatedField = JSON.parse(JSON.stringify(currentPhase[fieldToUpdate]));
+    // Handle potentially undefined values safely
+    const updatedField = currentPhase[fieldToUpdate] ? 
+      JSON.parse(JSON.stringify(currentPhase[fieldToUpdate])) : {};
     
     // Apply updates to the specific field
     if (pathSegments.length === 1) {
@@ -59,7 +61,7 @@ export const updatePhaseStatus = async (
     
     // Check if installation status is being set to complete
     let isComplete = currentPhase.is_complete;
-    if (fieldPath === 'installation' && updateData.status === 'complete') {
+    if (fieldPath === 'installation.status' && updateData.status === 'complete') {
       isComplete = true;
     }
     
