@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getInProgressPhases, getAllJobs } from '@/lib/supabase';
@@ -44,7 +43,6 @@ const DashboardPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Fetch in-progress phases
   const { 
     data: inProgressPhases = [], 
     isLoading: isLoadingPhases,
@@ -54,7 +52,6 @@ const DashboardPage: React.FC = () => {
     queryFn: getInProgressPhases
   });
 
-  // Fetch all jobs
   const { 
     data: jobs = [], 
     isLoading: isLoadingJobs,
@@ -66,7 +63,6 @@ const DashboardPage: React.FC = () => {
 
   const isLoading = isLoadingPhases || isLoadingJobs;
   
-  // Handle errors
   useEffect(() => {
     if (phasesError) {
       console.error('Error loading phases:', phasesError);
@@ -77,7 +73,6 @@ const DashboardPage: React.FC = () => {
   }, [phasesError, jobsError]);
 
   const filteredPhases = inProgressPhases.filter(({ job, phase }) => {
-    // Apply search filter
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
       job.jobNumber.toLowerCase().includes(searchLower) ||
@@ -86,7 +81,6 @@ const DashboardPage: React.FC = () => {
       job.salesman.toLowerCase().includes(searchLower) ||
       phase.phaseName.toLowerCase().includes(searchLower);
     
-    // Apply status filter if selected
     let matchesStatus = true;
     if (statusFilter !== 'all') {
       if (statusFilter === 'welding-materials-needed') {
@@ -349,11 +343,11 @@ const DashboardPage: React.FC = () => {
                             <div className="text-xs text-muted-foreground">Status</div>
                             <StatusBadge status={phase.powderCoat.status} />
                             
-                            {phase.powderCoat.color && (
-                              <>
-                                <div className="text-xs text-muted-foreground mt-2">Color</div>
-                                <div className="text-xs">{phase.powderCoat.color}</div>
-                              </>
+                            <div className="text-xs text-muted-foreground mt-2">Color</div>
+                            {phase.powderCoat.color ? (
+                              <div className="text-xs">{phase.powderCoat.color}</div>
+                            ) : (
+                              <div className="text-xs text-muted-foreground">Not set</div>
                             )}
                           </div>
                         </TableCell>
