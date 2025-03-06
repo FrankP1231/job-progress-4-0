@@ -5,8 +5,12 @@ import { getJobById, getPhaseById } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Wrench, Scissors } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import MaterialStatusCard from './status/MaterialStatusCard';
+import LaborStatusCard from './status/LaborStatusCard';
+import PowderCoatCard from './status/PowderCoatCard';
+import InstallationCard from './status/InstallationCard';
 
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
@@ -100,22 +104,44 @@ const PhaseDetail: React.FC = () => {
         </div>
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Phase Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center py-8 text-muted-foreground">
-            Detailed phase editing will be implemented soon.
-          </p>
-          
-          <div className="flex justify-center mt-4">
-            <Button onClick={() => navigate(`/jobs/${jobId}`)}>
-              Return to Job
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <LaborStatusCard 
+            title="Welding Labor"
+            icon={<Wrench className="h-4 w-4" />}
+            labor={phase.weldingLabor}
+          />
+          <MaterialStatusCard
+            title="Welding Materials"
+            icon={<Wrench className="h-4 w-4" />}
+            material={phase.weldingMaterials}
+          />
+        </div>
+        
+        <div className="space-y-6">
+          <LaborStatusCard
+            title="Sewing Labor"
+            icon={<Scissors className="h-4 w-4" />}
+            labor={phase.sewingLabor}
+          />
+          <MaterialStatusCard
+            title="Sewing Materials"
+            icon={<Scissors className="h-4 w-4" />}
+            material={phase.sewingMaterials}
+          />
+        </div>
+        
+        <div className="md:col-span-2">
+          <InstallationCard
+            installation={phase.installation}
+            materials={phase.installationMaterials}
+          />
+        </div>
+        
+        <div className="md:col-span-2">
+          <PowderCoatCard powderCoat={phase.powderCoat} />
+        </div>
+      </div>
     </div>
   );
 };
