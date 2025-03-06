@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById } from '@/lib/supabaseUtils';
 import { getPhaseById } from '@/lib/supabase/phaseUtils';
+import { getPhaseActivities } from '@/lib/supabase/activityLogUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import PowderCoatCard from './status/PowderCoatCard';
 import InstallationCard from './status/InstallationCard';
 import StatusUpdateButton from './status/StatusUpdateButton';
 import CombinedLaborMaterialCard from './status/CombinedLaborMaterialCard';
+import ActivityLogCard from './ActivityLogCard';
 
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
@@ -63,6 +64,15 @@ const PhaseDetail: React.FC = () => {
       if (jobId) navigate(`/jobs/${jobId}`);
     }
   }, [phase, phaseError, isLoadingPhase, jobId, navigate]);
+
+  const { 
+    data: activities,
+    isLoading: activitiesLoading
+  } = useQuery({
+    queryKey: ['activities', jobId, phaseId],
+    queryFn: () => jobId && phaseId ? getPhaseActivities(jobId, phaseId) : Promise.resolve([]),
+    enabled: !!jobId && !!phaseId
+  });
 
   const isLoading = isLoadingJob || isLoadingPhase;
 
@@ -122,12 +132,10 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
-  // Normalize installation status - ensure it's always a string, not an object
   const normalizedPhase = {
     ...phase,
     installation: {
       ...phase.installation,
-      // If status is an object with its own status property, extract the string value
       status: typeof phase.installation.status === 'object' && phase.installation.status !== null && 'status' in phase.installation.status 
         ? phase.installation.status.status as InstallationStatus 
         : phase.installation.status as InstallationStatus
@@ -269,9 +277,7 @@ const PhaseDetail: React.FC = () => {
                     currentStatus={normalizedPhase.installation.status}
                     options={installationStatusOptions}
                     onStatusChange={(newStatus) => {
-                      // If installation is complete, mark the phase as complete
                       if (newStatus === 'complete') {
-                        // This will be handled in the updatePhaseStatus function
                         return { isComplete: true };
                       }
                       return {};
@@ -325,6 +331,10 @@ const PhaseDetail: React.FC = () => {
             />
           </CardContent>
         </Card>
+      </div>
+      
+      <div className="mt-6">
+        <ActivityLogCard activities={activities || []} />
       </div>
     </div>
   );

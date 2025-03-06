@@ -1,5 +1,6 @@
 import { supabase, Json } from "./client";
 import { Phase, Material, Labor, PowderCoat, Installation } from '../types';
+import { logActivity } from "./activityLogUtils";
 
 // Get all phases for a job
 export const getPhasesForJob = async (jobId: string): Promise<Phase[]> => {
@@ -134,6 +135,14 @@ export const addPhaseToJob = async (jobId: string, phase: Phase): Promise<boolea
     throw error;
   }
   
+  // Log the activity
+  await logActivity({
+    jobId,
+    phaseId: data.id,
+    activityType: 'phase_added',
+    description: `Phase ${phase.phaseNumber}: ${phase.phaseName} was added to the job`
+  });
+  
   // Update the job's updated_at timestamp
   await supabase
     .from('jobs')
@@ -248,6 +257,22 @@ export const deletePhase = async (jobId: string, phaseId: string): Promise<boole
 
 // Mark a phase as complete
 export const markPhaseComplete = async (jobId: string, phaseId: string, isComplete: boolean = true): Promise<boolean> => {
+  const currentPhase = await getPhaseById(jobId, phaseId);
   const result = await updatePhase(jobId, phaseId, { isComplete });
+  
+  // Log the activity
+  if (result && currentPhase) {
+    await logActivity({
+      jobId,
+      phaseId,
+      activityType: 'phase_update',
+      description: isComplete 
+        ? `Phase ${currentPhase.phaseNumber}: ${currentPhase.phaseName} was marked as complete` 
+        : `Phase ${currentPhase.phaseNumber}: ${currentPhase.phaseName} was marked as incomplete`,
+      previousValue: { isComplete: currentPhase.isComplete },
+      newValue: { isComplete }
+    });
+  }
+  
   return result !== undefined;
 };

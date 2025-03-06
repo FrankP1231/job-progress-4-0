@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, markPhaseComplete } from '@/lib/supabaseUtils';
+import { getJobActivities } from '@/lib/supabase/activityLogUtils';
 import { Job, Phase, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import JobDetailsCard from './JobDetailsCard';
 import JobDetailsEditCard from './JobDetailsEditCard';
 import PhasesTabsCard from './PhasesTabsCard';
 import PhaseStatusOverview from './PhaseStatusOverview';
+import ActivityLogCard from './ActivityLogCard';
 
 const JobDetail: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -57,6 +59,16 @@ const JobDetail: React.FC = () => {
   } = useQuery({
     queryKey: ['job', jobId],
     queryFn: () => jobId ? getJobById(jobId) : Promise.resolve(undefined),
+    enabled: !!jobId
+  });
+
+  const { 
+    data: activities,
+    isLoading: activitiesLoading,
+    error: activitiesError
+  } = useQuery({
+    queryKey: ['activities', jobId],
+    queryFn: () => getJobActivities(jobId),
     enabled: !!jobId
   });
 
@@ -171,6 +183,14 @@ const JobDetail: React.FC = () => {
           onTogglePhaseComplete={handleTogglePhaseComplete}
           getProgressPercentage={getProgressPercentage}
         />
+        
+        <div className="md:col-span-1">
+          <ActivityLogCard 
+            activities={activities || []} 
+            maxHeight="300px"
+            job={job}
+          />
+        </div>
       </div>
       
       {job.phases.length > 0 && (

@@ -1,5 +1,6 @@
 
 import { supabase } from "./client";
+import { logActivity } from "./activityLogUtils";
 
 // Update a phase's status field
 export const updatePhaseStatus = async (
@@ -35,6 +36,9 @@ export const updatePhaseStatus = async (
     const updatedField = currentPhase[fieldToUpdate] ? 
       JSON.parse(JSON.stringify(currentPhase[fieldToUpdate])) : {};
     
+    // Store the current value before updates for logging
+    const previousValue = JSON.parse(JSON.stringify(updatedField));
+    
     // Apply updates to the specific field
     if (pathSegments.length === 1) {
       // Direct update to the full object
@@ -63,6 +67,25 @@ export const updatePhaseStatus = async (
     let isComplete = currentPhase.is_complete;
     if (fieldPath === 'installation.status' && updateData.status === 'complete') {
       isComplete = true;
+      
+      // Get phase details for better logging
+      const { data: phaseDetails } = await supabase
+        .from('phases')
+        .select('phase_name, phase_number')
+        .eq('id', phaseId)
+        .single();
+      
+      if (phaseDetails) {
+        // Log the phase completion separately
+        await logActivity({
+          jobId,
+          phaseId,
+          activityType: 'phase_update',
+          description: `Phase ${phaseDetails.phase_number}: ${phaseDetails.phase_name} was automatically marked as complete because installation was completed`,
+          previousValue: { isComplete: currentPhase.is_complete },
+          newValue: { isComplete: true }
+        });
+      }
     }
     
     // Update the phase with the modified field

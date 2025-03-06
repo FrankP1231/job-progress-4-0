@@ -9,6 +9,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string
+          field_name: string | null
+          id: string
+          job_id: string
+          new_value: Json | null
+          phase_id: string | null
+          previous_value: Json | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description: string
+          field_name?: string | null
+          id?: string
+          job_id: string
+          new_value?: Json | null
+          phase_id?: string | null
+          previous_value?: Json | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string
+          field_name?: string | null
+          id?: string
+          job_id?: string
+          new_value?: Json | null
+          phase_id?: string | null
+          previous_value?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           buyer: string

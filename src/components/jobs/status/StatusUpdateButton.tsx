@@ -8,6 +8,7 @@ import {
   InstallationStatus
 } from '@/lib/types';
 import { updatePhaseStatus } from '@/lib/supabase';
+import { logActivity } from '@/lib/supabase/activityLogUtils';
 import {
   Dialog,
   DialogContent,
@@ -88,7 +89,36 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         updateData = { ...updateData, hours: hours };
       }
 
+      // Store previous values before update for activity log
+      const previousValue = {
+        status: statusString,
+        ...(statusType === 'material' || statusType === 'powderCoat' ? { eta: currentEta } : {}),
+        ...(statusType === 'labor' ? { hours: currentHours } : {})
+      };
+
       await updatePhaseStatus(jobId, phaseId, fieldPath, updateData);
+      
+      // Log the activity
+      const statusTypeName = {
+        'material': 'Material',
+        'labor': 'Labor',
+        'powderCoat': 'Powder Coat',
+        'rental': 'Rental Equipment',
+        'installation': 'Installation'
+      }[statusType];
+      
+      const description = `${statusTypeName} status updated from ${getDisplayStatusLabel(statusString)} to ${getDisplayStatusLabel(typeof newStatus === 'string' ? newStatus : 'not-started')}`;
+      
+      await logActivity({
+        jobId,
+        phaseId,
+        activityType: 'status_update',
+        description,
+        fieldName: fieldPath,
+        previousValue,
+        newValue: updateData
+      });
+
       queryClient.invalidateQueries({ queryKey: ['job', jobId] });
       queryClient.invalidateQueries({ queryKey: ['inProgressPhases'] });
       toast.success(`Phase ${statusType} status updated successfully.`);
@@ -101,6 +131,12 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       console.error("Error updating phase status:", error);
       toast.error("Failed to update phase status.");
     }
+  };
+
+  // Helper function to get display label for a status value
+  const getDisplayStatusLabel = (statusValue: string): string => {
+    const option = options.find(opt => opt.value === statusValue);
+    return option ? option.label : statusValue;
   };
 
   return (

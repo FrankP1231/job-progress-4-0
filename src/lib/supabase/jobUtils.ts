@@ -1,6 +1,6 @@
-
 import { supabase, Json } from "./client";
 import { Job } from '../types';
+import { logActivity } from "./activityLogUtils";
 
 // Get all jobs
 export const getAllJobs = async (): Promise<Job[]> => {
@@ -161,17 +161,68 @@ export const createJob = async (jobData: Partial<Job>): Promise<Job> => {
 
 // Update a job
 export const updateJob = async (id: string, jobData: Partial<Job>): Promise<Job | undefined> => {
-  // Check if job number is being changed and already exists
-  if (jobData.jobNumber) {
-    const currentJob = await getJobById(id);
-    if (!currentJob) return undefined;
-    
-    if (jobData.jobNumber !== currentJob.jobNumber) {
-      const existingJob = await getJobByNumber(jobData.jobNumber);
-      if (existingJob && existingJob.id !== id) {
-        throw new Error(`Job number ${jobData.jobNumber} already exists`);
+  try {
+    // Check if job number is being changed and already exists
+    if (jobData.jobNumber) {
+      const currentJob = await getJobById(id);
+      if (!currentJob) return undefined;
+      
+      if (jobData.jobNumber !== currentJob.jobNumber) {
+        const existingJob = await getJobByNumber(jobData.jobNumber);
+        if (existingJob && existingJob.id !== id) {
+          throw new Error(`Job number ${jobData.jobNumber} already exists`);
+        }
+      }
+      
+      // Log the changes for activity tracking
+      const changes: string[] = [];
+      if (jobData.jobNumber !== currentJob.jobNumber) changes.push(`Job Number: ${currentJob.jobNumber} → ${jobData.jobNumber}`);
+      if (jobData.projectName !== currentJob.projectName) changes.push(`Project Name: ${currentJob.projectName} → ${jobData.projectName}`);
+      if (jobData.buyer !== currentJob.buyer) changes.push(`Buyer: ${currentJob.buyer} → ${jobData.buyer}`);
+      if (jobData.salesman !== currentJob.salesman) changes.push(`Project Manager: ${currentJob.salesman} → ${jobData.salesman}`);
+      
+      // For URLs, only log if they've changed and aren't empty
+      if (jobData.drawingsUrl !== currentJob.drawingsUrl) {
+        if (!currentJob.drawingsUrl && jobData.drawingsUrl) {
+          changes.push("Drawings URL added");
+        } else if (currentJob.drawingsUrl && !jobData.drawingsUrl) {
+          changes.push("Drawings URL removed");
+        } else if (currentJob.drawingsUrl && jobData.drawingsUrl) {
+          changes.push("Drawings URL updated");
+        }
+      }
+      
+      if (jobData.worksheetUrl !== currentJob.worksheetUrl) {
+        if (!currentJob.worksheetUrl && jobData.worksheetUrl) {
+          changes.push("Worksheet URL added");
+        } else if (currentJob.worksheetUrl && !jobData.worksheetUrl) {
+          changes.push("Worksheet URL removed");
+        } else if (currentJob.worksheetUrl && jobData.worksheetUrl) {
+          changes.push("Worksheet URL updated");
+        }
+      }
+      
+      // Only log activity if there are actual changes
+      if (changes.length > 0) {
+        await logActivity({
+          jobId: id,
+          activityType: 'job_update',
+          description: `Job details updated: ${changes.join(", ")}`,
+          previousValue: {
+            jobNumber: currentJob.jobNumber,
+            projectName: currentJob.projectName,
+            buyer: currentJob.buyer,
+            salesman: currentJob.salesman,
+            drawingsUrl: currentJob.drawingsUrl,
+            worksheetUrl: currentJob.worksheetUrl
+          },
+          newValue: jobData
+        });
       }
     }
+  } catch (error) {
+    console.error('Error preparing job update:', error);
+    throw error;
   }
   
   const { data, error } = await supabase
