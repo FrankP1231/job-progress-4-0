@@ -69,6 +69,28 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
               <span className="text-sm text-muted-foreground">Hours Needed</span>
               <span className="text-sm">{installation.crewHoursNeeded} hours</span>
             </div>
+            
+            {/* Moved Rental Equipment Section here - Under the Install Crew information */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-medium">Rental Equipment</h4>
+                {rental}
+              </div>
+              
+              {installation.rentalEquipment.details && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Details</span>
+                  <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
+                </div>
+              )}
+              
+              {installation.rentalEquipment.notes && (
+                <div className="mt-2">
+                  <span className="text-sm text-muted-foreground">Notes</span>
+                  <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="space-y-4">
@@ -120,28 +142,6 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
             <p className="text-sm mt-1">{installation.notes}</p>
           </div>
         )}
-        
-        {/* Moved Rental Equipment Section here */}
-        <div className="mt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Rental Equipment</h3>
-            {rental}
-          </div>
-          
-          {installation.rentalEquipment.details && (
-            <div>
-              <span className="text-sm text-muted-foreground">Details</span>
-              <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
-            </div>
-          )}
-          
-          {installation.rentalEquipment.notes && (
-            <div>
-              <span className="text-sm text-muted-foreground">Notes</span>
-              <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
