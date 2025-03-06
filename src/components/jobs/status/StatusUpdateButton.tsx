@@ -61,12 +61,16 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [hours, setHours] = useState(currentHours || 0);
   const queryClient = useQueryClient();
 
-  // Make sure we have a valid status string
-  const statusString = typeof currentStatus === 'string' 
-    ? currentStatus 
-    : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
-      ? String(currentStatus.status)
-      : 'not-started';
+  // Enhanced check for status string that handles all edge cases
+  let statusString = 'not-started';
+  
+  if (typeof currentStatus === 'string') {
+    statusString = currentStatus;
+  } else if (currentStatus && typeof currentStatus === 'object') {
+    if ('status' in currentStatus && currentStatus.status !== undefined) {
+      statusString = String(currentStatus.status);
+    }
+  }
 
   const handleStatusChange = async () => {
     try {
