@@ -18,6 +18,7 @@ import {
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
+import SearchBar from './SearchBar';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -121,7 +122,12 @@ const Navbar: React.FC = () => {
           </Link>
         </nav>
         
-        <div className="flex-1 flex justify-end">
+        {/* Add the search bar */}
+        <div className="flex-1 flex justify-center mx-4">
+          <SearchBar className="max-w-md hidden md:flex" />
+        </div>
+        
+        <div className="flex justify-end">
           <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1">
             <LogOut className="h-4 w-4" />
             <span className="hidden md:inline">Sign Out</span>
