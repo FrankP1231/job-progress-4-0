@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getJobById, getPhaseById } from '@/lib/supabase/client';
+import { getJobById } from '@/lib/supabaseUtils';
+import { getPhaseById } from '@/lib/supabase/phaseUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
