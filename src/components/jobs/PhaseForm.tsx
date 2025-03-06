@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
@@ -6,7 +5,7 @@ import {
   createNewPhase, 
   addPhaseToJob 
 } from '@/lib/supabase';
-import { Job, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
+import { Job, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +58,7 @@ const PhaseForm: React.FC = () => {
   const [powderCoatEta, setPowderCoatEta] = useState('');
   
   // Installation
+  const [installationStatus, setInstallationStatus] = useState<InstallationStatus>('not-started');
   const [crewMembersNeeded, setCrewMembersNeeded] = useState('2');
   const [crewHoursNeeded, setCrewHoursNeeded] = useState('4');
   const [siteReadyDate, setSiteReadyDate] = useState('');
@@ -136,6 +136,7 @@ const PhaseForm: React.FC = () => {
           eta: powderCoatEta || undefined
         },
         installation: {
+          status: installationStatus,
           crewMembersNeeded: Number(crewMembersNeeded),
           crewHoursNeeded: Number(crewHoursNeeded),
           siteReadyDate: siteReadyDate || undefined,
@@ -208,7 +209,6 @@ const PhaseForm: React.FC = () => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Basic Phase Information */}
         <Card>
           <CardHeader>
             <CardTitle>Phase Information</CardTitle>
@@ -246,7 +246,6 @@ const PhaseForm: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Welding Section */}
         <Card>
           <CardHeader>
             <CardTitle>Welding</CardTitle>
@@ -256,7 +255,6 @@ const PhaseForm: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Welding Materials */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Materials</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -290,7 +288,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Welding Labor */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Labor</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -339,7 +336,6 @@ const PhaseForm: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Sewing Section */}
         <Card>
           <CardHeader>
             <CardTitle>Sewing</CardTitle>
@@ -349,7 +345,6 @@ const PhaseForm: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Sewing Materials */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Materials</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -383,7 +378,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Sewing Labor */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Labor</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -432,7 +426,6 @@ const PhaseForm: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Powder Coat Section */}
         <Card>
           <CardHeader>
             <CardTitle>Powder Coat</CardTitle>
@@ -483,7 +476,6 @@ const PhaseForm: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Installation Section */}
         <Card>
           <CardHeader>
             <CardTitle>Installation</CardTitle>
@@ -493,7 +485,28 @@ const PhaseForm: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Installation Materials */}
+              <div>
+                <h3 className="text-lg font-medium mb-4">Installation Status</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="installationStatus">Status</Label>
+                    <Select 
+                      value={installationStatus} 
+                      onValueChange={(value: InstallationStatus) => setInstallationStatus(value)}
+                    >
+                      <SelectTrigger id="installationStatus">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not-started">Not Started</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="complete">Complete</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              
               <div>
                 <h3 className="text-lg font-medium mb-4">Materials</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -527,7 +540,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Crew Information */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Crew Information</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -560,7 +572,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Installation Schedule */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Schedule</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -586,7 +597,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Rental Equipment */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Rental Equipment</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -629,7 +639,6 @@ const PhaseForm: React.FC = () => {
                 </div>
               </div>
               
-              {/* Additional Notes */}
               <div>
                 <h3 className="text-lg font-medium mb-4">Additional Notes</h3>
                 <div className="space-y-2">
@@ -646,7 +655,6 @@ const PhaseForm: React.FC = () => {
           </CardContent>
         </Card>
         
-        {/* Form Buttons */}
         <div className="flex justify-end space-x-2">
           <Button 
             type="button" 
