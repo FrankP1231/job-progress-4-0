@@ -61,7 +61,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [hours, setHours] = useState(currentHours || 0);
   const queryClient = useQueryClient();
 
-  // Convert complex status objects to string
+  // Make sure we have a valid status string
   const statusString = typeof currentStatus === 'string' 
     ? currentStatus 
     : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
@@ -121,7 +121,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
                 <SelectValue placeholder="Select a status" />
               </SelectTrigger>
               <SelectContent>
-                {options.map((option) => (
+                {options && options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

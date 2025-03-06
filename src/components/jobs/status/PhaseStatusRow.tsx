@@ -68,8 +68,10 @@ const PhaseStatusRow: React.FC<PhaseStatusRowProps> = ({
         materialStatus={phase.installationMaterials.status}
         materialEta={phase.installationMaterials.eta}
         installationStatus={phase.installation.status}
+        rentalStatus={phase.installation.rentalEquipment.status}
         materialStatusOptions={materialStatusOptions}
         installationStatusOptions={installationStatusOptions}
+        rentalEquipmentStatusOptions={rentalEquipmentStatusOptions}
       />
       
       <PowderCoatColumn 
