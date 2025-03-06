@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Briefcase, ArrowRight, Clock } from 'lucide-react';
+import { Briefcase, ArrowRight, Clock, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -95,6 +95,10 @@ const ProjectsPage = () => {
                     <Badge variant="outline">{completionPercentage}% Complete</Badge>
                   </CardTitle>
                   <CardDescription className="text-base mt-1">{job.projectName}</CardDescription>
+                  <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                    <Users className="h-4 w-4 mr-1" />
+                    <span>Customer: {job.buyer}</span>
+                  </div>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <h3 className="font-medium text-sm text-muted-foreground mb-2">Active Phases:</h3>

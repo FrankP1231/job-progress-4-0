@@ -102,7 +102,7 @@ const JobForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="buyer">Buyer/Client *</Label>
+                <Label htmlFor="buyer">Customer *</Label>
                 <Input
                   id="buyer"
                   name="buyer"

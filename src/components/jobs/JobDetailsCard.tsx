@@ -23,7 +23,7 @@ const JobDetailsCard: React.FC<JobDetailsCardProps> = ({ job }) => {
           <div className="text-sm font-medium">Project Name</div>
           <div>{job.projectName}</div>
           
-          <div className="text-sm font-medium">Buyer/Client</div>
+          <div className="text-sm font-medium">Customer</div>
           <div>{job.buyer}</div>
           
           <div className="text-sm font-medium">Project Manager</div>
