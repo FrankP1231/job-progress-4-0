@@ -19,6 +19,38 @@ export const getInProgressPhases = async (): Promise<{ job: Job, phase: Phase }[
   const result: { job: Job, phase: Phase }[] = [];
   
   for (const item of phaseData || []) {
+    // Process installation data properly - this was causing the error
+    let installation: Installation = {
+      status: 'not-started',
+      crewHoursNeeded: 0,
+      crewMembersNeeded: 0,
+      rentalEquipment: { status: 'not-needed' }
+    };
+    
+    // Check if installation data exists and extract status properly
+    if (item.installation) {
+      // Fix the nested status object issue
+      if (typeof item.installation === 'object') {
+        if (item.installation.status && typeof item.installation.status === 'object' && 'status' in item.installation.status) {
+          // Handle nested status object
+          installation = {
+            status: item.installation.status.status as 'not-started' | 'scheduled' | 'in-progress' | 'complete',
+            crewHoursNeeded: item.installation.crewHoursNeeded || 0,
+            crewMembersNeeded: item.installation.crewMembersNeeded || 0,
+            rentalEquipment: item.installation.rentalEquipment || { status: 'not-needed' }
+          };
+        } else {
+          // Handle flat status value
+          installation = {
+            status: (item.installation.status as string) || 'not-started',
+            crewHoursNeeded: item.installation.crewHoursNeeded || 0,
+            crewMembersNeeded: item.installation.crewMembersNeeded || 0,
+            rentalEquipment: item.installation.rentalEquipment || { status: 'not-needed' }
+          };
+        }
+      }
+    }
+
     const phase: Phase = {
       id: item.id,
       jobId: item.job_id,
@@ -30,7 +62,7 @@ export const getInProgressPhases = async (): Promise<{ job: Job, phase: Phase }[
       sewingLabor: item.sewing_labor as unknown as Labor,
       installationMaterials: item.installation_materials as unknown as Material,
       powderCoat: item.powder_coat as unknown as PowderCoat,
-      installation: item.installation as unknown as Installation,
+      installation: installation,
       isComplete: item.is_complete,
       createdAt: item.created_at,
       updatedAt: item.updated_at
