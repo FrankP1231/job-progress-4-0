@@ -1,6 +1,5 @@
-
 import { supabase, Json } from "./client";
-import { Job, Phase, Material, Labor, PowderCoat, Installation } from '../types';
+import { Job, Phase, Material, Labor, PowderCoat, Installation, InstallationStatus, RentalEquipmentStatus } from '../types';
 
 // Get all in-progress phases across all jobs
 export const getInProgressPhases = async (): Promise<{ job: Job, phase: Phase }[]> => {
@@ -29,25 +28,34 @@ export const getInProgressPhases = async (): Promise<{ job: Job, phase: Phase }[
     
     // Check if installation data exists and extract status properly
     if (item.installation) {
-      // Fix the nested status object issue
-      if (typeof item.installation === 'object') {
-        if (item.installation.status && typeof item.installation.status === 'object' && 'status' in item.installation.status) {
-          // Handle nested status object
-          installation = {
-            status: item.installation.status.status as 'not-started' | 'scheduled' | 'in-progress' | 'complete',
-            crewHoursNeeded: item.installation.crewHoursNeeded || 0,
-            crewMembersNeeded: item.installation.crewMembersNeeded || 0,
-            rentalEquipment: item.installation.rentalEquipment || { status: 'not-needed' }
-          };
-        } else {
-          // Handle flat status value
-          installation = {
-            status: (item.installation.status as string) || 'not-started',
-            crewHoursNeeded: item.installation.crewHoursNeeded || 0,
-            crewMembersNeeded: item.installation.crewMembersNeeded || 0,
-            rentalEquipment: item.installation.rentalEquipment || { status: 'not-needed' }
-          };
+      try {
+        const installData = item.installation as Record<string, any>;
+        
+        // Handle potential nested status object
+        let statusValue: InstallationStatus = 'not-started';
+        if (installData.status) {
+          if (typeof installData.status === 'object' && installData.status !== null && 'status' in installData.status) {
+            // Get status from nested object
+            const nestedStatus = installData.status.status;
+            // Make sure it's a valid InstallationStatus
+            statusValue = validateInstallationStatus(nestedStatus);
+          } else if (typeof installData.status === 'string') {
+            // Direct string status
+            statusValue = validateInstallationStatus(installData.status);
+          }
         }
+        
+        installation = {
+          status: statusValue,
+          crewHoursNeeded: Number(installData.crewHoursNeeded) || 0,
+          crewMembersNeeded: Number(installData.crewMembersNeeded) || 0,
+          rentalEquipment: {
+            status: validateRentalStatus(installData.rentalEquipment?.status || 'not-needed')
+          }
+        };
+      } catch (error) {
+        console.error('Error processing installation data:', error);
+        // Keep default values in case of error
       }
     }
 
@@ -87,3 +95,19 @@ export const getInProgressPhases = async (): Promise<{ job: Job, phase: Phase }[
   
   return result;
 };
+
+// Helper function to validate installation status
+function validateInstallationStatus(status: any): InstallationStatus {
+  const validValues: InstallationStatus[] = ['not-started', 'in-progress', 'complete'];
+  return validValues.includes(status as InstallationStatus) 
+    ? (status as InstallationStatus) 
+    : 'not-started';
+}
+
+// Helper function to validate rental equipment status
+function validateRentalStatus(status: any): RentalEquipmentStatus {
+  const validValues: RentalEquipmentStatus[] = ['not-needed', 'not-ordered', 'ordered'];
+  return validValues.includes(status as RentalEquipmentStatus)
+    ? (status as RentalEquipmentStatus)
+    : 'not-needed';
+}
