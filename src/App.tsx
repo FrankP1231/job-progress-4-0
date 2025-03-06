@@ -11,6 +11,7 @@ import LoginPage from "./components/auth/LoginPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DashboardPage from "./components/dashboard/DashboardPage";
+import ProjectsPage from "./components/projects/ProjectsPage";
 import JobForm from "./components/jobs/JobForm";
 import JobDetail from "./components/jobs/JobDetail";
 import PhaseForm from "./components/jobs/PhaseForm";
@@ -50,6 +51,7 @@ const App = () => {
                 
                 {/* Protected routes */}
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/jobs" element={<DashboardPage />} />
                 <Route path="/jobs/new" element={<JobForm />} />
                 <Route path="/jobs/:jobId" element={<JobDetail />} />

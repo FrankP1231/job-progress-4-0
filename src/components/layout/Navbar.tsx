@@ -8,6 +8,7 @@ import {
   PlusCircle, 
   LogOut,
   Menu,
+  Briefcase,
 } from 'lucide-react';
 import {
   Sheet,
@@ -60,6 +61,12 @@ const Navbar: React.FC = () => {
                   </Link>
                 </SheetClose>
                 <SheetClose asChild>
+                  <Link to="/projects" className="flex items-center py-2">
+                    <Briefcase className="mr-2 h-5 w-5" />
+                    Projects
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
                   <Link to="/jobs/new" className="flex items-center py-2">
                     <PlusCircle className="mr-2 h-5 w-5" />
                     New Job
@@ -85,6 +92,12 @@ const Navbar: React.FC = () => {
             className="text-sm font-medium transition-colors hover:text-primary"
           >
             Dashboard
+          </Link>
+          <Link
+            to="/projects"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            Projects
           </Link>
           <Link
             to="/jobs/new"
