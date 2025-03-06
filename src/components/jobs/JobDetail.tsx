@@ -602,6 +602,12 @@ const JobDetail: React.FC = () => {
                             currentEta={phase.powderCoat.eta}
                             options={powderCoatStatusOptions}
                           />
+                          
+                          {phase.powderCoat.color && (
+                            <div className="mt-2 text-sm">
+                              <span className="font-medium">Color:</span> {phase.powderCoat.color}
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>

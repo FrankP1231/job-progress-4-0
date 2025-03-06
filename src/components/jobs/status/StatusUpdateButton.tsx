@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronDown, Calendar, Clock } from 'lucide-react';
+import { Check, ChevronDown, Calendar, Clock, Palette } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { updatePhase } from '@/lib/supabase/phaseUtils';
@@ -43,6 +44,7 @@ interface StatusUpdateButtonProps {
   currentStatus: StatusValue;
   currentHours?: number;
   currentEta?: string;
+  currentColor?: string;
   options: StatusOption[];
   onSuccess?: () => void;
 }
@@ -55,6 +57,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   currentStatus,
   currentHours,
   currentEta,
+  currentColor,
   options,
   onSuccess,
 }) => {
@@ -62,8 +65,10 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const [status, setStatus] = useState<StatusValue>(currentStatus);
   const [hours, setHours] = useState<string>(currentHours?.toString() || '');
   const [eta, setEta] = useState<string>(currentEta || '');
+  const [color, setColor] = useState<string>(currentColor || '');
   const [showHoursDialog, setShowHoursDialog] = useState(false);
   const [showEtaDialog, setShowEtaDialog] = useState(false);
+  const [showColorDialog, setShowColorDialog] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<StatusValue>(currentStatus);
   const queryClient = useQueryClient();
 
@@ -72,7 +77,8 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     setPreviousStatus(currentStatus);
     setHours(currentHours?.toString() || '');
     setEta(currentEta || '');
-  }, [currentStatus, currentHours, currentEta]);
+    setColor(currentColor || '');
+  }, [currentStatus, currentHours, currentEta, currentColor]);
 
   const handleStatusUpdate = async (newStatus: StatusValue) => {
     if (newStatus === status) return;
@@ -91,10 +97,16 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       return;
     }
     
+    if (statusType === 'powderCoat' && (newStatus === 'in-progress' || newStatus === 'complete')) {
+      setStatus(newStatus);
+      setShowColorDialog(true);
+      return;
+    }
+    
     await updateStatusInDatabase(newStatus);
   };
 
-  const updateStatusInDatabase = async (newStatus: StatusValue, newHours?: number, newEta?: string) => {
+  const updateStatusInDatabase = async (newStatus: StatusValue, newHours?: number, newEta?: string, newColor?: string) => {
     setIsUpdating(true);
     try {
       const pathParts = fieldPath.split('.');
@@ -112,6 +124,10 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
         
         if ((statusType === 'material' || statusType === 'powderCoat') && newStatus === 'ordered' && newEta) {
           updateData[pathParts[0]].eta = newEta;
+        }
+        
+        if (statusType === 'powderCoat' && (newStatus === 'in-progress' || newStatus === 'complete') && newColor) {
+          updateData[pathParts[0]].color = newColor;
         }
       } else if (pathParts.length === 3) {
         updateData[pathParts[0]] = {
@@ -135,6 +151,9 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
       }
       if (newEta) {
         successMessage += ` with ETA of ${format(new Date(newEta), 'PP')}`;
+      }
+      if (newColor) {
+        successMessage += ` with color: ${newColor}`;
       }
       
       toast.success(successMessage);
@@ -172,12 +191,24 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     await updateStatusInDatabase(status, undefined, eta);
     setShowEtaDialog(false);
   };
+  
+  const handleColorSubmit = async () => {
+    if (!color) {
+      toast.error('Please enter a color');
+      return;
+    }
+    
+    await updateStatusInDatabase(status, undefined, undefined, color);
+    setShowColorDialog(false);
+  };
 
-  const handleDialogClose = (dialogType: 'hours' | 'eta') => {
+  const handleDialogClose = (dialogType: 'hours' | 'eta' | 'color') => {
     if (dialogType === 'hours') {
       setShowHoursDialog(false);
-    } else {
+    } else if (dialogType === 'eta') {
       setShowEtaDialog(false);
+    } else if (dialogType === 'color') {
+      setShowColorDialog(false);
     }
     
     setStatus(previousStatus);
@@ -185,6 +216,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
     
     setHours(currentHours?.toString() || '');
     setEta(currentEta || '');
+    setColor(currentColor || '');
   };
   
   const getStatusLabel = (status: StatusValue, options: StatusOption[]) => {
@@ -336,6 +368,45 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
             <Button type="submit" onClick={handleEtaSubmit}>
               <Calendar className="mr-2 h-4 w-4" />
               Update ETA
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog 
+        open={showColorDialog} 
+        onOpenChange={(open) => {
+          if (!open) handleDialogClose('color');
+          else setShowColorDialog(open);
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enter Powder Coat Color</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                Color
+              </Label>
+              <Input
+                id="color"
+                type="text"
+                placeholder="e.g. Black Matte"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                className="col-span-3"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => handleDialogClose('color')}>
+              Cancel
+            </Button>
+            <Button type="submit" onClick={handleColorSubmit}>
+              <Palette className="mr-2 h-4 w-4" />
+              Update Color
             </Button>
           </DialogFooter>
         </DialogContent>
