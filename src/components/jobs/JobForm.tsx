@@ -18,7 +18,7 @@ const JobForm: React.FC = () => {
     projectName: '',
     buyer: '',
     title: '',
-    salesman: '',
+    salesman: '',  // We'll keep the field name the same to maintain database compatibility
     drawingsUrl: '',
     worksheetUrl: ''
   });
@@ -125,7 +125,7 @@ const JobForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="salesman">Salesperson *</Label>
+                <Label htmlFor="salesman">Project Manager *</Label>
                 <Input
                   id="salesman"
                   name="salesman"

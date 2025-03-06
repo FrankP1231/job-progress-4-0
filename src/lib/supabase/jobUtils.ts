@@ -1,3 +1,4 @@
+
 import { supabase, Json } from "./client";
 import { Job } from '../types';
 
@@ -65,7 +66,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     projectName: data.project_name,
     buyer: data.buyer,
     title: data.title,
-    salesman: data.salesman,
+    salesman: data.salesman, // Field name stays the same for database compatibility
     drawingsUrl: data.drawings_url,
     worksheetUrl: data.worksheet_url,
     phases: phases,
@@ -104,7 +105,7 @@ export const getJobByNumber = async (jobNumber: string): Promise<Job | undefined
     projectName: data.project_name,
     buyer: data.buyer,
     title: data.title,
-    salesman: data.salesman,
+    salesman: data.salesman, // Field name stays the same for database compatibility
     drawingsUrl: data.drawings_url,
     worksheetUrl: data.worksheet_url,
     phases: phases,
@@ -130,7 +131,7 @@ export const createJob = async (jobData: Partial<Job>): Promise<Job> => {
       project_name: jobData.projectName || '',
       buyer: jobData.buyer || '',
       title: jobData.title || '',
-      salesman: jobData.salesman || '',
+      salesman: jobData.salesman || '', // Field name stays the same for database compatibility
       drawings_url: jobData.drawingsUrl,
       worksheet_url: jobData.worksheetUrl
     })
@@ -149,7 +150,7 @@ export const createJob = async (jobData: Partial<Job>): Promise<Job> => {
     projectName: data.project_name,
     buyer: data.buyer,
     title: data.title,
-    salesman: data.salesman,
+    salesman: data.salesman, // Field name stays the same for database compatibility
     drawingsUrl: data.drawings_url,
     worksheetUrl: data.worksheet_url,
     phases: [],
@@ -180,7 +181,7 @@ export const updateJob = async (id: string, jobData: Partial<Job>): Promise<Job 
       project_name: jobData.projectName,
       buyer: jobData.buyer,
       title: jobData.title,
-      salesman: jobData.salesman,
+      salesman: jobData.salesman, // Field name stays the same for database compatibility
       drawings_url: jobData.drawingsUrl,
       worksheet_url: jobData.worksheetUrl,
       updated_at: new Date().toISOString()
@@ -207,7 +208,7 @@ export const updateJob = async (id: string, jobData: Partial<Job>): Promise<Job 
     projectName: data.project_name,
     buyer: data.buyer,
     title: data.title,
-    salesman: data.salesman,
+    salesman: data.salesman, // Field name stays the same for database compatibility
     drawingsUrl: data.drawings_url,
     worksheetUrl: data.worksheet_url,
     phases: phases,

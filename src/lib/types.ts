@@ -1,4 +1,5 @@
 
+
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
@@ -64,7 +65,7 @@ export interface Job {
   projectName: string;
   buyer: string;
   title: string;
-  salesman: string;
+  salesman: string;  // Field name stays the same for database compatibility
   drawingsUrl?: string;
   worksheetUrl?: string;
   phases: Phase[];
