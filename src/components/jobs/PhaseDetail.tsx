@@ -122,10 +122,22 @@ const PhaseDetail: React.FC = () => {
     );
   }
 
+  // Normalize installation status - ensure it's always a string, not an object
+  const normalizedPhase = {
+    ...phase,
+    installation: {
+      ...phase.installation,
+      // If status is an object with its own status property, extract the string value
+      status: typeof phase.installation.status === 'object' && phase.installation.status !== null && 'status' in phase.installation.status 
+        ? phase.installation.status.status as InstallationStatus 
+        : phase.installation.status as InstallationStatus
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center">
-        <Button variant="outline" size="icon" className="mr-2" onClick={handleBackClick}>
+        <Button variant="outline" size="icon" className="mr-2" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
           <span className="sr-only">Back</span>
         </Button>
@@ -232,7 +244,7 @@ const PhaseDetail: React.FC = () => {
           </CardHeader>
           <CardContent>
             <InstallationCard
-              installation={phase.installation}
+              installation={normalizedPhase.installation}
               materials={phase.installationMaterials}
               materialStatus={
                 jobId && phaseId ? (
@@ -254,7 +266,7 @@ const PhaseDetail: React.FC = () => {
                     phaseId={phaseId}
                     statusType="installation"
                     fieldPath="installation.status"
-                    currentStatus={phase.installation.status}
+                    currentStatus={normalizedPhase.installation.status}
                     options={installationStatusOptions}
                     onStatusChange={(newStatus) => {
                       // If installation is complete, mark the phase as complete
