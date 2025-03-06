@@ -2,6 +2,18 @@
 import { supabase } from "./client";
 import { logActivity } from "./activityLogUtils";
 
+// Map JavaScript camelCase field paths to database snake_case column names
+const fieldPathToColumnMap: Record<string, string> = {
+  'weldingMaterials': 'welding_materials',
+  'weldingLabor': 'welding_labor',
+  'sewingMaterials': 'sewing_materials',
+  'sewingLabor': 'sewing_labor',
+  'installationMaterials': 'installation_materials',
+  'powderCoat': 'powder_coat',
+  'installation': 'installation',
+  'installation.rentalEquipment': 'installation.rental_equipment'
+};
+
 // Update a phase's status field
 export const updatePhaseStatus = async (
   jobId: string, 
@@ -29,12 +41,15 @@ export const updatePhaseStatus = async (
     
     // Parse the field path to access the nested JSON field
     const pathSegments = fieldPath.split('.');
-    const fieldToUpdate = pathSegments[0]; // e.g., 'welding_materials', 'installation', etc.
+    
+    // Get the database column name for the first segment
+    const baseFieldName = pathSegments[0];
+    const dbColumnName = fieldPathToColumnMap[baseFieldName] || baseFieldName;
     
     // Deep clone the current field value to avoid mutating the original
     // Handle potentially undefined values safely
-    const updatedField = currentPhase[fieldToUpdate] ? 
-      JSON.parse(JSON.stringify(currentPhase[fieldToUpdate])) : {};
+    const updatedField = currentPhase[dbColumnName] ? 
+      JSON.parse(JSON.stringify(currentPhase[dbColumnName])) : {};
     
     // Store the current value before updates for logging
     const previousValue = JSON.parse(JSON.stringify(updatedField));
@@ -49,18 +64,25 @@ export const updatePhaseStatus = async (
       
       // Navigate to the nested object, except the last segment
       for (let i = 1; i < pathSegments.length - 1; i++) {
-        if (!target[pathSegments[i]]) {
-          target[pathSegments[i]] = {};
+        const segment = pathSegments[i];
+        // Handle snake_case conversion for nested objects
+        const dbSegment = segment === 'rentalEquipment' ? 'rental_equipment' : segment;
+        
+        if (!target[dbSegment]) {
+          target[dbSegment] = {};
         }
-        target = target[pathSegments[i]];
+        target = target[dbSegment];
       }
       
       // Update the nested property
       const lastSegment = pathSegments[pathSegments.length - 1];
-      if (!target[lastSegment]) {
-        target[lastSegment] = {};
+      // Convert the last segment if needed
+      const dbLastSegment = lastSegment === 'rentalEquipment' ? 'rental_equipment' : lastSegment;
+      
+      if (!target[dbLastSegment]) {
+        target[dbLastSegment] = {};
       }
-      Object.assign(target[lastSegment], updateData);
+      Object.assign(target[dbLastSegment], updateData);
     }
     
     // Check if installation status is being set to complete
@@ -92,7 +114,7 @@ export const updatePhaseStatus = async (
     const { error: updateError } = await supabase
       .from('phases')
       .update({
-        [fieldToUpdate]: updatedField,
+        [dbColumnName]: updatedField,
         is_complete: isComplete,
         updated_at: new Date().toISOString()
       })
