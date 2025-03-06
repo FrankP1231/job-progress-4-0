@@ -7,11 +7,10 @@ import { toast } from 'sonner';
 import { ArrowLeft, Wrench, Scissors, Palette } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus } from '@/lib/types';
-import MaterialStatusCard from './status/MaterialStatusCard';
-import LaborStatusCard from './status/LaborStatusCard';
 import PowderCoatCard from './status/PowderCoatCard';
 import InstallationCard from './status/InstallationCard';
 import StatusUpdateButton from './status/StatusUpdateButton';
+import CombinedLaborMaterialCard from './status/CombinedLaborMaterialCard';
 
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
@@ -133,145 +132,87 @@ const PhaseDetail: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Wrench className="h-4 w-4" />
-                <span>Welding Labor</span>
-              </CardTitle>
-              <div>
-                {jobId && phaseId && (
-                  <StatusUpdateButton
-                    jobId={jobId}
-                    phaseId={phaseId}
-                    statusType="labor"
-                    fieldPath="weldingLabor.status"
-                    currentStatus={phase.weldingLabor.status}
-                    currentHours={phase.weldingLabor.hours}
-                    options={laborStatusOptions}
-                  />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <LaborStatusCard
-                title=""
-                hideTitle
-                icon={<Wrench className="h-4 w-4" />}
-                labor={{
-                  ...phase.weldingLabor,
-                  status: undefined as any 
-                }}
-                hideStatus={true}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Wrench className="h-4 w-4" />
-                <span>Welding Materials</span>
-              </CardTitle>
-              <div>
-                {jobId && phaseId && (
-                  <StatusUpdateButton
-                    jobId={jobId}
-                    phaseId={phaseId}
-                    statusType="material"
-                    fieldPath="weldingMaterials.status"
-                    currentStatus={phase.weldingMaterials.status}
-                    currentEta={phase.weldingMaterials.eta}
-                    options={materialStatusOptions}
-                  />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <MaterialStatusCard
-                title=""
-                hideTitle
-                icon={<Wrench className="h-4 w-4" />}
-                material={{
-                  ...phase.weldingMaterials,
-                  status: undefined as any
-                }}
-                hideStatus={true}
-              />
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Wrench className="h-4 w-4" />
+              <span>Welding</span>
+            </CardTitle>
+          </CardHeader>
+          <CombinedLaborMaterialCard
+            title="Welding"
+            icon={<Wrench className="h-4 w-4" />}
+            labor={phase.weldingLabor}
+            material={phase.weldingMaterials}
+            laborStatus={
+              jobId && phaseId && (
+                <StatusUpdateButton
+                  jobId={jobId}
+                  phaseId={phaseId}
+                  statusType="labor"
+                  fieldPath="weldingLabor.status"
+                  currentStatus={phase.weldingLabor.status}
+                  currentHours={phase.weldingLabor.hours}
+                  options={laborStatusOptions}
+                />
+              )
+            }
+            materialStatus={
+              jobId && phaseId && (
+                <StatusUpdateButton
+                  jobId={jobId}
+                  phaseId={phaseId}
+                  statusType="material"
+                  fieldPath="weldingMaterials.status"
+                  currentStatus={phase.weldingMaterials.status}
+                  currentEta={phase.weldingMaterials.eta}
+                  options={materialStatusOptions}
+                />
+              )
+            }
+          />
+        </Card>
         
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Scissors className="h-4 w-4" />
-                <span>Sewing Labor</span>
-              </CardTitle>
-              <div>
-                {jobId && phaseId && (
-                  <StatusUpdateButton
-                    jobId={jobId}
-                    phaseId={phaseId}
-                    statusType="labor"
-                    fieldPath="sewingLabor.status"
-                    currentStatus={phase.sewingLabor.status}
-                    currentHours={phase.sewingLabor.hours}
-                    options={laborStatusOptions}
-                  />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <LaborStatusCard
-                title=""
-                hideTitle
-                icon={<Scissors className="h-4 w-4" />}
-                labor={{
-                  ...phase.sewingLabor,
-                  status: undefined as any
-                }}
-                hideStatus={true}
-              />
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Scissors className="h-4 w-4" />
-                <span>Sewing Materials</span>
-              </CardTitle>
-              <div>
-                {jobId && phaseId && (
-                  <StatusUpdateButton
-                    jobId={jobId}
-                    phaseId={phaseId}
-                    statusType="material"
-                    fieldPath="sewingMaterials.status"
-                    currentStatus={phase.sewingMaterials.status}
-                    currentEta={phase.sewingMaterials.eta}
-                    options={materialStatusOptions}
-                  />
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <MaterialStatusCard
-                title=""
-                hideTitle
-                icon={<Scissors className="h-4 w-4" />}
-                material={{
-                  ...phase.sewingMaterials,
-                  status: undefined as any
-                }}
-                hideStatus={true}
-              />
-            </CardContent>
-          </Card>
-        </div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Scissors className="h-4 w-4" />
+              <span>Sewing</span>
+            </CardTitle>
+          </CardHeader>
+          <CombinedLaborMaterialCard
+            title="Sewing"
+            icon={<Scissors className="h-4 w-4" />}
+            labor={phase.sewingLabor}
+            material={phase.sewingMaterials}
+            laborStatus={
+              jobId && phaseId && (
+                <StatusUpdateButton
+                  jobId={jobId}
+                  phaseId={phaseId}
+                  statusType="labor"
+                  fieldPath="sewingLabor.status"
+                  currentStatus={phase.sewingLabor.status}
+                  currentHours={phase.sewingLabor.hours}
+                  options={laborStatusOptions}
+                />
+              )
+            }
+            materialStatus={
+              jobId && phaseId && (
+                <StatusUpdateButton
+                  jobId={jobId}
+                  phaseId={phaseId}
+                  statusType="material"
+                  fieldPath="sewingMaterials.status"
+                  currentStatus={phase.sewingMaterials.status}
+                  currentEta={phase.sewingMaterials.eta}
+                  options={materialStatusOptions}
+                />
+              )
+            }
+          />
+        </Card>
         
         <div className="md:col-span-2">
           <Card>
