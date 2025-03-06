@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Wrench, Scissors, Clock } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Phase } from '@/lib/types';
+import { Phase, MaterialStatus, LaborStatus } from '@/lib/types';
 
 const ProductionLaborView: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -166,10 +166,10 @@ const ProductionLaborView: React.FC = () => {
 
 interface PhaseRowProps {
   phase: Phase;
-  materialStatus: string;
+  materialStatus: MaterialStatus;
   materialEta?: string;
   materialNotes?: string;
-  laborStatus: string;
+  laborStatus: LaborStatus;
   laborHours?: number;
   laborNotes?: string;
 }
@@ -191,10 +191,10 @@ const PhaseRow: React.FC<PhaseRowProps> = ({
         </Link>
       </TableCell>
       <TableCell>
-        <StatusBadge status={materialStatus} />
+        <StatusBadge status={materialStatus as MaterialStatus} />
       </TableCell>
       <TableCell>
-        <StatusBadge status={laborStatus} />
+        <StatusBadge status={laborStatus as LaborStatus} />
       </TableCell>
       <TableCell>
         {laborHours ? (
