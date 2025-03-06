@@ -1,99 +1,137 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Truck, Calendar, Users } from 'lucide-react';
+import { Package, Calendar, Truck } from 'lucide-react';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Installation, MaterialStatus } from '@/lib/types';
+import { Installation, Material, RentalEquipment } from '@/lib/types';
 
 interface InstallationCardProps {
   installation: Installation;
-  materials: { status: MaterialStatus; eta?: string; notes?: string; };
+  materials: Material;
+  rental?: React.ReactNode; // Pass in status update button
 }
 
-const InstallationCard: React.FC<InstallationCardProps> = ({ installation, materials }) => {
+const InstallationCard: React.FC<InstallationCardProps> = ({ 
+  installation, 
+  materials,
+  rental
+}) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Truck className="h-4 w-4" />
-          <span>Installation</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div>
-          <h3 className="text-sm font-medium mb-3">Crew Details</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-sm text-muted-foreground">Crew Size</span>
-              <div className="flex items-center mt-1">
-                <Users className="h-4 w-4 mr-2" />
-                <span>{installation.crewMembersNeeded} members</span>
-              </div>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Hours Needed</span>
-              <div className="flex items-center mt-1">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span>{installation.crewHoursNeeded} hours</span>
-              </div>
-            </div>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium">Materials</h3>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <StatusBadge status={materials.status} />
           </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium mb-3">Materials</h3>
-          <div className="space-y-2">
+          
+          {materials.eta && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Status</span>
-              <StatusBadge status={materials.status} />
+              <span className="text-sm text-muted-foreground">ETA</span>
+              <span className="text-sm">{new Date(materials.eta).toLocaleDateString()}</span>
             </div>
-            {materials.eta && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">ETA</span>
-                <span className="text-sm">{new Date(materials.eta).toLocaleDateString()}</span>
-              </div>
-            )}
-          </div>
+          )}
+          
+          {materials.notes && (
+            <div>
+              <span className="text-sm text-muted-foreground">Notes</span>
+              <p className="text-sm mt-1">{materials.notes}</p>
+            </div>
+          )}
         </div>
-
-        <div>
-          <h3 className="text-sm font-medium mb-3">Schedule</h3>
-          <div className="space-y-2">
+        
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">Rental Equipment</h3>
+            {rental}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Status</span>
+            <StatusBadge status={installation.rentalEquipment.status} />
+          </div>
+          
+          {installation.rentalEquipment.details && (
+            <div>
+              <span className="text-sm text-muted-foreground">Details</span>
+              <p className="text-sm mt-1">{installation.rentalEquipment.details}</p>
+            </div>
+          )}
+          
+          {installation.rentalEquipment.notes && (
+            <div>
+              <span className="text-sm text-muted-foreground">Notes</span>
+              <p className="text-sm mt-1">{installation.rentalEquipment.notes}</p>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      <div className="pt-4 border-t">
+        <h3 className="text-sm font-medium mb-4">Installation Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Crew Size</span>
+              <span className="text-sm">{installation.crewMembersNeeded} members</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Hours Needed</span>
+              <span className="text-sm">{installation.crewHoursNeeded} hours</span>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
             {installation.siteReadyDate && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Site Ready</span>
+                <div className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Site Ready</span>
+                </div>
                 <span className="text-sm">{new Date(installation.siteReadyDate).toLocaleDateString()}</span>
               </div>
             )}
+            
+            {installation.installDeadline && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Deadline</span>
+                </div>
+                <span className="text-sm">{new Date(installation.installDeadline).toLocaleDateString()}</span>
+              </div>
+            )}
+            
             {installation.installStartDate && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Start Date</span>
+                <div className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Start Date</span>
+                </div>
                 <span className="text-sm">{new Date(installation.installStartDate).toLocaleDateString()}</span>
               </div>
             )}
+            
             {installation.installFinishDate && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">End Date</span>
+                <div className="flex items-center">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Finish Date</span>
+                </div>
                 <span className="text-sm">{new Date(installation.installFinishDate).toLocaleDateString()}</span>
-              </div>
-            )}
-            {installation.installDeadline && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Deadline</span>
-                <span className="text-sm">{new Date(installation.installDeadline).toLocaleDateString()}</span>
               </div>
             )}
           </div>
         </div>
-
+        
         {installation.notes && (
-          <div>
-            <span className="text-sm text-muted-foreground">Notes</span>
+          <div className="mt-4">
+            <span className="text-sm text-muted-foreground">Installation Notes</span>
             <p className="text-sm mt-1">{installation.notes}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

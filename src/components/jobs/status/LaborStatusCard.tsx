@@ -9,22 +9,26 @@ interface LaborStatusCardProps {
   title: string;
   icon?: React.ReactNode;
   labor: Labor;
+  hideTitle?: boolean;
 }
 
 const LaborStatusCard: React.FC<LaborStatusCardProps> = ({
   title,
   icon = <Users className="h-4 w-4" />,
   labor,
+  hideTitle = false
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {icon}
-          <span>{title}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <>
+      {!hideTitle && (
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            {icon}
+            <span>{title}</span>
+          </CardTitle>
+        </CardHeader>
+      )}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Status</span>
           <StatusBadge status={labor.status} />
@@ -43,8 +47,8 @@ const LaborStatusCard: React.FC<LaborStatusCardProps> = ({
             <p className="text-sm mt-1">{labor.notes}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 };
 

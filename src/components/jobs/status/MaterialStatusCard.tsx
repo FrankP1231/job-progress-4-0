@@ -9,22 +9,26 @@ interface MaterialStatusCardProps {
   title: string;
   icon?: React.ReactNode;
   material: Material;
+  hideTitle?: boolean;
 }
 
 const MaterialStatusCard: React.FC<MaterialStatusCardProps> = ({
   title,
   icon = <Package className="h-4 w-4" />,
   material,
+  hideTitle = false
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          {icon}
-          <span>{title}</span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <>
+      {!hideTitle && (
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            {icon}
+            <span>{title}</span>
+          </CardTitle>
+        </CardHeader>
+      )}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Status</span>
           <StatusBadge status={material.status} />
@@ -43,8 +47,8 @@ const MaterialStatusCard: React.FC<MaterialStatusCardProps> = ({
             <p className="text-sm mt-1">{material.notes}</p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </>
   );
 };
 
