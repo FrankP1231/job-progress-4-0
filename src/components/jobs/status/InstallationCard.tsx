@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Package, Calendar, Truck } from 'lucide-react';
-import StatusBadge from '@/components/ui/StatusBadge';
 import { Installation, Material, RentalEquipment } from '@/lib/types';
 
 interface InstallationCardProps {
@@ -26,11 +25,6 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
           {materialStatus}
         </div>
         
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <StatusBadge status={materials.status} />
-        </div>
-        
         {materials.eta && (
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">ETA</span>
@@ -51,11 +45,6 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium">Rental Equipment</h3>
           {rental}
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Status</span>
-          <StatusBadge status={installation.rentalEquipment.status} />
         </div>
         
         {installation.rentalEquipment.details && (
