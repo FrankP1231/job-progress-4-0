@@ -19,7 +19,10 @@ const PhaseInfoColumn: React.FC<PhaseInfoColumnProps> = ({
       <div className="font-medium text-gray-800">
         Phase {phaseNumber}: {phaseName}
       </div>
-      <Badge variant={isComplete ? "outline" : "default"} className={isComplete ? "bg-green-100 text-green-700 border-green-200 mt-2" : "mt-2"}>
+      <Badge 
+        variant={isComplete ? "outline" : "default"} 
+        className={isComplete ? "bg-green-100 text-green-700 border-green-200 mt-2" : "mt-2"}
+      >
         {isComplete ? 'Complete' : 'In Progress'}
       </Badge>
     </TableCell>
