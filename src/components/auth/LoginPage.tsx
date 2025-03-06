@@ -42,8 +42,14 @@ const LoginPage: React.FC = () => {
     <div className="h-screen flex items-center justify-center bg-muted/30">
       <div className="w-full max-w-md px-4">
         <Card className="w-full">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Awning & Canopy Tracker</CardTitle>
+          <CardHeader className="space-y-4 text-center">
+            <div className="mx-auto w-full max-w-[200px] mb-4">
+              <img 
+                src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
+                alt="USA Canvas Logo" 
+                className="w-full" 
+              />
+            </div>
             <CardDescription>Enter your password to access the job tracking system</CardDescription>
           </CardHeader>
           

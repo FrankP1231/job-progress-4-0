@@ -37,7 +37,11 @@ const Navbar: React.FC = () => {
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
           <Link to="/dashboard" className="flex items-center space-x-2">
-            <span className="font-bold text-xl">Awning Tracker</span>
+            <img 
+              src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
+              alt="USA Canvas Logo" 
+              className="h-8" 
+            />
           </Link>
         </div>
         
@@ -51,7 +55,13 @@ const Navbar: React.FC = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-[300px] sm:w-[400px]">
               <SheetHeader>
-                <SheetTitle>Awning Tracker</SheetTitle>
+                <SheetTitle>
+                  <img 
+                    src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
+                    alt="USA Canvas Logo" 
+                    className="h-8 mx-auto" 
+                  />
+                </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 py-4">
                 <SheetClose asChild>
@@ -82,7 +92,11 @@ const Navbar: React.FC = () => {
             </SheetContent>
           </Sheet>
           <Link to="/dashboard" className="flex items-center">
-            <span className="font-bold">Awning Tracker</span>
+            <img 
+              src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
+              alt="USA Canvas Logo" 
+              className="h-6" 
+            />
           </Link>
         </div>
         
