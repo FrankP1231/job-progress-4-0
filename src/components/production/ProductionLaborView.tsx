@@ -3,13 +3,10 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { getJobById } from '@/lib/supabase/jobUtils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Wrench, Scissors, Clock } from 'lucide-react';
-import StatusBadge from '@/components/ui/StatusBadge';
-import { Phase, MaterialStatus, LaborStatus } from '@/lib/types';
+import { ArrowLeft, Wrench, Scissors } from 'lucide-react';
+import ProductionPhasesTab from './ProductionPhasesTab';
 
 const ProductionLaborView: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -76,171 +73,22 @@ const ProductionLaborView: React.FC = () => {
         </TabsList>
 
         <TabsContent value="welding" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center">
-                <Wrench className="mr-2 h-5 w-5 text-blue-500" />
-                Welding Production
-              </CardTitle>
-              <div className="flex items-center bg-blue-50 text-blue-700 px-3 py-1 rounded-md">
-                <Clock className="h-4 w-4 mr-2" />
-                <span className="font-medium">Total Est. Hours: {totalWeldingHours}</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {weldingPhases.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  No phases with welding tasks found
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phase</TableHead>
-                      <TableHead>Materials Status</TableHead>
-                      <TableHead>Labor Status</TableHead>
-                      <TableHead>Est. Hours</TableHead>
-                      <TableHead>Material ETA</TableHead>
-                      <TableHead>Notes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {weldingPhases
-                      .sort((a, b) => a.phaseNumber - b.phaseNumber)
-                      .map((phase) => (
-                        <PhaseRow 
-                          key={phase.id} 
-                          phase={phase} 
-                          materialStatus={phase.weldingMaterials.status}
-                          materialEta={phase.weldingMaterials.eta}
-                          materialNotes={phase.weldingMaterials.notes}
-                          laborStatus={phase.weldingLabor.status}
-                          laborHours={phase.weldingLabor.hours}
-                          laborNotes={phase.weldingLabor.notes}
-                        />
-                      ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ProductionPhasesTab 
+            phases={weldingPhases} 
+            tabType="welding" 
+            totalHours={totalWeldingHours}
+          />
         </TabsContent>
 
         <TabsContent value="sewing" className="mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center">
-                <Scissors className="mr-2 h-5 w-5 text-purple-500" />
-                Sewing Production
-              </CardTitle>
-              <div className="flex items-center bg-purple-50 text-purple-700 px-3 py-1 rounded-md">
-                <Clock className="h-4 w-4 mr-2" />
-                <span className="font-medium">Total Est. Hours: {totalSewingHours}</span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {sewingPhases.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  No phases with sewing tasks found
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Phase</TableHead>
-                      <TableHead>Materials Status</TableHead>
-                      <TableHead>Labor Status</TableHead>
-                      <TableHead>Est. Hours</TableHead>
-                      <TableHead>Material ETA</TableHead>
-                      <TableHead>Notes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sewingPhases
-                      .sort((a, b) => a.phaseNumber - b.phaseNumber)
-                      .map((phase) => (
-                        <PhaseRow 
-                          key={phase.id} 
-                          phase={phase} 
-                          materialStatus={phase.sewingMaterials.status}
-                          materialEta={phase.sewingMaterials.eta}
-                          materialNotes={phase.sewingMaterials.notes}
-                          laborStatus={phase.sewingLabor.status}
-                          laborHours={phase.sewingLabor.hours}
-                          laborNotes={phase.sewingLabor.notes}
-                        />
-                      ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ProductionPhasesTab 
+            phases={sewingPhases} 
+            tabType="sewing"
+            totalHours={totalSewingHours}
+          />
         </TabsContent>
       </Tabs>
     </div>
-  );
-};
-
-interface PhaseRowProps {
-  phase: Phase;
-  materialStatus: MaterialStatus;
-  materialEta?: string;
-  materialNotes?: string;
-  laborStatus: LaborStatus;
-  laborHours?: number;
-  laborNotes?: string;
-}
-
-const PhaseRow: React.FC<PhaseRowProps> = ({
-  phase,
-  materialStatus,
-  materialEta,
-  materialNotes,
-  laborStatus,
-  laborHours,
-  laborNotes
-}) => {
-  return (
-    <TableRow key={phase.id}>
-      <TableCell className="font-medium">
-        <Link to={`/jobs/${phase.jobId}/phases/${phase.id}`} className="hover:underline">
-          {phase.phaseNumber}: {phase.phaseName}
-        </Link>
-      </TableCell>
-      <TableCell>
-        <StatusBadge status={materialStatus as MaterialStatus} />
-      </TableCell>
-      <TableCell>
-        <StatusBadge status={laborStatus as LaborStatus} />
-      </TableCell>
-      <TableCell>
-        {laborHours ? (
-          <div className="flex items-center">
-            <Clock className="h-4 w-4 mr-1 text-gray-500" />
-            {laborHours} hrs
-          </div>
-        ) : (
-          <span className="text-gray-400">Not estimated</span>
-        )}
-      </TableCell>
-      <TableCell>
-        {materialEta ? (
-          new Date(materialEta).toLocaleDateString()
-        ) : (
-          <span className="text-gray-400">No ETA</span>
-        )}
-      </TableCell>
-      <TableCell className="max-w-xs truncate">
-        {materialNotes || laborNotes ? (
-          <div className="text-sm text-gray-600">
-            {materialNotes && <div className="truncate">{materialNotes}</div>}
-            {laborNotes && <div className="truncate">{laborNotes}</div>}
-          </div>
-        ) : (
-          <span className="text-gray-400">No notes</span>
-        )}
-      </TableCell>
-    </TableRow>
   );
 };
 
