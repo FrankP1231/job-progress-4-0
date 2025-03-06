@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TableCell } from '@/components/ui/table';
-import StatusUpdateButton from '../StatusUpdateButton';
+import StatusUpdateButton from '../../status/StatusUpdateButton';
 import { MaterialStatus, InstallationStatus, RentalEquipmentStatus } from '@/lib/types';
 
 interface InstallationColumnProps {

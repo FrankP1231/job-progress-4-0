@@ -65,7 +65,7 @@ const StatusUpdateButton: React.FC<StatusUpdateButtonProps> = ({
   const statusString = typeof currentStatus === 'string' 
     ? currentStatus 
     : (currentStatus && typeof currentStatus === 'object' && 'status' in currentStatus)
-      ? currentStatus.status
+      ? String(currentStatus.status)
       : 'not-started';
 
   const handleStatusChange = async () => {
