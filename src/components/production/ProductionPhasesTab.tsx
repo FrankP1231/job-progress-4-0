@@ -52,7 +52,7 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[40px]"></TableHead>
-                <TableHead>Job</TableHead>
+                <TableHead>Job / Customer</TableHead>
                 <TableHead>Phase</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Hours</TableHead>
@@ -83,6 +83,7 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
                                 <TasksContainer
                                   title="Welding Tasks"
                                   tasks={phase.weldingLabor.tasks || []}
+                                  phaseId={phase.id}
                                   area="weldingLabor"
                                   className="mb-4"
                                 />
@@ -91,6 +92,7 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
                                 <TasksContainer
                                   title="Sewing Tasks"
                                   tasks={phase.sewingLabor.tasks || []}
+                                  phaseId={phase.id}
                                   area="sewingLabor"
                                   className="mb-4"
                                 />
@@ -99,6 +101,7 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
                                 <TasksContainer
                                   title="Installation Tasks"
                                   tasks={phase.installation.tasks || []}
+                                  phaseId={phase.id}
                                   area="installation"
                                   className="mb-4"
                                 />

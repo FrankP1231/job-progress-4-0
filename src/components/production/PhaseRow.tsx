@@ -7,6 +7,8 @@ import { Phase } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getJob } from '@/lib/supabase/jobUtils';
 
 interface PhaseRowProps {
   phase: Phase;
@@ -16,6 +18,13 @@ interface PhaseRowProps {
 }
 
 const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggle }) => {
+  // Fetch job details to display job number and customer
+  const { data: job, isLoading } = useQuery({
+    queryKey: ['job', phase.jobId],
+    queryFn: () => getJob(phase.jobId),
+    enabled: !!phase.jobId,
+  });
+
   // Determine status and hours based on tab type
   const getStatusAndHours = () => {
     if (tabType === 'welding') {
@@ -45,7 +54,6 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
         return 'default';
       case 'complete':
         return 'default';
-      case 'waiting':
       case 'not-started':
         return 'secondary';
       case 'estimated':
@@ -64,7 +72,6 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
         return 'in progress';
       case 'complete':
         return 'complete';
-      case 'waiting':
       case 'not-started':
         return 'not started';
       case 'estimated':
@@ -72,7 +79,7 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
       case 'not-needed':
         return 'not needed';
       default:
-        return status.replace('-', ' ');
+        return status;
     }
   };
 
@@ -96,7 +103,16 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
       </TableCell>
       <TableCell className="font-medium py-2">
         <Link to={`/jobs/${phase.jobId}`} className="hover:underline">
-          {phase.jobId.slice(0, 8)}
+          {isLoading ? (
+            <span className="text-gray-400">Loading...</span>
+          ) : job ? (
+            <div className="flex flex-col">
+              <span className="font-medium">{job.jobNumber}</span>
+              <span className="text-xs text-gray-500">{job.buyer}</span>
+            </div>
+          ) : (
+            phase.jobId.slice(0, 8)
+          )}
         </Link>
       </TableCell>
       <TableCell className="py-2">{phase.phaseName}</TableCell>
