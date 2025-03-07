@@ -62,6 +62,22 @@ export const getTasksForPhaseArea = async (phaseId: string, area: string): Promi
   }));
 };
 
+// Get job ID for a phase
+export const getJobIdForPhase = async (phaseId: string): Promise<string | null> => {
+  const { data, error } = await supabase
+    .from('phases')
+    .select('job_id')
+    .eq('id', phaseId)
+    .single();
+  
+  if (error) {
+    console.error('Error getting job ID for phase:', error);
+    return null;
+  }
+  
+  return data?.job_id || null;
+};
+
 // Create a new task
 export const createTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>): Promise<Task> => {
   const { data, error } = await supabase
@@ -84,13 +100,18 @@ export const createTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedA
     throw error;
   }
   
+  // Get job ID for logging
+  const jobId = await getJobIdForPhase(task.phaseId);
+  
   // Log the activity
-  await logActivity({
-    jobId: '', // This needs to be retrieved from phase data
-    phaseId: task.phaseId,
-    activityType: 'task_change',
-    description: `Task "${task.name}" was added to ${task.area}`
-  });
+  if (jobId) {
+    await logActivity({
+      jobId,
+      phaseId: task.phaseId,
+      activityType: 'task_change',
+      description: `Task "${task.name}" was added to ${task.area}`
+    });
+  }
   
   // Transform the data to match our types
   return {
@@ -131,16 +152,21 @@ export const updateTask = async (taskId: string, updates: Partial<Task>): Promis
     throw error;
   }
   
+  // Get job ID for logging
+  const jobId = await getJobIdForPhase(data.phase_id);
+  
   // Log the activity
-  await logActivity({
-    jobId: '', // This needs to be retrieved from phase data
-    phaseId: data.phase_id,
-    activityType: 'task_change',
-    description: `Task "${data.name}" was updated`,
-    fieldName: 'task',
-    previousValue: null, // Ideally, we would fetch the previous state
-    newValue: updateData
-  });
+  if (jobId) {
+    await logActivity({
+      jobId,
+      phaseId: data.phase_id,
+      activityType: 'task_change',
+      description: `Task "${data.name}" was updated`,
+      fieldName: 'task',
+      previousValue: null, // Ideally, we would fetch the previous state
+      newValue: updateData
+    });
+  }
   
   // Transform the data to match our types
   return {
@@ -178,13 +204,18 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
   }
   
   if (taskData) {
+    // Get job ID for logging
+    const jobId = await getJobIdForPhase(taskData.phase_id);
+    
     // Log the activity
-    await logActivity({
-      jobId: '', // This needs to be retrieved
-      phaseId: taskData.phase_id,
-      activityType: 'task_change',
-      description: `Task "${taskData.name}" was deleted from ${taskData.area}`
-    });
+    if (jobId) {
+      await logActivity({
+        jobId,
+        phaseId: taskData.phase_id,
+        activityType: 'task_change',
+        description: `Task "${taskData.name}" was deleted from ${taskData.area}`
+      });
+    }
   }
   
   return true;
@@ -237,13 +268,18 @@ export const addTasksToPhaseArea = async (
     throw error;
   }
   
+  // Get job ID for logging
+  const jobId = await getJobIdForPhase(phaseId);
+  
   // Log the activity
-  await logActivity({
-    jobId: '', // This needs to be retrieved
-    phaseId,
-    activityType: 'task_change',
-    description: `${tasksList.length} tasks were added to ${area}`
-  });
+  if (jobId) {
+    await logActivity({
+      jobId,
+      phaseId,
+      activityType: 'task_change',
+      description: `${tasksList.length} tasks were added to ${area}`
+    });
+  }
   
   // Transform the data to match our types
   return (data || []).map(task => ({

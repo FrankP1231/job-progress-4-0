@@ -1,19 +1,22 @@
+
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById } from '@/lib/supabaseUtils';
 import { getPhaseById } from '@/lib/supabase/phaseUtils';
 import { getPhaseActivities } from '@/lib/supabase/activityLogUtils';
+import { getTasksForPhase } from '@/lib/supabase/taskUtils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Wrench, Scissors, Palette } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
+import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus, Task } from '@/lib/types';
 import PowderCoatCard from './status/PowderCoatCard';
 import InstallationCard from './status/InstallationCard';
 import StatusUpdateButton from './status/StatusUpdateButton';
 import CombinedLaborMaterialCard from './status/CombinedLaborMaterialCard';
 import ActivityLogCard from './ActivityLogCard';
+import TasksContainer from '@/components/production/TasksContainer';
 
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
@@ -74,6 +77,15 @@ const PhaseDetail: React.FC = () => {
     enabled: !!jobId && !!phaseId
   });
 
+  const {
+    data: tasks,
+    isLoading: tasksLoading
+  } = useQuery({
+    queryKey: ['tasks', phaseId],
+    queryFn: () => phaseId ? getTasksForPhase(phaseId) : Promise.resolve([]),
+    enabled: !!phaseId
+  });
+
   const isLoading = isLoadingJob || isLoadingPhase;
 
   const handleBackClick = () => {
@@ -111,6 +123,12 @@ const PhaseDetail: React.FC = () => {
     { value: 'not-ordered', label: 'Not Ordered' },
     { value: 'ordered', label: 'Ordered' },
   ];
+
+  // Group tasks by area
+  const getTasksForArea = (area: string): Task[] => {
+    if (!tasks) return [];
+    return tasks.filter(task => task.area === area);
+  };
 
   if (isLoading) {
     return (
@@ -199,6 +217,7 @@ const PhaseDetail: React.FC = () => {
                   />
                 )
               }
+              phaseId={phaseId}
             />
           </CardContent>
         </Card>
@@ -242,6 +261,7 @@ const PhaseDetail: React.FC = () => {
                   />
                 )
               }
+              phaseId={phaseId}
             />
           </CardContent>
         </Card>
@@ -298,6 +318,16 @@ const PhaseDetail: React.FC = () => {
                 ) : undefined
               }
             />
+            
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Installation Tasks</h4>
+              <TasksContainer 
+                tasks={getTasksForArea('installation')}
+                phaseId={phaseId}
+                area="installation"
+                isEditing={true}
+              />
+            </div>
           </CardContent>
         </Card>
         
@@ -329,6 +359,16 @@ const PhaseDetail: React.FC = () => {
               }}
               hideStatus={true}
             />
+            
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-2">Powder Coat Tasks</h4>
+              <TasksContainer 
+                tasks={getTasksForArea('powderCoat')}
+                phaseId={phaseId}
+                area="powderCoat"
+                isEditing={true}
+              />
+            </div>
           </CardContent>
         </Card>
       </div>
