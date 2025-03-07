@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 
 export type ActivityType = 
@@ -7,7 +6,8 @@ export type ActivityType =
   | 'phase_update'
   | 'phase_added'
   | 'phase_deleted'
-  | 'job_created';
+  | 'job_created'
+  | 'task_change';
 
 export interface ActivityLog {
   id: string;

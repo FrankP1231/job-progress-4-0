@@ -63,7 +63,7 @@ const ProductionOverview: React.FC = () => {
   // Enhance phases with tasks
   const enhancePhaseWithTasks = (phases: Phase[]): Phase[] => {
     return phases.map(phase => {
-      const phaseTasks = phaseTasks[phase.id] || [];
+      const phaseTasks = tasksMap[phase.id] || [];
       
       return {
         ...phase,
@@ -119,6 +119,9 @@ const ProductionOverview: React.FC = () => {
     return phaseWithJobArray.map(item => item.phase);
   };
 
+  // Use tasksMap variable name consistently
+  const tasksMap = phaseTasks;
+  
   const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
   const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
   const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
