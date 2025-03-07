@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/supabase/jobUtils';
+import { calculateAreaStatus } from '@/lib/supabase/task-status';
 
 interface PhaseRowProps {
   phase: Phase;
@@ -25,27 +26,42 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
     enabled: !!phase.jobId,
   });
 
-  // Determine status and hours based on tab type
-  const getStatusAndHours = () => {
+  // Determine tasks and status based on tab type
+  const getTasksAndStatus = () => {
     if (tabType === 'welding') {
+      const tasks = phase.weldingLabor.tasks || [];
+      // Calculate status based on task completion, not just using the stored status
+      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.weldingLabor.status;
+      
       return {
-        status: phase.weldingLabor.status,
+        status: calculatedStatus,
         hours: phase.weldingLabor.hours || 0,
+        tasks: tasks
       };
     } else if (tabType === 'sewing') {
+      const tasks = phase.sewingLabor.tasks || [];
+      // Calculate status based on task completion
+      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.sewingLabor.status;
+      
       return {
-        status: phase.sewingLabor.status,
+        status: calculatedStatus,
         hours: phase.sewingLabor.hours || 0,
+        tasks: tasks
       };
     } else {
+      const tasks = phase.installation.tasks || [];
+      // Calculate status based on task completion
+      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.installation.status;
+      
       return {
-        status: phase.installation.status,
+        status: calculatedStatus,
         hours: phase.installation.crewHoursNeeded || 0,
+        tasks: tasks
       };
     }
   };
 
-  const { status, hours } = getStatusAndHours();
+  const { status, hours } = getTasksAndStatus();
 
   // Get status variant for badge
   const getStatusVariant = () => {
