@@ -12,7 +12,9 @@ import { useQueryClient } from '@tanstack/react-query';
 interface TasksContainerProps {
   tasks?: Task[];
   phaseId?: string;
+  title?: string;
   area: string;
+  className?: string;
   isEditing?: boolean;
   onAddTask?: (taskName: string) => void;
   onRemoveTask?: (taskIndex: number) => void;
@@ -21,7 +23,9 @@ interface TasksContainerProps {
 const TasksContainer: React.FC<TasksContainerProps> = ({ 
   tasks = [],
   phaseId,
+  title,
   area,
+  className = "",
   isEditing = false,
   onAddTask,
   onRemoveTask
@@ -52,7 +56,9 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   };
 
   return (
-    <div className="space-y-3 mt-2">
+    <div className={`space-y-3 mt-2 ${className}`}>
+      {title && <h3 className="text-md font-medium">{title}</h3>}
+      
       {tasks.length === 0 && !isAdding && (
         <div className="text-sm text-gray-500 italic">
           No tasks defined. {isEditing && 'Add tasks to track detailed progress.'}

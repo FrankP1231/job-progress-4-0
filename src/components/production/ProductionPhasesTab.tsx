@@ -3,12 +3,9 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Button } from '@/components/ui/button';
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Phase } from '@/lib/types';
-import { formatDistance } from 'date-fns';
-import { Link } from 'react-router-dom';
-import { Wrench, Scissors, CalendarDays, Clock, ChevronDown, ChevronRight } from 'lucide-react';
+import { Wrench, Scissors, CalendarDays, Clock } from 'lucide-react';
 import PhaseRow from './PhaseRow';
 import TasksContainer from './TasksContainer';
 
@@ -70,42 +67,47 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
                 </TableRow>
               ) : (
                 phases.map(phase => (
-                  <Collapsible key={phase.id} open={expandedPhases[phase.id]} onOpenChange={() => togglePhase(phase.id)}>
-                    <PhaseRow 
-                      phase={phase} 
-                      tabType={tabType}
-                      isExpanded={expandedPhases[phase.id] || false}
-                      onToggle={() => togglePhase(phase.id)}
-                    />
-                    <CollapsibleContent>
-                      <tr>
-                        <td colSpan={5} className="p-0">
-                          <div className="bg-muted/30 p-4 border-t">
-                            {tabType === 'welding' && (
-                              <TasksContainer
-                                title="Welding Tasks"
-                                tasks={phase.weldingLabor.tasks || []}
-                                className="mb-4"
-                              />
-                            )}
-                            {tabType === 'sewing' && (
-                              <TasksContainer
-                                title="Sewing Tasks"
-                                tasks={phase.sewingLabor.tasks || []}
-                                className="mb-4"
-                              />
-                            )}
-                            {tabType === 'readyForInstall' && (
-                              <TasksContainer
-                                title="Installation Tasks"
-                                tasks={phase.installation.tasks || []}
-                                className="mb-4"
-                              />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    </CollapsibleContent>
+                  <Collapsible key={phase.id} open={expandedPhases[phase.id]} asChild>
+                    <React.Fragment>
+                      <PhaseRow 
+                        phase={phase} 
+                        tabType={tabType}
+                        isExpanded={expandedPhases[phase.id] || false}
+                        onToggle={() => togglePhase(phase.id)}
+                      />
+                      <CollapsibleContent asChild>
+                        <tr>
+                          <td colSpan={5} className="p-0">
+                            <div className="bg-muted/30 p-4 border-t">
+                              {tabType === 'welding' && (
+                                <TasksContainer
+                                  title="Welding Tasks"
+                                  tasks={phase.weldingLabor.tasks || []}
+                                  area="weldingLabor"
+                                  className="mb-4"
+                                />
+                              )}
+                              {tabType === 'sewing' && (
+                                <TasksContainer
+                                  title="Sewing Tasks"
+                                  tasks={phase.sewingLabor.tasks || []}
+                                  area="sewingLabor"
+                                  className="mb-4"
+                                />
+                              )}
+                              {tabType === 'readyForInstall' && (
+                                <TasksContainer
+                                  title="Installation Tasks"
+                                  tasks={phase.installation.tasks || []}
+                                  area="installation"
+                                  className="mb-4"
+                                />
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      </CollapsibleContent>
+                    </React.Fragment>
                   </Collapsible>
                 ))
               )}

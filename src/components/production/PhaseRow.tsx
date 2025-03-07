@@ -42,13 +42,37 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
   const getStatusVariant = () => {
     switch (status) {
       case 'in-progress':
-        return 'warning';
+        return 'default';
       case 'complete':
-        return 'success';
+        return 'default';
       case 'waiting':
+      case 'not-started':
         return 'secondary';
+      case 'estimated':
+        return 'outline';
+      case 'not-needed':
+        return 'destructive';
       default:
         return 'outline';
+    }
+  };
+
+  // Make status display more user-friendly
+  const getDisplayStatus = () => {
+    switch (status) {
+      case 'in-progress':
+        return 'in progress';
+      case 'complete':
+        return 'complete';
+      case 'waiting':
+      case 'not-started':
+        return 'not started';
+      case 'estimated':
+        return 'estimated';
+      case 'not-needed':
+        return 'not needed';
+      default:
+        return status.replace('-', ' ');
     }
   };
 
@@ -78,7 +102,7 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
       <TableCell className="py-2">{phase.phaseName}</TableCell>
       <TableCell className="py-2">
         <Badge variant={getStatusVariant()}>
-          {status.replace('-', ' ')}
+          {getDisplayStatus()}
         </Badge>
       </TableCell>
       <TableCell className="text-right py-2">{hours}</TableCell>
