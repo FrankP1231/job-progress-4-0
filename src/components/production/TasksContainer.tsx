@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { X, PlusCircle, Check } from 'lucide-react';
-import { toggleTaskCompletion } from '@/lib/supabase/taskUtils';
+import { toggleTaskCompletion } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
+import { refreshTasksData } from '@/lib/supabase/task-status';
 
 interface TasksContainerProps {
   tasks?: Task[];
@@ -47,9 +48,11 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     
     try {
       await toggleTaskCompletion(task.id, !task.isComplete);
-      queryClient.invalidateQueries({ queryKey: ['phase', task.phaseId] });
-      queryClient.invalidateQueries({ queryKey: ['job'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks', task.phaseId] });
+      
+      // Use the dedicated function to refresh all related tasks data
+      refreshTasksData(queryClient, undefined, task.phaseId);
+      
+      console.log(`Task "${task.name}" completion toggled to ${!task.isComplete}`);
     } catch (error) {
       console.error('Error toggling task completion:', error);
     }

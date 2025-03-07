@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById } from '@/lib/supabaseUtils';
@@ -9,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { ArrowLeft, Wrench, Scissors, Palette } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus, Task } from '@/lib/types';
 import PowderCoatCard from './status/PowderCoatCard';
 import InstallationCard from './status/InstallationCard';
@@ -21,6 +20,7 @@ import TasksContainer from '@/components/production/TasksContainer';
 const PhaseDetail: React.FC = () => {
   const { jobId, phaseId } = useParams<{ jobId: string, phaseId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { 
     data: job,
@@ -83,8 +83,16 @@ const PhaseDetail: React.FC = () => {
   } = useQuery({
     queryKey: ['tasks', phaseId],
     queryFn: () => phaseId ? getTasksForPhase(phaseId) : Promise.resolve([]),
-    enabled: !!phaseId
+    enabled: !!phaseId,
+    refetchOnWindowFocus: true,
+    refetchInterval: 5000
   });
+
+  React.useEffect(() => {
+    if (tasks) {
+      console.log('Tasks fetched for phase detail:', tasks);
+    }
+  }, [tasks]);
 
   const isLoading = isLoadingJob || isLoadingPhase;
 
@@ -124,10 +132,12 @@ const PhaseDetail: React.FC = () => {
     { value: 'ordered', label: 'Ordered' },
   ];
 
-  // Group tasks by area
   const getTasksForArea = (area: string): Task[] => {
     if (!tasks) return [];
-    return tasks.filter(task => task.area === area);
+    
+    const filteredTasks = tasks.filter(task => task.area === area);
+    console.log(`Tasks for area ${area}:`, filteredTasks);
+    return filteredTasks;
   };
 
   if (isLoading) {

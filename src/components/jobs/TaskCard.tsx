@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,6 +14,12 @@ interface TaskCardProps {
 const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
   const tasks = useMemo(() => {
     const allTasks: Array<Task & { phaseName: string; phaseNumber: number }> = [];
+    
+    // Ensure job and phases exist before processing
+    if (!job || !job.phases) {
+      console.log("No job or phases available for task processing");
+      return [];
+    }
     
     // Collect tasks from all phases
     job.phases.forEach(phase => {
@@ -38,7 +43,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     });
     
     // Filter tasks that are not completed
-    return allTasks.filter(task => !task.isComplete);
+    const pendingTasks = allTasks.filter(task => !task.isComplete);
+    console.log('All pending tasks in TaskCard:', pendingTasks);
+    return pendingTasks;
   }, [job]);
 
   const getTaskIcon = (status: string) => {
@@ -66,7 +73,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     }
   };
 
-  if (tasks.length === 0) {
+  if (!tasks || tasks.length === 0) {
     return (
       <Card>
         <CardHeader>

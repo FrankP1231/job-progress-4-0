@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Labor, Material, Task } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import TasksContainer from '@/components/production/TasksContainer';
 import { addTasksToPhaseArea } from '@/lib/supabase/taskUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { refreshTasksData } from '@/lib/supabase/task-status';
 
 interface CombinedLaborMaterialCardProps {
   title: string;
@@ -39,15 +39,13 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
     if (!phaseId) return;
     
     try {
-      await addTasksToPhaseArea(phaseId, area, [taskName]);
+      const result = await addTasksToPhaseArea(phaseId, area, [taskName]);
       toast.success('Task added successfully');
       
-      // Invalidate all relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['phase'] });
-      queryClient.invalidateQueries({ queryKey: ['job'] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`, result);
       
-      console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`);
+      // Use the dedicated function to refresh all related tasks data
+      refreshTasksData(queryClient, undefined, phaseId);
     } catch (error) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task');
