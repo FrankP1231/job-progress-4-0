@@ -200,3 +200,126 @@ export const addTasksToPhaseArea = async (
   // Transform the data to match our types
   return (data || []).map(transformTaskData);
 };
+
+// Add sample tasks for testing (new function)
+export const addSampleTasksToPhases = async (): Promise<void> => {
+  // Get all phases to add tasks to
+  const { data: phases, error } = await supabase
+    .from('phases')
+    .select('id, phase_name, job_id')
+    .order('created_at', { ascending: true })
+    .limit(10);
+  
+  if (error) {
+    console.error('Error fetching phases for sample data:', error);
+    throw error;
+  }
+  
+  if (!phases || phases.length === 0) {
+    console.log('No phases found to add sample tasks to');
+    return;
+  }
+  
+  // Tasks for each area
+  const weldingMaterialsTasks = [
+    'Order steel tubing',
+    'Order angle brackets',
+    'Source fasteners',
+    'Verify material specifications',
+    'Check inventory for reusable parts'
+  ];
+  
+  const weldingLaborTasks = [
+    'Cut steel to specifications',
+    'Weld frame assembly',
+    'Grind welds',
+    'Quality check all welds',
+    'Prepare for powder coating'
+  ];
+  
+  const sewingMaterialsTasks = [
+    'Order fabric material',
+    'Source thread and zippers',
+    'Order grommets and hardware',
+    'Verify material colors',
+    'Check inventory for extra materials'
+  ];
+  
+  const sewingLaborTasks = [
+    'Cut fabric according to pattern',
+    'Sew seams and edges',
+    'Install grommets',
+    'Add reinforcements',
+    'Quality check stitching'
+  ];
+  
+  const powderCoatTasks = [
+    'Prepare surface for coating',
+    'Apply primer',
+    'Apply powder coat',
+    'Inspect finish',
+    'Pack for shipping'
+  ];
+  
+  const installationTasks = [
+    'Schedule installation crew',
+    'Coordinate with client',
+    'Verify site measurements',
+    'Prepare installation tools',
+    'Final walkthrough with client'
+  ];
+  
+  // Process each phase
+  for (const phase of phases) {
+    try {
+      console.log(`Adding sample tasks to phase: ${phase.phase_name}`);
+      
+      // Check if tasks already exist for this phase
+      const existingTasks = await getTasksForPhase(phase.id);
+      if (existingTasks.length > 0) {
+        console.log(`Phase ${phase.phase_name} already has ${existingTasks.length} tasks, skipping...`);
+        continue;
+      }
+      
+      // Add tasks with different completion statuses
+      const addTasksWithStatus = async (area: string, tasks: string[]) => {
+        const tasksList = tasks.map((name, index) => ({
+          phase_id: phase.id,
+          area,
+          name,
+          is_complete: index < 2, // First two tasks are complete
+          status: index < 2 ? 'complete' as TaskStatus : 
+                 index === 2 ? 'in-progress' as TaskStatus : 
+                 'not-started' as TaskStatus,
+          hours: area.includes('Labor') ? 2 + (index % 3) : undefined, // Add hours for labor tasks
+          eta: area.includes('Materials') ? new Date(Date.now() + (7 + index) * 24 * 60 * 60 * 1000).toISOString() : undefined, // Add ETA for material tasks
+          notes: index % 3 === 0 ? `Priority task for ${area}` : undefined // Add notes to some tasks
+        }));
+        
+        await supabase.from('tasks').insert(tasksList);
+      };
+      
+      // Add different task types to each phase
+      await addTasksWithStatus('weldingMaterials', weldingMaterialsTasks);
+      await addTasksWithStatus('weldingLabor', weldingLaborTasks);
+      await addTasksWithStatus('sewingMaterials', sewingMaterialsTasks);
+      await addTasksWithStatus('sewingLabor', sewingLaborTasks);
+      await addTasksWithStatus('powderCoat', powderCoatTasks);
+      await addTasksWithStatus('installation', installationTasks);
+      
+      console.log(`Successfully added sample tasks to phase: ${phase.phase_name}`);
+      
+      // Log the activity
+      await logActivity({
+        jobId: phase.job_id,
+        phaseId: phase.id,
+        activityType: 'task_change',
+        description: `Sample tasks were added to phase ${phase.phase_name} for testing`
+      });
+    } catch (err) {
+      console.error(`Error adding sample tasks to phase ${phase.phase_name}:`, err);
+    }
+  }
+  
+  console.log('Sample task creation complete');
+};
