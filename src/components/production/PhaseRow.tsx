@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getJob } from '@/lib/supabase/jobUtils';
+import { getJobById } from '@/lib/supabase/jobUtils';
 
 interface PhaseRowProps {
   phase: Phase;
@@ -21,7 +21,7 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
   // Fetch job details to display job number and customer
   const { data: job, isLoading } = useQuery({
     queryKey: ['job', phase.jobId],
-    queryFn: () => getJob(phase.jobId),
+    queryFn: () => getJobById(phase.jobId),
     enabled: !!phase.jobId,
   });
 
