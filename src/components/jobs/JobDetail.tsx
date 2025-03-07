@@ -13,6 +13,7 @@ import JobDetailsEditCard from './JobDetailsEditCard';
 import PhasesTabsCard from './PhasesTabsCard';
 import PhaseStatusOverview from './PhaseStatusOverview';
 import ActivityLogCard from './ActivityLogCard';
+import TaskCard from './TaskCard';
 
 const JobDetail: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -201,7 +202,10 @@ const JobDetail: React.FC = () => {
         />
       )}
       
-      {/* Activity log moved below Phase status overview */}
+      {/* Task Card added above Activity Log */}
+      <TaskCard job={job} />
+      
+      {/* Activity log moved below Task Card */}
       <ActivityLogCard 
         activities={activities || []} 
         maxHeight="300px"
