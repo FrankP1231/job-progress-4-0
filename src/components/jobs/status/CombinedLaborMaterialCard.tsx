@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Labor, Material, Task } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,20 +36,41 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
   const laborTasks = labor.tasks || [];
   const materialTasks = material.tasks || [];
   
+  console.log(`${title} Labor Tasks:`, laborTasks.length);
+  console.log(`${title} Material Tasks:`, materialTasks.length);
+  
   const handleAddTask = async (area: string, taskName: string) => {
     if (!phaseId) return;
     
     try {
+      console.log(`Adding task "${taskName}" to ${area} in phase ${phaseId}`);
       const result = await addTasksToPhaseArea(phaseId, area, [taskName]);
       toast.success('Task added successfully');
       
       console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`, result);
       
       // Use the dedicated function to refresh all related tasks data
-      refreshTasksData(queryClient, undefined, phaseId);
+      await refreshTasksData(queryClient, undefined, phaseId);
+      
+      // Also invalidate the job query to refresh the job detail page
+      const jobId = await getJobIdForPhase(phaseId);
+      if (jobId) {
+        queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+      }
     } catch (error) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task');
+    }
+  };
+  
+  // Helper function to get jobId from phaseId
+  const getJobIdForPhase = async (phaseId: string): Promise<string | null> => {
+    try {
+      const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
+      return await getJobIdForPhase(phaseId);
+    } catch (error) {
+      console.error('Error getting job ID for phase:', error);
+      return null;
     }
   };
 

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -23,20 +24,29 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     
     // Collect tasks from all phases
     job.phases.forEach(phase => {
-      // Check all possible areas that might have tasks
+      // Define all possible areas that might have tasks
       const areas = [
-        'weldingMaterials', 'weldingLabor', 
-        'sewingMaterials', 'sewingLabor', 
-        'powderCoat', 'installation'
+        { key: 'weldingMaterials', label: 'weldingMaterials' },
+        { key: 'weldingLabor', label: 'weldingLabor' },
+        { key: 'sewingMaterials', label: 'sewingMaterials' },
+        { key: 'sewingLabor', label: 'sewingLabor' },
+        { key: 'powderCoat', label: 'powderCoat' },
+        { key: 'installation', label: 'installation' },
+        { key: 'installationMaterials', label: 'installationMaterials' }
       ];
       
-      areas.forEach(area => {
-        if (phase[area]?.tasks) {
-          const phaseTasks = phase[area].tasks.map(task => ({
+      // Process each area
+      areas.forEach(({ key, label }) => {
+        if (phase[key] && Array.isArray(phase[key].tasks)) {
+          console.log(`Found ${phase[key].tasks.length} tasks in ${key} for phase ${phase.phaseNumber}`);
+          
+          const phaseTasks = phase[key].tasks.map(task => ({
             ...task,
             phaseName: phase.phaseName,
-            phaseNumber: phase.phaseNumber
+            phaseNumber: phase.phaseNumber,
+            area: task.area || label // Use the task's area if available, otherwise use the label
           }));
+          
           allTasks.push(...phaseTasks);
         }
       });
@@ -44,7 +54,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     
     // Filter tasks that are not completed
     const pendingTasks = allTasks.filter(task => !task.isComplete);
-    console.log('All pending tasks in TaskCard:', pendingTasks);
+    console.log('All pending tasks collected:', pendingTasks.length);
     return pendingTasks;
   }, [job]);
 
@@ -69,6 +79,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       case 'sewingLabor': return 'Sewing Labor';
       case 'powderCoat': return 'Powder Coat';
       case 'installation': return 'Installation';
+      case 'installationMaterials': return 'Installation Materials';
       default: return area;
     }
   };
@@ -86,15 +97,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     );
   }
 
-  console.log('All pending tasks:', tasks);
-
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Pending Tasks ({tasks.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className={`max-h-[${maxHeight}]`}>
+        <ScrollArea className={`max-h-${maxHeight}`}>
           <div className="space-y-4">
             {tasks.map((task) => (
               <div key={task.id} className="border-b pb-3 mb-3 last:border-0 last:pb-0">
