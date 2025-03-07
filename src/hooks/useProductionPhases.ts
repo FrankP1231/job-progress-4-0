@@ -2,7 +2,10 @@
 import { useMemo } from 'react';
 import { Job, Phase } from '@/lib/types';
 
-type PhaseWithJob = { phase: Phase, job: Job };
+export interface PhaseWithJob {
+  phase: Phase;
+  job: Job;
+}
 
 export function useProductionPhases(jobs: Job[] | undefined) {
   const productionJobs = useMemo(() => {
@@ -88,5 +91,3 @@ export function useProductionPhases(jobs: Job[] | undefined) {
     totalInstallHours
   };
 }
-
-export type { PhaseWithJob };

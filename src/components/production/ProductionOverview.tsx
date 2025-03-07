@@ -5,7 +5,7 @@ import { getAllJobs } from '@/lib/supabase/jobUtils';
 import { getTasksForPhase } from '@/lib/supabase/taskUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Wrench, Scissors, PackageCheck } from 'lucide-react';
-import { useProductionPhases } from '@/hooks/useProductionPhases';
+import { useProductionPhases, PhaseWithJob } from '@/hooks/useProductionPhases';
 import WeldingTabContent from './WeldingTabContent';
 import SewingTabContent from './SewingTabContent';
 import ReadyForInstallTabContent from './ReadyForInstallTabContent';
@@ -32,8 +32,8 @@ const ProductionOverview: React.FC = () => {
   // Fetch tasks for all phases
   useEffect(() => {
     const fetchTasks = async () => {
-      const allPhases = [...weldingPhases, ...sewingPhases, ...readyForInstallPhases];
-      const uniquePhaseIds = Array.from(new Set(allPhases.map(phase => phase.id)));
+      const allPhaseObjects = [...weldingPhases, ...sewingPhases, ...readyForInstallPhases];
+      const uniquePhaseIds = Array.from(new Set(allPhaseObjects.map(phaseObj => phaseObj.phase.id)));
       
       const taskPromises = uniquePhaseIds.map(async (phaseId) => {
         try {
@@ -114,9 +114,14 @@ const ProductionOverview: React.FC = () => {
     return <div className="text-red-500">Error loading jobs</div>;
   }
 
-  const enhancedWeldingPhases = enhancePhaseWithTasks(weldingPhases);
-  const enhancedSewingPhases = enhancePhaseWithTasks(sewingPhases);
-  const enhancedInstallPhases = enhancePhaseWithTasks(readyForInstallPhases);
+  // Convert PhaseWithJob objects to Phase objects
+  const extractPhases = (phaseWithJobArray: PhaseWithJob[]): Phase[] => {
+    return phaseWithJobArray.map(item => item.phase);
+  };
+
+  const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
+  const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
+  const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
 
   return (
     <div className="container mx-auto py-6 space-y-6">

@@ -88,7 +88,7 @@ export const createTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedA
   await logActivity({
     jobId: '', // This needs to be retrieved from phase data
     phaseId: task.phaseId,
-    activityType: 'task_added',
+    activityType: 'task_change',
     description: `Task "${task.name}" was added to ${task.area}`
   });
   
@@ -99,7 +99,7 @@ export const createTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedA
     area: data.area,
     name: data.name,
     isComplete: data.is_complete,
-    status: data.status,
+    status: data.status as TaskStatus,
     hours: data.hours,
     eta: data.eta,
     notes: data.notes,
@@ -135,7 +135,7 @@ export const updateTask = async (taskId: string, updates: Partial<Task>): Promis
   await logActivity({
     jobId: '', // This needs to be retrieved from phase data
     phaseId: data.phase_id,
-    activityType: 'task_updated',
+    activityType: 'task_change',
     description: `Task "${data.name}" was updated`,
     fieldName: 'task',
     previousValue: null, // Ideally, we would fetch the previous state
@@ -149,7 +149,7 @@ export const updateTask = async (taskId: string, updates: Partial<Task>): Promis
     area: data.area,
     name: data.name,
     isComplete: data.is_complete,
-    status: data.status,
+    status: data.status as TaskStatus,
     hours: data.hours,
     eta: data.eta,
     notes: data.notes,
@@ -182,7 +182,7 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
     await logActivity({
       jobId: '', // This needs to be retrieved
       phaseId: taskData.phase_id,
-      activityType: 'task_deleted',
+      activityType: 'task_change',
       description: `Task "${taskData.name}" was deleted from ${taskData.area}`
     });
   }
@@ -222,7 +222,7 @@ export const addTasksToPhaseArea = async (
       area,
       name: name.trim(),
       is_complete: false,
-      status: 'not-started'
+      status: 'not-started' as TaskStatus
     }));
   
   if (tasksList.length === 0) return [];
@@ -241,7 +241,7 @@ export const addTasksToPhaseArea = async (
   await logActivity({
     jobId: '', // This needs to be retrieved
     phaseId,
-    activityType: 'tasks_added',
+    activityType: 'task_change',
     description: `${tasksList.length} tasks were added to ${area}`
   });
   
@@ -252,7 +252,7 @@ export const addTasksToPhaseArea = async (
     area: task.area,
     name: task.name,
     isComplete: task.is_complete,
-    status: task.status,
+    status: task.status as TaskStatus,
     hours: task.hours,
     eta: task.eta,
     notes: task.notes,
