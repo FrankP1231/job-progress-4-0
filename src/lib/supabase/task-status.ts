@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 import { Task, TaskStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
@@ -89,4 +88,20 @@ export const refreshTasksData = (queryClient: any, jobId?: string, phaseId?: str
   queryClient.invalidateQueries({ queryKey: ['tasks'] });
   queryClient.invalidateQueries({ queryKey: ['phases'] });
   queryClient.invalidateQueries({ queryKey: ['jobs'] });
+};
+
+// Calculate area status based on task completion
+export const calculateAreaStatus = (tasks: Task[]): TaskStatus => {
+  if (!tasks || tasks.length === 0) return 'not-started';
+  
+  const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
+  
+  if (completedTasks.length === tasks.length) {
+    return 'complete';
+  } else if (completedTasks.length > 0 || inProgressTasks.length > 0) {
+    return 'in-progress';
+  } else {
+    return 'not-started';
+  }
 };
