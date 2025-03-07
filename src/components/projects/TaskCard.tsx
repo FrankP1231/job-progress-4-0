@@ -29,9 +29,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
       case 'in-progress':
         return 'default';
       case 'complete':
-        return 'success';
+        return 'secondary'; // Changed from 'success' to 'secondary'
       case 'not-started':
-        return 'secondary';
+        return 'outline'; // Changed from 'secondary' to 'outline'
       default:
         return 'outline';
     }
