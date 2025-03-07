@@ -40,9 +40,14 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
     
     try {
       await addTasksToPhaseArea(phaseId, area, [taskName]);
-      queryClient.invalidateQueries({ queryKey: ['phase', phaseId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
       toast.success('Task added successfully');
+      
+      // Invalidate all relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['phase'] });
+      queryClient.invalidateQueries({ queryKey: ['job'] });
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      
+      console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`);
     } catch (error) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task');

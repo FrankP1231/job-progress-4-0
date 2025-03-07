@@ -79,13 +79,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     );
   }
 
+  console.log('All pending tasks:', tasks);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">Pending Tasks ({tasks.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className={`h-[${maxHeight}]`}>
+        <ScrollArea className={`max-h-[${maxHeight}]`}>
           <div className="space-y-4">
             {tasks.map((task) => (
               <div key={task.id} className="border-b pb-3 mb-3 last:border-0 last:pb-0">
