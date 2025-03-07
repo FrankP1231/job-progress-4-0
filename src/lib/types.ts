@@ -5,17 +5,34 @@ export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'c
 export type RentalEquipmentStatus = 'not-needed' | 'not-ordered' | 'ordered';
 export type InstallationStatus = 'not-started' | 'in-progress' | 'complete';
 export type ProductionStatus = 'not-started' | 'in-progress' | 'complete'; // Added for Production Labor view
+export type TaskStatus = 'not-started' | 'in-progress' | 'complete';
+
+export interface Task {
+  id: string;
+  phaseId: string;
+  area: string; // 'weldingLabor', 'sewingMaterials', etc.
+  name: string;
+  isComplete: boolean;
+  status: TaskStatus;
+  hours?: number;
+  eta?: string; // ISO date string
+  notes?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
 
 export interface Material {
   status: MaterialStatus;
   notes?: string;
   eta?: string; // ISO date string
+  tasks?: Task[];
 }
 
 export interface Labor {
   status: LaborStatus;
   notes?: string;
   hours?: number;
+  tasks?: Task[];
 }
 
 export interface PowderCoat {
@@ -23,12 +40,14 @@ export interface PowderCoat {
   notes?: string;
   eta?: string; // ISO date string
   color?: string; // Add color field to the PowderCoat interface
+  tasks?: Task[];
 }
 
 export interface RentalEquipment {
   status: RentalEquipmentStatus;
   notes?: string;
   details?: string;
+  tasks?: Task[];
 }
 
 export interface Installation {
@@ -42,6 +61,7 @@ export interface Installation {
   rentalEquipment: RentalEquipment;
   notes?: string;
   outlookEventId?: string;
+  tasks?: Task[];
 }
 
 export interface Phase {

@@ -158,6 +158,56 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          area: string
+          created_at: string
+          eta: string | null
+          hours: number | null
+          id: string
+          is_complete: boolean
+          name: string
+          notes: string | null
+          phase_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          eta?: string | null
+          hours?: number | null
+          id?: string
+          is_complete?: boolean
+          name: string
+          notes?: string | null
+          phase_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          eta?: string | null
+          hours?: number | null
+          id?: string
+          is_complete?: boolean
+          name?: string
+          notes?: string | null
+          phase_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_phase_id_fkey"
+            columns: ["phase_id"]
+            isOneToOne: false
+            referencedRelation: "phases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

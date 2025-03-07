@@ -1,6 +1,7 @@
 import { supabase, Json } from "./client";
 import { Phase, Material, Labor, PowderCoat, Installation } from '../types';
 import { logActivity } from "./activityLogUtils";
+import { addTasksToPhaseArea } from "./taskUtils";
 
 // Get all phases for a job
 export const getPhasesForJob = async (jobId: string): Promise<Phase[]> => {
@@ -101,7 +102,11 @@ export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: nu
 };
 
 // Add a phase to a job
-export const addPhaseToJob = async (jobId: string, phase: Phase): Promise<boolean> => {
+export const addPhaseToJob = async (
+  jobId: string, 
+  phase: Phase, 
+  pendingTasks?: Record<string, string[]>
+): Promise<boolean> => {
   // Check if phase number already exists for this job
   const existingPhases = await getPhasesForJob(jobId);
   if (existingPhases.some(p => p.phaseNumber === phase.phaseNumber)) {
@@ -133,6 +138,21 @@ export const addPhaseToJob = async (jobId: string, phase: Phase): Promise<boolea
   if (error) {
     console.error('Error adding phase:', error);
     throw error;
+  }
+  
+  // Now add any pending tasks if provided
+  if (pendingTasks && Object.keys(pendingTasks).length > 0) {
+    try {
+      for (const area of Object.keys(pendingTasks)) {
+        const tasks = pendingTasks[area];
+        if (tasks && tasks.length > 0) {
+          await addTasksToPhaseArea(data.id, area, tasks);
+        }
+      }
+    } catch (taskError) {
+      console.error('Error adding tasks to new phase:', taskError);
+      // We don't throw here since the phase was created successfully
+    }
   }
   
   // Log the activity
