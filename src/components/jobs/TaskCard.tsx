@@ -1,11 +1,13 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CheckCircle, Circle, Clock, AlertCircle } from 'lucide-react';
 import { Job, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { getTasksForJob } from '@/lib/supabase/taskUtils';
 
 interface TaskCardProps {
   job: Job;
@@ -13,50 +15,49 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
+  // Fetch all tasks for the job directly instead of relying on tasks embedded in the job object
+  const { 
+    data: jobTasks, 
+    isLoading: tasksLoading,
+    error: tasksError
+  } = useQuery({
+    queryKey: ['jobTasks', job.id],
+    queryFn: () => getTasksForJob(job.id),
+    enabled: !!job.id
+  });
+  
+  useEffect(() => {
+    console.log('Job tasks loaded:', jobTasks?.length);
+    if (tasksError) {
+      console.error('Error loading tasks:', tasksError);
+    }
+  }, [jobTasks, tasksError]);
+
   const tasks = useMemo(() => {
-    const allTasks: Array<Task & { phaseName: string; phaseNumber: number }> = [];
-    
-    // Ensure job and phases exist before processing
-    if (!job || !job.phases) {
-      console.log("No job or phases available for task processing");
+    if (!jobTasks || !job || !job.phases) {
       return [];
     }
     
-    // Collect tasks from all phases
-    job.phases.forEach(phase => {
-      // Define all possible areas that might have tasks
-      const areas = [
-        { key: 'weldingMaterials', label: 'weldingMaterials' },
-        { key: 'weldingLabor', label: 'weldingLabor' },
-        { key: 'sewingMaterials', label: 'sewingMaterials' },
-        { key: 'sewingLabor', label: 'sewingLabor' },
-        { key: 'powderCoat', label: 'powderCoat' },
-        { key: 'installation', label: 'installation' },
-        { key: 'installationMaterials', label: 'installationMaterials' }
-      ];
-      
-      // Process each area
-      areas.forEach(({ key, label }) => {
-        if (phase[key] && Array.isArray(phase[key].tasks)) {
-          console.log(`Found ${phase[key].tasks.length} tasks in ${key} for phase ${phase.phaseNumber}`);
-          
-          const phaseTasks = phase[key].tasks.map(task => ({
-            ...task,
-            phaseName: phase.phaseName,
-            phaseNumber: phase.phaseNumber,
-            area: task.area || label // Use the task's area if available, otherwise use the label
-          }));
-          
-          allTasks.push(...phaseTasks);
-        }
-      });
+    const enhancedTasks: Array<Task & { phaseName: string; phaseNumber: number }> = [];
+    
+    // Process all tasks and attach phase information
+    jobTasks.forEach(task => {
+      // Find the phase this task belongs to
+      const phase = job.phases.find(p => p.id === task.phaseId);
+      if (phase) {
+        enhancedTasks.push({
+          ...task,
+          phaseName: phase.phaseName,
+          phaseNumber: phase.phaseNumber
+        });
+      }
     });
     
     // Filter tasks that are not completed
-    const pendingTasks = allTasks.filter(task => !task.isComplete);
+    const pendingTasks = enhancedTasks.filter(task => !task.isComplete);
     console.log('All pending tasks collected:', pendingTasks.length);
     return pendingTasks;
-  }, [job]);
+  }, [jobTasks, job]);
 
   const getTaskIcon = (status: string) => {
     switch (status) {
@@ -83,6 +84,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       default: return area;
     }
   };
+
+  if (tasksLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Pending Tasks</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-6">
+            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-2" />
+            <span className="text-sm text-muted-foreground">Loading tasks...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!tasks || tasks.length === 0) {
     return (

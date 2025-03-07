@@ -1,158 +1,151 @@
 
 import React, { useState } from 'react';
-import { Task, TaskStatus } from '@/lib/types';
+import { Task } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { X, PlusCircle, Check } from 'lucide-react';
-import { toggleTaskCompletion } from '@/lib/supabase/task-status';
+import { CheckCircle, Circle, Plus, X } from 'lucide-react';
+import { toggleTaskCompletion } from '@/lib/supabase/taskUtils';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
 
 interface TasksContainerProps {
-  tasks?: Task[];
-  phaseId?: string;
   title?: string;
-  area: string;
-  className?: string;
+  tasks: Task[];
+  phaseId?: string;
+  area?: string;
   isEditing?: boolean;
   onAddTask?: (taskName: string) => void;
-  onRemoveTask?: (taskIndex: number) => void;
+  className?: string;
+  isDisabled?: boolean;
 }
 
-const TasksContainer: React.FC<TasksContainerProps> = ({ 
+const TasksContainer: React.FC<TasksContainerProps> = ({
+  title,
   tasks = [],
   phaseId,
-  title,
   area,
-  className = "",
   isEditing = false,
   onAddTask,
-  onRemoveTask
+  className = '',
+  isDisabled = false
 }) => {
-  const [newTaskName, setNewTaskName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [newTaskName, setNewTaskName] = useState('');
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const handleAddTask = () => {
-    if (newTaskName.trim() && onAddTask) {
-      onAddTask(newTaskName);
-      setNewTaskName('');
-      setIsAdding(false);
-    }
-  };
-
-  const handleToggleComplete = async (task: Task) => {
+  const handleToggleTaskCompletion = async (taskId: string, isComplete: boolean) => {
     if (!phaseId) return;
     
     try {
-      await toggleTaskCompletion(task.id, !task.isComplete);
+      setUpdatingTaskId(taskId);
+      await toggleTaskCompletion(taskId, !isComplete);
       
-      // Use the dedicated function to refresh all related tasks data
-      refreshTasksData(queryClient, undefined, task.phaseId);
+      // Get jobId to invalidate job-related queries
+      const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
+      const jobId = await getJobIdForPhase(phaseId);
       
-      console.log(`Task "${task.name}" completion toggled to ${!task.isComplete}`);
+      // Refresh all task-related data
+      await refreshTasksData(queryClient, jobId, phaseId);
+      
+      // Also invalidate JobTasks query if we have a jobId
+      if (jobId) {
+        queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
+      }
+      
+      console.log(`Task ${taskId} completion toggled to ${!isComplete}`);
     } catch (error) {
       console.error('Error toggling task completion:', error);
+      toast.error('Failed to update task');
+    } finally {
+      setUpdatingTaskId(null);
     }
   };
 
+  const handleAddNewTask = () => {
+    if (!newTaskName.trim() || !onAddTask) return;
+    
+    onAddTask(newTaskName);
+    setNewTaskName('');
+    setIsAdding(false);
+  };
+
   return (
-    <div className={`space-y-3 mt-2 ${className}`}>
-      {title && <h3 className="text-md font-medium">{title}</h3>}
+    <div className={className}>
+      {title && <h4 className="text-sm font-medium mb-2">{title}</h4>}
       
-      {tasks.length === 0 && !isAdding && (
-        <div className="text-sm text-gray-500 italic">
-          No tasks defined. {isEditing && 'Add tasks to track detailed progress.'}
-        </div>
-      )}
-      
-      {tasks.map((task, index) => (
-        <div key={task.id || index} className="flex items-center space-x-2 group">
-          {phaseId ? (
-            <Checkbox 
-              id={`task-${task.id || index}`}
-              checked={task.isComplete}
-              onCheckedChange={() => handleToggleComplete(task)}
-              className="h-4 w-4"
-            />
+      <div className="space-y-2">
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <div key={task.id} className="flex items-center text-sm py-1">
+              <button
+                onClick={() => handleToggleTaskCompletion(task.id, task.isComplete)}
+                disabled={updatingTaskId === task.id}
+                className="flex items-center justify-center w-5 h-5 mr-2 rounded-full focus:outline-none"
+              >
+                {updatingTaskId === task.id ? (
+                  <div className="h-3 w-3 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
+                ) : task.isComplete ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <Circle className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+              <span className={task.isComplete ? 'line-through text-gray-400' : ''}>
+                {task.name}
+              </span>
+            </div>
+          ))
+        ) : (
+          <div className="text-sm text-gray-500 italic">No tasks yet</div>
+        )}
+        
+        {isEditing && (
+          isAdding ? (
+            <div className="flex items-center space-x-2">
+              <Input
+                value={newTaskName}
+                onChange={(e) => setNewTaskName(e.target.value)}
+                placeholder="Task name"
+                className="h-8 text-sm"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddNewTask()}
+                autoFocus
+              />
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8"
+                onClick={handleAddNewTask}
+                disabled={isDisabled}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8"
+                onClick={() => {
+                  setIsAdding(false);
+                  setNewTaskName('');
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           ) : (
-            <Checkbox 
-              id={`task-${index}`}
-              className="h-4 w-4"
-              disabled={!isEditing}
-            />
-          )}
-          <Label 
-            htmlFor={`task-${task.id || index}`} 
-            className={`text-sm flex-grow ${task.isComplete ? 'line-through text-gray-500' : ''}`}
-          >
-            {task.name}
-          </Label>
-          {isEditing && onRemoveTask && (
-            <Button 
-              type="button" 
-              variant="ghost" 
-              size="sm" 
-              className="p-0 h-6 w-6 opacity-0 group-hover:opacity-100"
-              onClick={() => onRemoveTask(index)}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs h-8"
+              onClick={() => setIsAdding(true)}
+              disabled={isDisabled}
             >
-              <X className="h-3 w-3" />
-              <span className="sr-only">Remove</span>
+              <Plus className="h-3 w-3 mr-1" /> Add Task
             </Button>
-          )}
-        </div>
-      ))}
-      
-      {isAdding && (
-        <div className="flex items-center space-x-2">
-          <Input
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            placeholder="Enter task name"
-            className="text-sm"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleAddTask();
-              if (e.key === 'Escape') setIsAdding(false);
-            }}
-            autoFocus
-          />
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="ghost" 
-            className="p-1"
-            onClick={handleAddTask}
-          >
-            <Check className="h-4 w-4" />
-            <span className="sr-only">Add</span>
-          </Button>
-          <Button 
-            type="button" 
-            size="sm" 
-            variant="ghost" 
-            className="p-1"
-            onClick={() => setIsAdding(false)}
-          >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Cancel</span>
-          </Button>
-        </div>
-      )}
-      
-      {isEditing && !isAdding && (
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs"
-          onClick={() => setIsAdding(true)}
-        >
-          <PlusCircle className="h-3 w-3 mr-1" />
-          Add Task
-        </Button>
-      )}
+          )
+        )}
+      </div>
     </div>
   );
 };

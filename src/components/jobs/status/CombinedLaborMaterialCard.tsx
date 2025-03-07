@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Labor, Material, Task } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Clock } from 'lucide-react';
 import TasksContainer from '@/components/production/TasksContainer';
-import { addTasksToPhaseArea } from '@/lib/supabase/taskUtils';
-import { useQueryClient } from '@tanstack/react-query';
+import { addTasksToPhaseArea, getTasksForPhaseArea } from '@/lib/supabase/taskUtils';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
+import { getJobIdForPhase } from '@/lib/supabase/task-helpers';
 
 interface CombinedLaborMaterialCardProps {
   title: string;
@@ -31,46 +32,61 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
   phaseId
 }) => {
   const queryClient = useQueryClient();
-  const [newTaskName, setNewTaskName] = useState('');
+  const [isAddingTask, setIsAddingTask] = useState(false);
   
-  const laborTasks = labor.tasks || [];
-  const materialTasks = material.tasks || [];
+  // Fetch latest tasks directly if we have a phaseId
+  const { data: materialAreaTasks } = useQuery({
+    queryKey: ['tasks', phaseId, title.toLowerCase() + 'Materials'],
+    queryFn: () => getTasksForPhaseArea(phaseId!, title.toLowerCase() + 'Materials'),
+    enabled: !!phaseId,
+    refetchInterval: 10000 // Refetch every 10 seconds
+  });
   
-  console.log(`${title} Labor Tasks:`, laborTasks.length);
-  console.log(`${title} Material Tasks:`, materialTasks.length);
+  const { data: laborAreaTasks } = useQuery({
+    queryKey: ['tasks', phaseId, title.toLowerCase() + 'Labor'],
+    queryFn: () => getTasksForPhaseArea(phaseId!, title.toLowerCase() + 'Labor'),
+    enabled: !!phaseId,
+    refetchInterval: 10000 // Refetch every 10 seconds
+  });
+  
+  // Use fetched tasks if available, otherwise fall back to tasks from props
+  const laborTasks = laborAreaTasks || labor.tasks || [];
+  const materialTasks = materialAreaTasks || material.tasks || [];
+  
+  useEffect(() => {
+    console.log(`${title} Labor Tasks loaded:`, laborTasks.length);
+    console.log(`${title} Material Tasks loaded:`, materialTasks.length);
+  }, [title, laborTasks, materialTasks]);
   
   const handleAddTask = async (area: string, taskName: string) => {
-    if (!phaseId) return;
+    if (!phaseId || !taskName.trim()) return;
     
     try {
+      setIsAddingTask(true);
       console.log(`Adding task "${taskName}" to ${area} in phase ${phaseId}`);
       const result = await addTasksToPhaseArea(phaseId, area, [taskName]);
       toast.success('Task added successfully');
       
       console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`, result);
       
-      // Use the dedicated function to refresh all related tasks data
-      await refreshTasksData(queryClient, undefined, phaseId);
-      
-      // Also invalidate the job query to refresh the job detail page
+      // Get job ID to invalidate job query
       const jobId = await getJobIdForPhase(phaseId);
+      
+      // Use the dedicated function to refresh all related tasks data
+      await refreshTasksData(queryClient, jobId, phaseId);
+      
+      // Also explicitly invalidate the current area's tasks
+      queryClient.invalidateQueries({ queryKey: ['tasks', phaseId, area] });
+      
+      // Invalidate JobTasks query if we have a jobId
       if (jobId) {
-        queryClient.invalidateQueries({ queryKey: ['job', jobId] });
+        queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
     } catch (error) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task');
-    }
-  };
-  
-  // Helper function to get jobId from phaseId
-  const getJobIdForPhase = async (phaseId: string): Promise<string | null> => {
-    try {
-      const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
-      return await getJobIdForPhase(phaseId);
-    } catch (error) {
-      console.error('Error getting job ID for phase:', error);
-      return null;
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -105,6 +121,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
             area={title.toLowerCase() + 'Materials'}
             isEditing={!!phaseId}
             onAddTask={(taskName) => handleAddTask(title.toLowerCase() + 'Materials', taskName)}
+            isDisabled={isAddingTask}
           />
         </div>
         
@@ -139,6 +156,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
             area={title.toLowerCase() + 'Labor'}
             isEditing={!!phaseId}
             onAddTask={(taskName) => handleAddTask(title.toLowerCase() + 'Labor', taskName)}
+            isDisabled={isAddingTask}
           />
         </div>
       </CardContent>
