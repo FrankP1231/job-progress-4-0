@@ -1,5 +1,5 @@
 
-import { supabase } from "./client";
+import { supabase } from "../supabase/client";
 import { Task, TaskStatus } from '../types';
 
 // Get job ID for a phase
@@ -68,16 +68,18 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
   
   // Transform the data to match our Task type
   return (data || []).map(task => {
-    // Get phase data if it exists, or use a properly typed empty object
-    const phase = task.phases || {};
+    // Handle the nested structure properly
+    // The phases field contains the joined phase data
+    const phases = task.phases || {};
+    
+    // Get jobs data from the nested structure
+    // In Supabase joins, phases.jobs contains the joined jobs data
+    const jobs = phases.jobs || {};
     
     // Create properly typed variables with fallbacks
-    const phaseNumber = phase.phase_number !== undefined ? Number(phase.phase_number) : 0;
-    const phaseName = phase.phase_name !== undefined ? String(phase.phase_name) : 'Unknown Phase';
-    const jobId = phase.job_id !== undefined ? String(phase.job_id) : '';
-    
-    // Get jobs data if it exists
-    const jobs = phase.jobs || {};
+    const phaseNumber = phases.phase_number !== undefined ? Number(phases.phase_number) : 0;
+    const phaseName = phases.phase_name !== undefined ? String(phases.phase_name) : 'Unknown Phase';
+    const jobId = phases.job_id !== undefined ? String(phases.job_id) : '';
     const jobNumber = jobs.job_number !== undefined ? String(jobs.job_number) : 'Unknown';
     const projectName = jobs.project_name !== undefined ? String(jobs.project_name) : '';
 
