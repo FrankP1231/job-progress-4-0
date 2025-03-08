@@ -157,7 +157,6 @@ const PhaseForm: React.FC = () => {
     addPhaseMutation.mutate();
   };
 
-  // Task handlers
   const addTaskToArea = (area: string, task: TaskWithMetadata) => {
     if (!task.name.trim()) return;
     
@@ -249,7 +248,7 @@ const PhaseForm: React.FC = () => {
             Add New Phase
           </h1>
           <p className="text-muted-foreground">
-            Job {job.jobNumber}: {job.projectName}
+            Job {job?.jobNumber}: {job?.projectName}
           </p>
         </div>
       </div>

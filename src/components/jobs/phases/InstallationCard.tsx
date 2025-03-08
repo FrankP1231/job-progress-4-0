@@ -5,10 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import TaskList from './TaskList';
 
+interface TaskWithMetadata {
+  name: string;
+  hours?: number;
+  eta?: string;
+}
+
 interface InstallationCardProps {
-  installationMaterialTasks: string[];
-  installationTasks: string[];
-  rentalEquipmentTasks: string[];
+  installationMaterialTasks: TaskWithMetadata[];
+  installationTasks: TaskWithMetadata[];
+  rentalEquipmentTasks: TaskWithMetadata[];
   crewMembersNeeded: string;
   crewHoursNeeded: string;
   siteReadyDate: string;
@@ -19,7 +25,7 @@ interface InstallationCardProps {
   setSiteReadyDate: (date: string) => void;
   setInstallDeadline: (date: string) => void;
   setInstallNotes: (notes: string) => void;
-  onAddTask: (area: string, taskName: string) => void;
+  onAddTask: (area: string, task: TaskWithMetadata) => void;
   onRemoveTask: (area: string, index: number) => void;
 }
 
@@ -58,6 +64,7 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
             <TaskList 
               tasks={installationMaterialTasks} 
               area="installationMaterials" 
+              isMaterialArea={true}
               onAdd={onAddTask} 
               onRemove={onRemoveTask} 
             />
@@ -128,6 +135,7 @@ const InstallationCard: React.FC<InstallationCardProps> = ({
             <TaskList 
               tasks={installationTasks} 
               area="installation" 
+              isLaborArea={true}
               onAdd={onAddTask} 
               onRemove={onRemoveTask} 
             />

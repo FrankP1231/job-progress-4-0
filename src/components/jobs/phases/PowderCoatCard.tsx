@@ -5,15 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import TaskList from './TaskList';
 
+interface TaskWithMetadata {
+  name: string;
+  hours?: number;
+  eta?: string;
+}
+
 interface PowderCoatCardProps {
-  powderCoatTasks: string[];
+  powderCoatTasks: TaskWithMetadata[];
   powderCoatEta: string;
   powderCoatNotes: string;
   powderCoatColor: string;
   setPowderCoatEta: (eta: string) => void;
   setPowderCoatNotes: (notes: string) => void;
   setPowderCoatColor: (color: string) => void;
-  onAddTask: (area: string, taskName: string) => void;
+  onAddTask: (area: string, task: TaskWithMetadata) => void;
   onRemoveTask: (area: string, index: number) => void;
 }
 
@@ -76,6 +82,7 @@ const PowderCoatCard: React.FC<PowderCoatCardProps> = ({
             <TaskList 
               tasks={powderCoatTasks} 
               area="powderCoat" 
+              isLaborArea={true}
               onAdd={onAddTask} 
               onRemove={onRemoveTask} 
             />
