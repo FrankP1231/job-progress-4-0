@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
@@ -30,6 +29,7 @@ const ProductionPhasesTab: React.FC<ProductionPhasesTabProps> = ({
   };
 
   return (
+    
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">

@@ -2,9 +2,9 @@
 import React from 'react';
 import { Badge } from './badge';
 import { cn } from '@/lib/utils';
-import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
+import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus, TaskStatus } from '@/lib/types';
 
-type StatusType = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus | InstallationStatus;
+type StatusType = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus | InstallationStatus | TaskStatus;
 
 const statusConfig: Record<StatusType, { label: string; className: string }> = {
   'not-needed': { label: 'Not Needed', className: 'bg-gray-100 text-gray-600 border-gray-200' },
@@ -20,11 +20,32 @@ const statusConfig: Record<StatusType, { label: string; className: string }> = {
 interface StatusBadgeProps {
   status: StatusType;
   className?: string;
+  tasks?: any[]; // Array of tasks to determine status
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className, tasks }) => {
+  // If tasks are provided, calculate status based on tasks
+  let statusKey = status;
+  
+  if (tasks && Array.isArray(tasks)) {
+    if (tasks.length === 0) {
+      statusKey = 'not-needed';
+    } else {
+      const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
+      const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
+      
+      if (completedTasks.length === tasks.length) {
+        statusKey = 'complete';
+      } else if (completedTasks.length > 0 || inProgressTasks.length > 0) {
+        statusKey = 'in-progress';
+      } else {
+        statusKey = 'not-started';
+      }
+    }
+  }
+  
   // Make sure status is a string and is one of the valid status types
-  const statusKey = typeof status === 'string' ? status : 'not-started';
+  statusKey = typeof statusKey === 'string' ? statusKey : 'not-started';
   
   // Get config for the status or use a default
   const config = statusConfig[statusKey as StatusType] || { 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -10,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/supabase/jobUtils';
 import { calculateAreaStatus } from '@/lib/supabase/task-status';
+import StatusBadge from '@/components/ui/StatusBadge';
 
 interface PhaseRowProps {
   phase: Phase;
@@ -30,74 +30,32 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
   const getTasksAndStatus = () => {
     if (tabType === 'welding') {
       const tasks = phase.weldingLabor.tasks || [];
-      // Calculate status based on task completion, not just using the stored status
-      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.weldingLabor.status;
       
       return {
-        status: calculatedStatus,
+        status: phase.weldingLabor.status,
         hours: phase.weldingLabor.hours || 0,
         tasks: tasks
       };
     } else if (tabType === 'sewing') {
       const tasks = phase.sewingLabor.tasks || [];
-      // Calculate status based on task completion
-      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.sewingLabor.status;
       
       return {
-        status: calculatedStatus,
+        status: phase.sewingLabor.status,
         hours: phase.sewingLabor.hours || 0,
         tasks: tasks
       };
     } else {
       const tasks = phase.installation.tasks || [];
-      // Calculate status based on task completion
-      const calculatedStatus = tasks.length > 0 ? calculateAreaStatus(tasks) : phase.installation.status;
       
       return {
-        status: calculatedStatus,
+        status: phase.installation.status,
         hours: phase.installation.crewHoursNeeded || 0,
         tasks: tasks
       };
     }
   };
 
-  const { status, hours } = getTasksAndStatus();
-
-  // Get status variant for badge
-  const getStatusVariant = () => {
-    switch (status) {
-      case 'in-progress':
-        return 'default';
-      case 'complete':
-        return 'default';
-      case 'not-started':
-        return 'secondary';
-      case 'estimated':
-        return 'outline';
-      case 'not-needed':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-
-  // Make status display more user-friendly
-  const getDisplayStatus = () => {
-    switch (status) {
-      case 'in-progress':
-        return 'in progress';
-      case 'complete':
-        return 'complete';
-      case 'not-started':
-        return 'not started';
-      case 'estimated':
-        return 'estimated';
-      case 'not-needed':
-        return 'not needed';
-      default:
-        return status;
-    }
-  };
+  const { status, hours, tasks } = getTasksAndStatus();
 
   return (
     <TableRow className="group">
@@ -133,9 +91,7 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
       </TableCell>
       <TableCell className="py-2">{phase.phaseName}</TableCell>
       <TableCell className="py-2">
-        <Badge variant={getStatusVariant()}>
-          {getDisplayStatus()}
-        </Badge>
+        <StatusBadge status={status} tasks={tasks} />
       </TableCell>
       <TableCell className="text-right py-2">{hours}</TableCell>
     </TableRow>

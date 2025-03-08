@@ -100,7 +100,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
           </div>
           
           <div className="flex flex-wrap gap-2 items-center">
-            <StatusBadge status={material.status} />
+            <StatusBadge status={material.status} tasks={materialTasks} />
             
             {material.eta && (
               <div className="text-sm text-gray-600">
@@ -134,7 +134,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
           </div>
           
           <div className="flex flex-wrap gap-2 items-center">
-            <StatusBadge status={labor.status} />
+            <StatusBadge status={labor.status} tasks={laborTasks} />
             
             {labor.hours && (
               <div className="flex items-center text-sm text-gray-600">
