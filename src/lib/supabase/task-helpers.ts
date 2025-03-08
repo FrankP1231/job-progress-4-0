@@ -70,7 +70,7 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
   return (data || []).map(task => {
     // Safely access nested objects with optional chaining and defaults
     const phase = task.phases || {};
-    const job = phase.jobs || {};
+    const phaseJobs = phase.jobs || {};
     
     return {
       id: task.id,
@@ -85,12 +85,12 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
       createdAt: task.created_at,
       updatedAt: task.updated_at,
       
-      // Additional fields from joins using optional chaining and default values
-      jobId: job?.id || phase?.job_id || '',
-      jobNumber: job?.job_number || 'Unknown',
-      projectName: job?.project_name || '',
-      phaseNumber: phase?.phase_number || 0,
-      phaseName: phase?.phase_name || 'Unknown Phase'
+      // Additional fields from joins using optional chaining with proper fallbacks
+      jobId: phaseJobs?.id || (typeof phase === 'object' && 'job_id' in phase ? phase.job_id : '') || '',
+      jobNumber: phaseJobs?.job_number || 'Unknown',
+      projectName: phaseJobs?.project_name || '',
+      phaseNumber: (typeof phase === 'object' && 'phase_number' in phase ? phase.phase_number : 0) || 0,
+      phaseName: (typeof phase === 'object' && 'phase_name' in phase ? phase.phase_name : 'Unknown Phase') || 'Unknown Phase'
     };
   });
 };
