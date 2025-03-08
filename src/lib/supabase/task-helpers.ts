@@ -70,7 +70,13 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
   return (data || []).map(task => {
     // Safely access nested objects with optional chaining and defaults
     const phase = task.phases || {};
-    const phaseJobs = phase.jobs || {};
+    // Explicitly check if phase.jobs exists before accessing it
+    const jobs = phase.jobs ? phase.jobs : {};
+    
+    // Explicitly cast numbers and strings to ensure correct types
+    const phaseNumber = typeof phase.phase_number === 'number' ? phase.phase_number : 0;
+    const phaseName = typeof phase.phase_name === 'string' ? phase.phase_name : 'Unknown Phase';
+    const jobId = jobs.id || (phase.job_id ? String(phase.job_id) : '');
     
     return {
       id: task.id,
@@ -85,12 +91,12 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
       createdAt: task.created_at,
       updatedAt: task.updated_at,
       
-      // Additional fields from joins using optional chaining with proper fallbacks
-      jobId: phaseJobs?.id || (typeof phase === 'object' && 'job_id' in phase ? phase.job_id : '') || '',
-      jobNumber: phaseJobs?.job_number || 'Unknown',
-      projectName: phaseJobs?.project_name || '',
-      phaseNumber: (typeof phase === 'object' && 'phase_number' in phase ? phase.phase_number : 0) || 0,
-      phaseName: (typeof phase === 'object' && 'phase_name' in phase ? phase.phase_name : 'Unknown Phase') || 'Unknown Phase'
+      // Additional fields with proper type casting to match Task interface
+      jobId: jobId,
+      jobNumber: jobs.job_number || 'Unknown',
+      projectName: jobs.project_name || '',
+      phaseNumber: phaseNumber,
+      phaseName: phaseName
     };
   });
 };
