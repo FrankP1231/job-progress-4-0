@@ -1,7 +1,7 @@
 
 import { supabase } from "./client";
 import { v4 as uuidv4 } from 'uuid';
-import { Phase } from '../types';
+import { Phase, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '../types';
 import { Json } from './client';
 
 export const createNewPhase = (
@@ -18,29 +18,29 @@ export const createNewPhase = (
     phaseName: phaseName,
     phaseNumber: phaseNumber,
     weldingMaterials: {
-      status: 'not-ordered'
+      status: 'not-ordered' as MaterialStatus
     },
     sewingMaterials: {
-      status: 'not-ordered'
+      status: 'not-ordered' as MaterialStatus
     },
     installationMaterials: {
-      status: 'not-ordered'
+      status: 'not-ordered' as MaterialStatus
     },
     weldingLabor: {
-      status: 'not-needed'
+      status: 'not-needed' as LaborStatus
     },
     sewingLabor: {
-      status: 'not-needed'
+      status: 'not-needed' as LaborStatus
     },
     powderCoat: {
-      status: 'not-needed'
+      status: 'not-needed' as PowderCoatStatus
     },
     installation: {
-      status: 'not-started',
+      status: 'not-started' as InstallationStatus,
       crewMembersNeeded: 2,
       crewHoursNeeded: 4,
       rentalEquipment: {
-        status: 'not-needed'
+        status: 'not-needed' as RentalEquipmentStatus
       }
     },
     isComplete: false,

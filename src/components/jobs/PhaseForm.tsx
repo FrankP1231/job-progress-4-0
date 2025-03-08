@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
-  getJobById, 
+  getJobById,
   createNewPhase, 
   addPhaseToJob 
 } from '@/lib/supabase';
-import { Job } from '@/lib/types';
+import { Job, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +43,7 @@ const PhaseForm: React.FC = () => {
   const [installNotes, setInstallNotes] = useState('');
   const [powderCoatEta, setPowderCoatEta] = useState('');
   const [powderCoatNotes, setPowderCoatNotes] = useState('');
+  const [powderCoatColor, setPowderCoatColor] = useState('');
 
   const { 
     data: job,
@@ -80,42 +81,31 @@ const PhaseForm: React.FC = () => {
         throw new Error('Please enter a valid phase number');
       }
       
-      const newPhase = {
-        ...createNewPhase(jobId, phaseName, Number(phaseNumber)),
-        weldingMaterials: {
-          status: 'not-ordered'
-        },
-        sewingMaterials: {
-          status: 'not-ordered'
-        },
-        installationMaterials: {
-          status: 'not-ordered'
-        },
-        weldingLabor: {
-          status: 'not-needed',
-          hours: 0
-        },
-        sewingLabor: {
-          status: 'not-needed',
-          hours: 0
-        },
-        powderCoat: {
-          status: 'not-needed',
-          eta: powderCoatEta || undefined,
-          notes: powderCoatNotes || undefined
-        },
-        installation: {
-          status: 'not-started',
-          crewMembersNeeded: Number(crewMembersNeeded),
-          crewHoursNeeded: Number(crewHoursNeeded),
-          siteReadyDate: siteReadyDate || undefined,
-          installDeadline: installDeadline || undefined,
-          notes: installNotes || undefined,
-          rentalEquipment: {
-            status: 'not-needed'
-          }
+      // Create a new phase with proper typing
+      const newPhase = createNewPhase(jobId, phaseName, Number(phaseNumber));
+      
+      // Add installation details
+      newPhase.installation = {
+        status: 'not-started' as InstallationStatus,
+        crewMembersNeeded: Number(crewMembersNeeded),
+        crewHoursNeeded: Number(crewHoursNeeded),
+        siteReadyDate: siteReadyDate || undefined,
+        installDeadline: installDeadline || undefined,
+        notes: installNotes || undefined,
+        rentalEquipment: {
+          status: 'not-needed' as RentalEquipmentStatus
         }
       };
+      
+      // Add powder coat details
+      if (powderCoatEta || powderCoatNotes || powderCoatColor) {
+        newPhase.powderCoat = {
+          status: 'not-started' as PowderCoatStatus,
+          eta: powderCoatEta || undefined,
+          notes: powderCoatNotes || undefined,
+          color: powderCoatColor || undefined
+        };
+      }
       
       // Prepare tasks for each area
       const pendingTasks: Record<string, string[]> = {};
@@ -415,6 +405,16 @@ const PhaseForm: React.FC = () => {
                   type="date"
                   value={powderCoatEta}
                   onChange={(e) => setPowderCoatEta(e.target.value)}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="powderCoatColor">Color (Optional)</Label>
+                <Input
+                  id="powderCoatColor"
+                  placeholder="Color name or code"
+                  value={powderCoatColor}
+                  onChange={(e) => setPowderCoatColor(e.target.value)}
                 />
               </div>
               

@@ -1,5 +1,6 @@
+
 import { supabase, Json } from "./client";
-import { Phase, Material, Labor, PowderCoat, Installation } from '../types';
+import { Phase, Material, Labor, PowderCoat, Installation, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
 import { addTasksToPhaseArea } from "./taskUtils";
 
@@ -83,17 +84,17 @@ export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: nu
     jobId,
     phaseName,
     phaseNumber,
-    weldingMaterials: { status: 'not-ordered' },
-    sewingMaterials: { status: 'not-ordered' },
-    weldingLabor: { status: 'not-needed' },
-    sewingLabor: { status: 'not-needed' },
-    installationMaterials: { status: 'not-ordered' },
-    powderCoat: { status: 'not-needed' },
+    weldingMaterials: { status: 'not-ordered' as MaterialStatus },
+    sewingMaterials: { status: 'not-ordered' as MaterialStatus },
+    weldingLabor: { status: 'not-needed' as LaborStatus },
+    sewingLabor: { status: 'not-needed' as LaborStatus },
+    installationMaterials: { status: 'not-ordered' as MaterialStatus },
+    powderCoat: { status: 'not-needed' as PowderCoatStatus },
     installation: {
-      status: 'not-started',
+      status: 'not-started' as InstallationStatus,
       crewMembersNeeded: 2,
       crewHoursNeeded: 4,
-      rentalEquipment: { status: 'not-needed' }
+      rentalEquipment: { status: 'not-needed' as RentalEquipmentStatus }
     },
     isComplete: false,
     createdAt: timestamp,
