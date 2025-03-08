@@ -296,41 +296,7 @@ const TasksPage: React.FC = () => {
                   {filteredTasks.map(task => (
                     <TableRow key={task.id} className={task.isComplete ? 'bg-muted/30' : ''}>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5"
-                              disabled={updatingTaskId === task.id}
-                            >
-                              {getTaskStatusIcon(task)}
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start">
-                            <DropdownMenuItem 
-                              onClick={() => handleUpdateTaskStatus(task, 'not-started')}
-                              className="flex items-center"
-                            >
-                              <Circle className="mr-2 h-4 w-4 text-gray-400" />
-                              Not Started
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleUpdateTaskStatus(task, 'in-progress')}
-                              className="flex items-center"
-                            >
-                              <Clock className="mr-2 h-4 w-4 text-amber-500" />
-                              In Progress
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleUpdateTaskStatus(task, 'complete')}
-                              className="flex items-center"
-                            >
-                              <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
-                              Complete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {getTaskStatusIcon(task)}
                       </TableCell>
                       <TableCell className={task.isComplete ? 'line-through text-muted-foreground' : ''}>
                         {task.name}
