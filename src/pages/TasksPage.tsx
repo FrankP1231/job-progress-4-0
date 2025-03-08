@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -52,14 +51,12 @@ const TasksPage: React.FC = () => {
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch all tasks
   const { data: allTasks, isLoading, error, refetch } = useQuery({
     queryKey: ['allTasks'],
     queryFn: getTasksForAllJobs,
     refetchInterval: 60000, // Refetch every minute
   });
 
-  // Effect to log task data
   useEffect(() => {
     console.log('All tasks loaded:', allTasks?.length);
     if (error) {
@@ -67,22 +64,19 @@ const TasksPage: React.FC = () => {
     }
   }, [allTasks, error]);
 
-  // Filter tasks based on search and filters
   const filteredTasks = React.useMemo(() => {
     if (!allTasks) return [];
     
     return allTasks.filter(task => {
-      // Search filter
       const matchesSearch = searchQuery === '' || 
         task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (task.notes && task.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
         task.phaseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.projectName.toLowerCase().includes(searchQuery.toLowerCase());
+        task.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.jobNumber && task.jobNumber.toLowerCase().includes(searchQuery.toLowerCase()));
       
-      // Area filter
       const matchesArea = areaFilter === 'all' || task.area === areaFilter;
       
-      // Status filter
       const matchesStatus = statusFilter === 'all' || 
         (statusFilter === 'complete' && task.isComplete) ||
         (statusFilter === 'in-progress' && task.status === 'in-progress' && !task.isComplete) ||
@@ -98,15 +92,12 @@ const TasksPage: React.FC = () => {
       setUpdatingTaskId(task.id);
       await updateTaskStatus(task.id, newStatus);
       
-      // Refresh tasks data
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
       
-      // Also invalidate job and phase related queries
       if (task.phaseId) {
         queryClient.invalidateQueries({ queryKey: ['phase', task.phaseId] });
         queryClient.invalidateQueries({ queryKey: ['tasks', task.phaseId] });
         
-        // Get jobId to invalidate job-related queries
         const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
         const jobId = await getJobIdForPhase(task.phaseId);
         
@@ -206,7 +197,6 @@ const TasksPage: React.FC = () => {
           <CardDescription>View and manage all tasks across projects</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Filters and search */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -266,14 +256,12 @@ const TasksPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Tasks count */}
           <div className="mb-4">
             <Badge variant="outline" className="text-sm">
               {filteredTasks.length} tasks found
             </Badge>
           </div>
 
-          {/* Table View */}
           {filteredTasks.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No tasks found matching your filters.
