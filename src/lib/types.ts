@@ -19,6 +19,13 @@ export interface Task {
   notes?: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+  
+  // Additional fields for Tasks page (optional, populated by joins)
+  jobId?: string;
+  jobNumber?: string;
+  projectName?: string;
+  phaseNumber?: number;
+  phaseName?: string;
 }
 
 export interface Material {

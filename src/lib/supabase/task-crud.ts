@@ -2,7 +2,7 @@
 import { supabase } from "./client";
 import { Task, TaskStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
-import { getJobIdForPhase, transformTaskData } from "./task-helpers";
+import { getJobIdForPhase, transformTaskData, getAllTasksWithDetails } from "./task-helpers";
 
 // Get all tasks for a phase
 export const getTasksForPhase = async (phaseId: string): Promise<Task[]> => {
@@ -19,6 +19,16 @@ export const getTasksForPhase = async (phaseId: string): Promise<Task[]> => {
   
   // Transform the data to match our types
   return (data || []).map(transformTaskData);
+};
+
+// Get all tasks for all jobs
+export const getTasksForAllJobs = async (): Promise<Task[]> => {
+  try {
+    return await getAllTasksWithDetails();
+  } catch (error) {
+    console.error('Error in getTasksForAllJobs:', error);
+    throw error;
+  }
 };
 
 // Get tasks for a specific area of a phase
