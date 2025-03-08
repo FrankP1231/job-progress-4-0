@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getTasksForAllJobs } from '@/lib/supabase/taskUtils';
-import { Task } from '@/lib/types';
+import { Task, TaskStatus } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { 
@@ -31,13 +30,20 @@ import {
   Link as LinkIcon, 
   Search, 
   Tag, 
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { toggleTaskCompletion } from '@/lib/supabase/taskUtils';
+import { updateTaskStatus } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const TasksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,10 +67,10 @@ const TasksPage: React.FC = () => {
     }
   }, [allTasks, error]);
 
-  const handleToggleTaskCompletion = async (task: Task) => {
+  const handleUpdateTaskStatus = async (task: Task, newStatus: TaskStatus) => {
     try {
       setUpdatingTaskId(task.id);
-      await toggleTaskCompletion(task.id, !task.isComplete);
+      await updateTaskStatus(task.id, newStatus);
       
       // Refresh tasks data
       queryClient.invalidateQueries({ queryKey: ['allTasks'] });
@@ -84,68 +90,26 @@ const TasksPage: React.FC = () => {
         }
       }
       
-      toast.success(`Task ${task.isComplete ? 'reopened' : 'completed'}`);
+      const statusMessage = newStatus === 'complete' 
+        ? 'completed' 
+        : newStatus === 'in-progress' 
+          ? 'marked as in progress' 
+          : 'reopened';
+          
+      toast.success(`Task ${statusMessage}`);
     } catch (error) {
-      console.error('Error toggling task completion:', error);
+      console.error('Error updating task status:', error);
       toast.error('Failed to update task');
     } finally {
       setUpdatingTaskId(null);
     }
   };
 
-  // Filter and sort tasks
-  const filteredTasks = React.useMemo(() => {
-    if (!allTasks) return [];
-    
-    return allTasks
-      .filter(task => {
-        // Filter by status
-        if (statusFilter === 'complete' && !task.isComplete) return false;
-        if (statusFilter === 'in-progress' && task.status !== 'in-progress') return false;
-        if (statusFilter === 'not-started' && task.status !== 'not-started') return false;
-        if (statusFilter === 'pending' && task.isComplete) return false;
-        
-        // Filter by area
-        if (areaFilter !== 'all' && task.area !== areaFilter) return false;
-        
-        // Search in task name
-        if (searchQuery && !task.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-          return false;
-        }
-        
-        return true;
-      })
-      .sort((a, b) => {
-        // Sort by completion status (incomplete first)
-        if (a.isComplete !== b.isComplete) {
-          return a.isComplete ? 1 : -1;
-        }
-        
-        // Then sort by status (in-progress before not-started)
-        if (a.status !== b.status) {
-          if (a.status === 'in-progress') return -1;
-          if (b.status === 'in-progress') return 1;
-        }
-        
-        // Then sort by create date (newest first)
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
-  }, [allTasks, searchQuery, areaFilter, statusFilter]);
-
-  // Group tasks by job
-  const tasksByJob = React.useMemo(() => {
-    const grouped: { [key: string]: Task[] } = {};
-    
-    filteredTasks.forEach(task => {
-      const jobId = task.jobId || 'unknown';
-      if (!grouped[jobId]) {
-        grouped[jobId] = [];
-      }
-      grouped[jobId].push(task);
-    });
-    
-    return grouped;
-  }, [filteredTasks]);
+  // Legacy function for backward compatibility
+  const handleToggleTaskCompletion = async (task: Task) => {
+    const newStatus: TaskStatus = task.isComplete ? 'not-started' : 'complete';
+    await handleUpdateTaskStatus(task, newStatus);
+  };
 
   const getTaskStatusIcon = (task: Task) => {
     if (updatingTaskId === task.id) {
@@ -331,15 +295,41 @@ const TasksPage: React.FC = () => {
                                   : 'bg-white dark:bg-gray-800'
                               } hover:bg-muted/50 transition-colors`}
                             >
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-5 w-5 mr-3 mt-0.5"
-                                onClick={() => handleToggleTaskCompletion(task)}
-                                disabled={updatingTaskId === task.id}
-                              >
-                                {getTaskStatusIcon(task)}
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 mr-3 mt-0.5"
+                                    disabled={updatingTaskId === task.id}
+                                  >
+                                    {getTaskStatusIcon(task)}
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                  <DropdownMenuItem 
+                                    onClick={() => handleUpdateTaskStatus(task, 'not-started')}
+                                    className="flex items-center"
+                                  >
+                                    <Circle className="mr-2 h-4 w-4 text-gray-400" />
+                                    Not Started
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleUpdateTaskStatus(task, 'in-progress')}
+                                    className="flex items-center"
+                                  >
+                                    <Clock className="mr-2 h-4 w-4 text-amber-500" />
+                                    In Progress
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleUpdateTaskStatus(task, 'complete')}
+                                    className="flex items-center"
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                    Complete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                               
                               <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -428,15 +418,41 @@ const TasksPage: React.FC = () => {
                       {filteredTasks.map(task => (
                         <TableRow key={task.id} className={task.isComplete ? 'bg-muted/30' : ''}>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-5 w-5"
-                              onClick={() => handleToggleTaskCompletion(task)}
-                              disabled={updatingTaskId === task.id}
-                            >
-                              {getTaskStatusIcon(task)}
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5"
+                                  disabled={updatingTaskId === task.id}
+                                >
+                                  {getTaskStatusIcon(task)}
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'not-started')}
+                                  className="flex items-center"
+                                >
+                                  <Circle className="mr-2 h-4 w-4 text-gray-400" />
+                                  Not Started
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'in-progress')}
+                                  className="flex items-center"
+                                >
+                                  <Clock className="mr-2 h-4 w-4 text-amber-500" />
+                                  In Progress
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'complete')}
+                                  className="flex items-center"
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                  Complete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                           <TableCell className={task.isComplete ? 'line-through text-muted-foreground' : ''}>
                             {task.name}
@@ -466,14 +482,42 @@ const TasksPage: React.FC = () => {
                             {task.eta ? format(new Date(task.eta), 'MMM d, yyyy') : '-'}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleToggleTaskCompletion(task)}
-                              disabled={updatingTaskId === task.id}
-                            >
-                              {task.isComplete ? 'Reopen' : 'Complete'}
-                            </Button>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={updatingTaskId === task.id}
+                                  className="flex items-center"
+                                >
+                                  Set Status
+                                  <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'not-started')}
+                                  className="flex items-center"
+                                >
+                                  <Circle className="mr-2 h-4 w-4 text-gray-400" />
+                                  Not Started
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'in-progress')}
+                                  className="flex items-center"
+                                >
+                                  <Clock className="mr-2 h-4 w-4 text-amber-500" />
+                                  In Progress
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleUpdateTaskStatus(task, 'complete')}
+                                  className="flex items-center"
+                                >
+                                  <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+                                  Complete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}

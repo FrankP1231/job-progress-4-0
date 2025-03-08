@@ -66,17 +66,18 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
     throw error;
   }
   
-  // Transform and enhance task data
+  // Transform and enhance task data with proper type handling
   return (data || []).map(task => {
-    // Safely access nested objects with optional chaining and defaults
+    // Get the phase data or default to empty object with proper type assertion
     const phase = task.phases || {};
-    // Explicitly check if phase.jobs exists before accessing it
-    const jobs = phase.jobs ? phase.jobs : {};
     
-    // Explicitly cast numbers and strings to ensure correct types
+    // Instead of trying to access phase.jobs directly, check if it exists first
+    const jobs = phase.jobs || {};
+    
+    // Safely handle potentially missing or null values with proper type conversion
     const phaseNumber = typeof phase.phase_number === 'number' ? phase.phase_number : 0;
     const phaseName = typeof phase.phase_name === 'string' ? phase.phase_name : 'Unknown Phase';
-    const jobId = jobs.id || (phase.job_id ? String(phase.job_id) : '');
+    const jobId = phase.job_id ? String(phase.job_id) : '';
     
     return {
       id: task.id,
@@ -91,7 +92,7 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
       createdAt: task.created_at,
       updatedAt: task.updated_at,
       
-      // Additional fields with proper type casting to match Task interface
+      // Additional fields with proper type assignments
       jobId: jobId,
       jobNumber: jobs.job_number || 'Unknown',
       projectName: jobs.project_name || '',

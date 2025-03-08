@@ -3,9 +3,10 @@ import { Task, TaskStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
 import { getJobIdForPhase, transformTaskData } from "./task-helpers";
 
-// Toggle task completion status
-export const toggleTaskCompletion = async (taskId: string, isComplete: boolean): Promise<Task> => {
-  const status: TaskStatus = isComplete ? 'complete' : 'not-started';
+// Update task status (now supporting in-progress status as well)
+export const updateTaskStatus = async (taskId: string, status: TaskStatus): Promise<Task> => {
+  // Only mark complete if status is 'complete'
+  const isComplete = status === 'complete';
   
   const { data, error } = await supabase
     .from('tasks')
@@ -31,11 +32,17 @@ export const toggleTaskCompletion = async (taskId: string, isComplete: boolean):
       jobId,
       phaseId: data.phase_id,
       activityType: 'task_change',
-      description: `Task "${data.name}" was marked as ${isComplete ? 'complete' : 'incomplete'}`
+      description: `Task "${data.name}" was marked as ${status === 'complete' ? 'complete' : status === 'in-progress' ? 'in progress' : 'not started'}`
     });
   }
   
   return transformTaskData(data);
+};
+
+// Toggle task completion status (legacy function, kept for backward compatibility)
+export const toggleTaskCompletion = async (taskId: string, isComplete: boolean): Promise<Task> => {
+  const status: TaskStatus = isComplete ? 'complete' : 'not-started';
+  return updateTaskStatus(taskId, status);
 };
 
 // Get all tasks for all phases in a job
