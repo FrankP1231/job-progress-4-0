@@ -47,7 +47,7 @@ import {
 const TasksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
