@@ -68,6 +68,7 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
   
   // Transform and enhance task data
   return (data || []).map(task => {
+    // Safely access nested objects with optional chaining and defaults
     const phase = task.phases || {};
     const job = phase.jobs || {};
     
@@ -84,12 +85,12 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
       createdAt: task.created_at,
       updatedAt: task.updated_at,
       
-      // Additional fields from joins
-      jobId: job.id || phase.job_id,
-      jobNumber: job.job_number || 'Unknown',
-      projectName: job.project_name || '',
-      phaseNumber: phase.phase_number || 0,
-      phaseName: phase.phase_name || 'Unknown Phase'
+      // Additional fields from joins using optional chaining and default values
+      jobId: job?.id || phase?.job_id || '',
+      jobNumber: job?.job_number || 'Unknown',
+      projectName: job?.project_name || '',
+      phaseNumber: phase?.phase_number || 0,
+      phaseName: phase?.phase_name || 'Unknown Phase'
     };
   });
 };
