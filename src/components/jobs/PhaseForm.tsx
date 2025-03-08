@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
@@ -5,21 +6,15 @@ import {
   createNewPhase, 
   addPhaseToJob 
 } from '@/lib/supabase';
-import { Job, MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus } from '@/lib/types';
+import { Job } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import TasksContainer from '@/components/production/TasksContainer';
 
 const PhaseForm: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -30,45 +25,24 @@ const PhaseForm: React.FC = () => {
   const [phaseName, setPhaseName] = useState('');
   const [phaseNumber, setPhaseNumber] = useState('');
   
-  // Welding materials
-  const [weldingMaterialStatus, setWeldingMaterialStatus] = useState<MaterialStatus>('not-ordered');
-  const [weldingMaterialNotes, setWeldingMaterialNotes] = useState('');
+  // Task lists for each area
+  const [weldingMaterialTasks, setWeldingMaterialTasks] = useState<string[]>([]);
+  const [sewingMaterialTasks, setSewingMaterialTasks] = useState<string[]>([]);
+  const [installationMaterialTasks, setInstallationMaterialTasks] = useState<string[]>([]);
+  const [weldingLaborTasks, setWeldingLaborTasks] = useState<string[]>([]);
+  const [sewingLaborTasks, setSewingLaborTasks] = useState<string[]>([]);
+  const [powderCoatTasks, setPowderCoatTasks] = useState<string[]>([]);
+  const [installationTasks, setInstallationTasks] = useState<string[]>([]);
+  const [rentalEquipmentTasks, setRentalEquipmentTasks] = useState<string[]>([]);
   
-  // Sewing materials
-  const [sewingMaterialStatus, setSewingMaterialStatus] = useState<MaterialStatus>('not-ordered');
-  const [sewingMaterialNotes, setSewingMaterialNotes] = useState('');
-  
-  // Installation materials
-  const [installationMaterialStatus, setInstallationMaterialStatus] = useState<MaterialStatus>('not-ordered');
-  const [installationMaterialNotes, setInstallationMaterialNotes] = useState('');
-  
-  // Welding labor
-  const [weldingLaborStatus, setWeldingLaborStatus] = useState<LaborStatus>('not-needed');
-  const [weldingLaborNotes, setWeldingLaborNotes] = useState('');
-  const [weldingLaborHours, setWeldingLaborHours] = useState('');
-  
-  // Sewing labor
-  const [sewingLaborStatus, setSewingLaborStatus] = useState<LaborStatus>('not-needed');
-  const [sewingLaborNotes, setSewingLaborNotes] = useState('');
-  const [sewingLaborHours, setSewingLaborHours] = useState('');
-  
-  // Powder coat
-  const [powderCoatStatus, setPowderCoatStatus] = useState<PowderCoatStatus>('not-needed');
-  const [powderCoatNotes, setPowderCoatNotes] = useState('');
-  const [powderCoatEta, setPowderCoatEta] = useState('');
-  
-  // Installation
-  const [installationStatus, setInstallationStatus] = useState<InstallationStatus>('not-started');
+  // Crew information
   const [crewMembersNeeded, setCrewMembersNeeded] = useState('2');
   const [crewHoursNeeded, setCrewHoursNeeded] = useState('4');
   const [siteReadyDate, setSiteReadyDate] = useState('');
   const [installDeadline, setInstallDeadline] = useState('');
   const [installNotes, setInstallNotes] = useState('');
-  
-  // Rental equipment
-  const [rentalEquipmentStatus, setRentalEquipmentStatus] = useState<RentalEquipmentStatus>('not-needed');
-  const [rentalEquipmentDetails, setRentalEquipmentDetails] = useState('');
-  const [rentalEquipmentNotes, setRentalEquipmentNotes] = useState('');
+  const [powderCoatEta, setPowderCoatEta] = useState('');
+  const [powderCoatNotes, setPowderCoatNotes] = useState('');
 
   const { 
     data: job,
@@ -109,48 +83,76 @@ const PhaseForm: React.FC = () => {
       const newPhase = {
         ...createNewPhase(jobId, phaseName, Number(phaseNumber)),
         weldingMaterials: {
-          status: weldingMaterialStatus,
-          notes: weldingMaterialNotes || undefined
+          status: 'not-ordered'
         },
         sewingMaterials: {
-          status: sewingMaterialStatus,
-          notes: sewingMaterialNotes || undefined
+          status: 'not-ordered'
         },
         installationMaterials: {
-          status: installationMaterialStatus,
-          notes: installationMaterialNotes || undefined
+          status: 'not-ordered'
         },
         weldingLabor: {
-          status: weldingLaborStatus,
-          notes: weldingLaborNotes || undefined,
-          hours: weldingLaborHours ? Number(weldingLaborHours) : undefined
+          status: 'not-needed',
+          hours: 0
         },
         sewingLabor: {
-          status: sewingLaborStatus,
-          notes: sewingLaborNotes || undefined,
-          hours: sewingLaborHours ? Number(sewingLaborHours) : undefined
+          status: 'not-needed',
+          hours: 0
         },
         powderCoat: {
-          status: powderCoatStatus,
-          notes: powderCoatNotes || undefined,
-          eta: powderCoatEta || undefined
+          status: 'not-needed',
+          eta: powderCoatEta || undefined,
+          notes: powderCoatNotes || undefined
         },
         installation: {
-          status: installationStatus,
+          status: 'not-started',
           crewMembersNeeded: Number(crewMembersNeeded),
           crewHoursNeeded: Number(crewHoursNeeded),
           siteReadyDate: siteReadyDate || undefined,
           installDeadline: installDeadline || undefined,
           notes: installNotes || undefined,
           rentalEquipment: {
-            status: rentalEquipmentStatus,
-            notes: rentalEquipmentNotes || undefined,
-            details: rentalEquipmentDetails || undefined
+            status: 'not-needed'
           }
         }
       };
       
-      return addPhaseToJob(jobId, newPhase);
+      // Prepare tasks for each area
+      const pendingTasks: Record<string, string[]> = {};
+      
+      if (weldingMaterialTasks.length > 0) {
+        pendingTasks.weldingMaterials = weldingMaterialTasks;
+      }
+      
+      if (sewingMaterialTasks.length > 0) {
+        pendingTasks.sewingMaterials = sewingMaterialTasks;
+      }
+      
+      if (installationMaterialTasks.length > 0) {
+        pendingTasks.installationMaterials = installationMaterialTasks;
+      }
+      
+      if (weldingLaborTasks.length > 0) {
+        pendingTasks.weldingLabor = weldingLaborTasks;
+      }
+      
+      if (sewingLaborTasks.length > 0) {
+        pendingTasks.sewingLabor = sewingLaborTasks;
+      }
+      
+      if (powderCoatTasks.length > 0) {
+        pendingTasks.powderCoat = powderCoatTasks;
+      }
+      
+      if (installationTasks.length > 0) {
+        pendingTasks.installation = installationTasks;
+      }
+      
+      if (rentalEquipmentTasks.length > 0) {
+        pendingTasks.rentalEquipment = rentalEquipmentTasks;
+      }
+      
+      return addPhaseToJob(jobId, newPhase, pendingTasks);
     },
     onSuccess: () => {
       toast.success('Phase added successfully');
@@ -170,6 +172,101 @@ const PhaseForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addPhaseMutation.mutate();
+  };
+
+  // Task handlers
+  const addTaskToArea = (area: string, taskName: string) => {
+    if (!taskName.trim()) return;
+    
+    switch (area) {
+      case 'weldingMaterials':
+        setWeldingMaterialTasks([...weldingMaterialTasks, taskName]);
+        break;
+      case 'sewingMaterials':
+        setSewingMaterialTasks([...sewingMaterialTasks, taskName]);
+        break;
+      case 'installationMaterials':
+        setInstallationMaterialTasks([...installationMaterialTasks, taskName]);
+        break;
+      case 'weldingLabor':
+        setWeldingLaborTasks([...weldingLaborTasks, taskName]);
+        break;
+      case 'sewingLabor':
+        setSewingLaborTasks([...sewingLaborTasks, taskName]);
+        break;
+      case 'powderCoat':
+        setPowderCoatTasks([...powderCoatTasks, taskName]);
+        break;
+      case 'installation':
+        setInstallationTasks([...installationTasks, taskName]);
+        break;
+      case 'rentalEquipment':
+        setRentalEquipmentTasks([...rentalEquipmentTasks, taskName]);
+        break;
+    }
+  };
+
+  const removeTaskFromArea = (area: string, index: number) => {
+    switch (area) {
+      case 'weldingMaterials':
+        setWeldingMaterialTasks(weldingMaterialTasks.filter((_, i) => i !== index));
+        break;
+      case 'sewingMaterials':
+        setSewingMaterialTasks(sewingMaterialTasks.filter((_, i) => i !== index));
+        break;
+      case 'installationMaterials':
+        setInstallationMaterialTasks(installationMaterialTasks.filter((_, i) => i !== index));
+        break;
+      case 'weldingLabor':
+        setWeldingLaborTasks(weldingLaborTasks.filter((_, i) => i !== index));
+        break;
+      case 'sewingLabor':
+        setSewingLaborTasks(sewingLaborTasks.filter((_, i) => i !== index));
+        break;
+      case 'powderCoat':
+        setPowderCoatTasks(powderCoatTasks.filter((_, i) => i !== index));
+        break;
+      case 'installation':
+        setInstallationTasks(installationTasks.filter((_, i) => i !== index));
+        break;
+      case 'rentalEquipment':
+        setRentalEquipmentTasks(rentalEquipmentTasks.filter((_, i) => i !== index));
+        break;
+    }
+  };
+
+  // Render a task list preview
+  const renderTasksList = (tasks: string[], area: string) => {
+    return (
+      <div className="space-y-2 mt-2">
+        {tasks.map((task, index) => (
+          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
+            <span className="text-sm">{task}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => removeTaskFromArea(area, index)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <div className="pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full text-xs"
+            onClick={() => {
+              const taskName = prompt('Enter task name:');
+              if (taskName) addTaskToArea(area, taskName);
+            }}
+          >
+            <Plus className="h-3 w-3 mr-1" /> Add Task
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -250,87 +347,25 @@ const PhaseForm: React.FC = () => {
           <CardHeader>
             <CardTitle>Welding</CardTitle>
             <CardDescription>
-              Details about welding materials and labor for this phase.
+              Add tasks for welding materials and labor for this phase.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-4">Materials</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="weldingMaterialStatus">Status</Label>
-                    <Select 
-                      value={weldingMaterialStatus} 
-                      onValueChange={(value: MaterialStatus) => setWeldingMaterialStatus(value)}
-                    >
-                      <SelectTrigger id="weldingMaterialStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="not-ordered">Not Ordered</SelectItem>
-                        <SelectItem value="ordered">Ordered</SelectItem>
-                        <SelectItem value="received">Received</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="weldingMaterialNotes">Notes</Label>
-                    <Input
-                      id="weldingMaterialNotes"
-                      placeholder="Any special notes about materials"
-                      value={weldingMaterialNotes}
-                      onChange={(e) => setWeldingMaterialNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Materials</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for welding materials. Status will be determined by task completion.
+                </p>
+                {renderTasksList(weldingMaterialTasks, 'weldingMaterials')}
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Labor</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="weldingLaborStatus">Status</Label>
-                    <Select 
-                      value={weldingLaborStatus} 
-                      onValueChange={(value: LaborStatus) => setWeldingLaborStatus(value)}
-                    >
-                      <SelectTrigger id="weldingLaborStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="estimated">Estimated</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="weldingLaborHours">Hours</Label>
-                    <Input
-                      id="weldingLaborHours"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      placeholder="Estimated hours"
-                      value={weldingLaborHours}
-                      onChange={(e) => setWeldingLaborHours(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="weldingLaborNotes">Notes</Label>
-                    <Input
-                      id="weldingLaborNotes"
-                      placeholder="Any special notes about labor"
-                      value={weldingLaborNotes}
-                      onChange={(e) => setWeldingLaborNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Labor</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for welding labor. Status will be determined by task completion.
+                </p>
+                {renderTasksList(weldingLaborTasks, 'weldingLabor')}
               </div>
             </div>
           </CardContent>
@@ -340,87 +375,25 @@ const PhaseForm: React.FC = () => {
           <CardHeader>
             <CardTitle>Sewing</CardTitle>
             <CardDescription>
-              Details about sewing materials and labor for this phase.
+              Add tasks for sewing materials and labor for this phase.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-4">Materials</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="sewingMaterialStatus">Status</Label>
-                    <Select 
-                      value={sewingMaterialStatus} 
-                      onValueChange={(value: MaterialStatus) => setSewingMaterialStatus(value)}
-                    >
-                      <SelectTrigger id="sewingMaterialStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="not-ordered">Not Ordered</SelectItem>
-                        <SelectItem value="ordered">Ordered</SelectItem>
-                        <SelectItem value="received">Received</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="sewingMaterialNotes">Notes</Label>
-                    <Input
-                      id="sewingMaterialNotes"
-                      placeholder="Any special notes about materials"
-                      value={sewingMaterialNotes}
-                      onChange={(e) => setSewingMaterialNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Materials</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for sewing materials. Status will be determined by task completion.
+                </p>
+                {renderTasksList(sewingMaterialTasks, 'sewingMaterials')}
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Labor</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="sewingLaborStatus">Status</Label>
-                    <Select 
-                      value={sewingLaborStatus} 
-                      onValueChange={(value: LaborStatus) => setSewingLaborStatus(value)}
-                    >
-                      <SelectTrigger id="sewingLaborStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="estimated">Estimated</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="sewingLaborHours">Hours</Label>
-                    <Input
-                      id="sewingLaborHours"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      placeholder="Estimated hours"
-                      value={sewingLaborHours}
-                      onChange={(e) => setSewingLaborHours(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="sewingLaborNotes">Notes</Label>
-                    <Input
-                      id="sewingLaborNotes"
-                      placeholder="Any special notes about labor"
-                      value={sewingLaborNotes}
-                      onChange={(e) => setSewingLaborNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Labor</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for sewing labor. Status will be determined by task completion.
+                </p>
+                {renderTasksList(sewingLaborTasks, 'sewingLabor')}
               </div>
             </div>
           </CardContent>
@@ -430,31 +403,13 @@ const PhaseForm: React.FC = () => {
           <CardHeader>
             <CardTitle>Powder Coat</CardTitle>
             <CardDescription>
-              Details about powder coating for this phase.
+              Add tasks and details for powder coating this phase.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="powderCoatStatus">Status</Label>
-                <Select 
-                  value={powderCoatStatus} 
-                  onValueChange={(value: PowderCoatStatus) => setPowderCoatStatus(value)}
-                >
-                  <SelectTrigger id="powderCoatStatus">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not-needed">Not Needed</SelectItem>
-                    <SelectItem value="not-started">Not Started</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="complete">Complete</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="powderCoatEta">ETA</Label>
+                <Label htmlFor="powderCoatEta">Expected Completion Date (Optional)</Label>
                 <Input
                   id="powderCoatEta"
                   type="date"
@@ -464,13 +419,21 @@ const PhaseForm: React.FC = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="powderCoatNotes">Notes</Label>
+                <Label htmlFor="powderCoatNotes">Notes (Optional)</Label>
                 <Input
                   id="powderCoatNotes"
                   placeholder="Any special notes about powder coating"
                   value={powderCoatNotes}
                   onChange={(e) => setPowderCoatNotes(e.target.value)}
                 />
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium mb-2">Tasks</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for powder coating. Status will be determined by task completion.
+                </p>
+                {renderTasksList(powderCoatTasks, 'powderCoat')}
               </div>
             </div>
           </CardContent>
@@ -480,68 +443,21 @@ const PhaseForm: React.FC = () => {
           <CardHeader>
             <CardTitle>Installation</CardTitle>
             <CardDescription>
-              Details about the installation of this phase.
+              Add tasks and details for installation of this phase.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium mb-4">Installation Status</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="installationStatus">Status</Label>
-                    <Select 
-                      value={installationStatus} 
-                      onValueChange={(value: InstallationStatus) => setInstallationStatus(value)}
-                    >
-                      <SelectTrigger id="installationStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-started">Not Started</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Installation Materials</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for installation materials. Status will be determined by task completion.
+                </p>
+                {renderTasksList(installationMaterialTasks, 'installationMaterials')}
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Materials</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="installationMaterialStatus">Status</Label>
-                    <Select 
-                      value={installationMaterialStatus} 
-                      onValueChange={(value: MaterialStatus) => setInstallationMaterialStatus(value)}
-                    >
-                      <SelectTrigger id="installationMaterialStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="not-ordered">Not Ordered</SelectItem>
-                        <SelectItem value="ordered">Ordered</SelectItem>
-                        <SelectItem value="received">Received</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="installationMaterialNotes">Notes</Label>
-                    <Input
-                      id="installationMaterialNotes"
-                      placeholder="Any special notes about materials"
-                      value={installationMaterialNotes}
-                      onChange={(e) => setInstallationMaterialNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-4">Crew Information</h3>
+                <h3 className="text-lg font-medium mb-2">Crew Information</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="crewMembersNeeded">Crew Members Needed</Label>
@@ -573,7 +489,7 @@ const PhaseForm: React.FC = () => {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Schedule</h3>
+                <h3 className="text-lg font-medium mb-2">Schedule</h3>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="siteReadyDate">Site Ready Date</Label>
@@ -598,58 +514,29 @@ const PhaseForm: React.FC = () => {
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Rental Equipment</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="rentalEquipmentStatus">Status</Label>
-                    <Select 
-                      value={rentalEquipmentStatus} 
-                      onValueChange={(value: RentalEquipmentStatus) => setRentalEquipmentStatus(value)}
-                    >
-                      <SelectTrigger id="rentalEquipmentStatus">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="not-needed">Not Needed</SelectItem>
-                        <SelectItem value="not-ordered">Not Ordered</SelectItem>
-                        <SelectItem value="ordered">Ordered</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rentalEquipmentDetails">Details</Label>
-                    <Input
-                      id="rentalEquipmentDetails"
-                      placeholder="Equipment type and size"
-                      value={rentalEquipmentDetails}
-                      onChange={(e) => setRentalEquipmentDetails(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rentalEquipmentNotes">Notes</Label>
-                    <Input
-                      id="rentalEquipmentNotes"
-                      placeholder="Any special notes about rental equipment"
-                      value={rentalEquipmentNotes}
-                      onChange={(e) => setRentalEquipmentNotes(e.target.value)}
-                    />
-                  </div>
-                </div>
+                <h3 className="text-lg font-medium mb-2">Installation Tasks</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks for the installation process. Status will be determined by task completion.
+                </p>
+                {renderTasksList(installationTasks, 'installation')}
               </div>
               
               <div>
-                <h3 className="text-lg font-medium mb-4">Additional Notes</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="installNotes">Installation Notes</Label>
-                  <Input
-                    id="installNotes"
-                    placeholder="Any special notes about the installation"
-                    value={installNotes}
-                    onChange={(e) => setInstallNotes(e.target.value)}
-                  />
-                </div>
+                <h3 className="text-lg font-medium mb-2">Rental Equipment</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Add specific tasks related to rental equipment. Status will be determined by task completion.
+                </p>
+                {renderTasksList(rentalEquipmentTasks, 'rentalEquipment')}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="installNotes">Additional Notes (Optional)</Label>
+                <Input
+                  id="installNotes"
+                  placeholder="Any special notes about the installation"
+                  value={installNotes}
+                  onChange={(e) => setInstallNotes(e.target.value)}
+                />
               </div>
             </div>
           </CardContent>
