@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Job, Phase } from '@/lib/types';
@@ -32,16 +33,22 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
   const handleDeletePhase = async (phaseId: string) => {
     try {
       setDeletingPhaseId(phaseId);
+      
+      // Get the phase info for the toast message
+      const phaseToDelete = job.phases.find(p => p.id === phaseId);
+      const phaseName = phaseToDelete ? `Phase ${phaseToDelete.phaseNumber}: ${phaseToDelete.phaseName}` : 'Phase';
+      
       await deletePhase(job.id, phaseId);
       
       // Invalidate queries to refresh UI
       queryClient.invalidateQueries({ queryKey: ['job', job.id] });
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['activities', job.id] });
       
-      toast.success('Phase deleted successfully');
+      toast.success(`${phaseName} deleted successfully`);
     } catch (error) {
       console.error('Error deleting phase:', error);
-      toast.error('Failed to delete phase');
+      toast.error('Failed to delete phase. Please try again.');
     } finally {
       setDeletingPhaseId(null);
     }

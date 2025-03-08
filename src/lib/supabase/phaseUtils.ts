@@ -1,4 +1,3 @@
-
 import { supabase, Json } from "./client";
 import { Phase, Material, Labor, PowderCoat, Installation, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
@@ -256,24 +255,55 @@ export const updatePhase = async (jobId: string, phaseId: string, phaseData: Par
 
 // Delete a phase
 export const deletePhase = async (jobId: string, phaseId: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('phases')
-    .delete()
-    .eq('id', phaseId)
-    .eq('job_id', jobId);
-  
-  if (error) {
-    console.error('Error deleting phase:', error);
+  try {
+    // Get phase info for the activity log before deleting
+    const phaseToDelete = await getPhaseById(jobId, phaseId);
+    if (!phaseToDelete) {
+      throw new Error('Phase not found');
+    }
+    
+    // Count related tasks that will be deleted
+    const { count: tasksCount, error: countError } = await supabase
+      .from('tasks')
+      .select('id', { count: 'exact', head: true })
+      .eq('phase_id', phaseId);
+    
+    if (countError) {
+      console.error('Error counting related tasks:', countError);
+    }
+    
+    // Delete the phase (cascading delete will handle related tasks and activity logs)
+    const { error } = await supabase
+      .from('phases')
+      .delete()
+      .eq('id', phaseId)
+      .eq('job_id', jobId);
+    
+    if (error) {
+      console.error('Error deleting phase:', error);
+      throw error;
+    }
+    
+    // Log the phase deletion activity
+    await logActivity({
+      jobId,
+      activityType: 'phase_deleted',
+      description: `Phase ${phaseToDelete.phaseNumber}: ${phaseToDelete.phaseName} was deleted${
+        tasksCount ? ` along with ${tasksCount} related task${tasksCount !== 1 ? 's' : ''}` : ''
+      }`
+    });
+    
+    // Update the job's updated_at timestamp
+    await supabase
+      .from('jobs')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', jobId);
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to delete phase:', error);
     throw error;
   }
-  
-  // Update the job's updated_at timestamp
-  await supabase
-    .from('jobs')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', jobId);
-  
-  return true;
 };
 
 // Mark a phase as complete
