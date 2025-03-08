@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Job, Phase } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -9,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { PlusCircle, Check } from 'lucide-react';
+import DeleteConfirmDialog from '@/components/ui/DeleteConfirmDialog';
+import { deletePhase } from '@/lib/supabase/phaseUtils';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface PhasesTabsCardProps {
   job: Job;
@@ -23,6 +26,27 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
   onTogglePhaseComplete,
   getProgressPercentage
 }) => {
+  const [deletingPhaseId, setDeletingPhaseId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDeletePhase = async (phaseId: string) => {
+    try {
+      setDeletingPhaseId(phaseId);
+      await deletePhase(job.id, phaseId);
+      
+      // Invalidate queries to refresh UI
+      queryClient.invalidateQueries({ queryKey: ['job', job.id] });
+      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      
+      toast.success('Phase deleted successfully');
+    } catch (error) {
+      console.error('Error deleting phase:', error);
+      toast.error('Failed to delete phase');
+    } finally {
+      setDeletingPhaseId(null);
+    }
+  };
+
   return (
     <Card className="md:col-span-2">
       <CardHeader>
@@ -101,6 +125,12 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
                                 View
                               </Link>
                             </Button>
+                            <DeleteConfirmDialog
+                              title={`Delete Phase ${phase.phaseNumber}`}
+                              description={`Are you sure you want to delete Phase ${phase.phaseNumber}: ${phase.phaseName}? This action cannot be undone.`}
+                              onDelete={() => handleDeletePhase(phase.id)}
+                              isDeleting={deletingPhaseId === phase.id}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -154,6 +184,12 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
                                 View
                               </Link>
                             </Button>
+                            <DeleteConfirmDialog
+                              title={`Delete Phase ${phase.phaseNumber}`}
+                              description={`Are you sure you want to delete Phase ${phase.phaseNumber}: ${phase.phaseName}? This action cannot be undone.`}
+                              onDelete={() => handleDeletePhase(phase.id)}
+                              isDeleting={deletingPhaseId === phase.id}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -208,6 +244,12 @@ const PhasesTabsCard: React.FC<PhasesTabsCardProps> = ({
                                 View
                               </Link>
                             </Button>
+                            <DeleteConfirmDialog
+                              title={`Delete Phase ${phase.phaseNumber}`}
+                              description={`Are you sure you want to delete Phase ${phase.phaseNumber}: ${phase.phaseName}? This action cannot be undone.`}
+                              onDelete={() => handleDeletePhase(phase.id)}
+                              isDeleting={deletingPhaseId === phase.id}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>

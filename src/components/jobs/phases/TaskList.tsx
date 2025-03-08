@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, X, Clock, Calendar } from 'lucide-react';
+import { Plus, X, Clock, Calendar, Trash } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
@@ -31,6 +31,7 @@ const TaskList: React.FC<TaskListProps> = ({
   onRemove 
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<number | null>(null);
   const [newTaskName, setNewTaskName] = useState('');
   const [laborHours, setLaborHours] = useState('');
   const [materialEta, setMaterialEta] = useState('');
@@ -53,6 +54,11 @@ const TaskList: React.FC<TaskListProps> = ({
     onAdd(area, task);
     resetForm();
     setIsDialogOpen(false);
+  };
+
+  const handleConfirmDelete = (index: number) => {
+    onRemove(area, index);
+    setIsDeleteDialogOpen(null);
   };
 
   const resetForm = () => {
@@ -91,14 +97,16 @@ const TaskList: React.FC<TaskListProps> = ({
             )}
           </div>
           
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={() => onRemove(area, index)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-destructive hover:bg-destructive/10"
+              onClick={() => setIsDeleteDialogOpen(index)}
+            >
+              <Trash className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       ))}
       
@@ -113,6 +121,7 @@ const TaskList: React.FC<TaskListProps> = ({
         </Button>
       </div>
 
+      {/* Add Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -165,6 +174,32 @@ const TaskList: React.FC<TaskListProps> = ({
               Cancel
             </Button>
             <Button onClick={handleAddTask}>Add Task</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen !== null} onOpenChange={() => setIsDeleteDialogOpen(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Delete Task</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+            {isDeleteDialogOpen !== null && tasks[isDeleteDialogOpen] && (
+              <p className="font-semibold mt-2">"{tasks[isDeleteDialogOpen].name}"</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => isDeleteDialogOpen !== null && handleConfirmDelete(isDeleteDialogOpen)}
+            >
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
