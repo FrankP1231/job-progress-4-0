@@ -148,3 +148,65 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
     };
   });
 };
+
+// New function to get all tasks for a specific job
+export const getTasksForJob = async (jobId: string): Promise<Task[]> => {
+  // First get all phases for the job
+  const { data: phases, error: phasesError } = await supabase
+    .from('phases')
+    .select('id')
+    .eq('job_id', jobId);
+  
+  if (phasesError) {
+    console.error('Error fetching phases for job:', phasesError);
+    throw phasesError;
+  }
+  
+  if (!phases || phases.length === 0) {
+    return [];
+  }
+  
+  // Get all tasks for these phases
+  const phaseIds = phases.map(phase => phase.id);
+  
+  const { data: tasks, error: tasksError } = await supabase
+    .from('tasks')
+    .select(`
+      *,
+      phases:phase_id (
+        id,
+        phase_name,
+        phase_number,
+        job_id
+      )
+    `)
+    .in('phase_id', phaseIds)
+    .order('created_at', { ascending: true });
+  
+  if (tasksError) {
+    console.error('Error fetching tasks for job phases:', tasksError);
+    throw tasksError;
+  }
+  
+  // Transform the tasks data
+  return (tasks || []).map(task => {
+    return {
+      id: task.id,
+      phaseId: task.phase_id,
+      area: task.area,
+      name: task.name,
+      isComplete: task.is_complete,
+      status: task.status as TaskStatus,
+      hours: task.hours,
+      eta: task.eta,
+      notes: task.notes,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at,
+      
+      // Add phase data
+      phaseName: task.phases?.phase_name || 'Unknown Phase',
+      phaseNumber: task.phases?.phase_number || 0,
+      jobId: task.phases?.job_id || jobId
+    };
+  });
+};

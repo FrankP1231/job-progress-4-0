@@ -7,7 +7,7 @@ import { Job, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { getTasksForJob } from '@/lib/supabase/taskUtils';
+import { getTasksForJob } from '@/lib/supabase/task-helpers';
 
 interface TaskCardProps {
   job: Job;

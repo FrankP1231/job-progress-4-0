@@ -4,9 +4,26 @@ export * from './jobUtils';
 export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './statusUtils';
-export * from './task-crud';
-export * from './task-status';
 export * from './task-helpers';
+
+// Explicitly export from task-crud to avoid conflict with task-status
+export {
+  getTasksForPhase,
+  getTasksForAllJobs,
+  getTasksForPhaseArea,
+  createTask,
+  updateTask,
+  addTasksToPhaseArea,
+  addSampleTasksToPhases
+} from './task-crud';
+
+// Explicitly export from task-status
+export {
+  updateTaskStatus,
+  deleteTask as deleteTaskStatus,
+  refreshTasksData,
+  calculateAreaStatus
+} from './task-status';
 
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 

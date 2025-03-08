@@ -5,6 +5,24 @@ import { transformTaskData } from './task-helpers';
 import { useQueryClient } from '@tanstack/react-query';
 import { logActivity } from './activityLogUtils';
 
+// Function to calculate status based on tasks
+export const calculateAreaStatus = (tasks: Task[] = []): TaskStatus => {
+  if (!tasks || tasks.length === 0) {
+    return 'not-started';
+  }
+  
+  const completeTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
+  
+  if (completeTasks.length === tasks.length) {
+    return 'complete';
+  } else if (completeTasks.length > 0 || inProgressTasks.length > 0) {
+    return 'in-progress';
+  } else {
+    return 'not-started';
+  }
+};
+
 // Function to update a task's status
 export const updateTaskStatus = async (taskId: string, status: TaskStatus): Promise<Task> => {
   // First, get the current task data for the activity log
