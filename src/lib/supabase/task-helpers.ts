@@ -66,19 +66,21 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
     throw error;
   }
   
-  // Transform and enhance task data with proper type handling
+  // Transform the data to match our Task type
   return (data || []).map(task => {
-    // Get the phase data or default to empty object with proper type assertion
+    // Get phase data if it exists, or use a properly typed empty object
     const phase = task.phases || {};
     
-    // Instead of trying to access phase.jobs directly, check if it exists first
+    // Create properly typed variables with fallbacks
+    const phaseNumber = phase.phase_number !== undefined ? Number(phase.phase_number) : 0;
+    const phaseName = phase.phase_name !== undefined ? String(phase.phase_name) : 'Unknown Phase';
+    const jobId = phase.job_id !== undefined ? String(phase.job_id) : '';
+    
+    // Get jobs data if it exists
     const jobs = phase.jobs || {};
-    
-    // Safely handle potentially missing or null values with proper type conversion
-    const phaseNumber = typeof phase.phase_number === 'number' ? phase.phase_number : 0;
-    const phaseName = typeof phase.phase_name === 'string' ? phase.phase_name : 'Unknown Phase';
-    const jobId = phase.job_id ? String(phase.job_id) : '';
-    
+    const jobNumber = jobs.job_number !== undefined ? String(jobs.job_number) : 'Unknown';
+    const projectName = jobs.project_name !== undefined ? String(jobs.project_name) : '';
+
     return {
       id: task.id,
       phaseId: task.phase_id,
@@ -94,8 +96,8 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
       
       // Additional fields with proper type assignments
       jobId: jobId,
-      jobNumber: jobs.job_number || 'Unknown',
-      projectName: jobs.project_name || '',
+      jobNumber: jobNumber,
+      projectName: projectName,
       phaseNumber: phaseNumber,
       phaseName: phaseName
     };

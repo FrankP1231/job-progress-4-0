@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -67,6 +68,46 @@ const TasksPage: React.FC = () => {
     }
   }, [allTasks, error]);
 
+  // Filter tasks based on search and filters
+  const filteredTasks = React.useMemo(() => {
+    if (!allTasks) return [];
+    
+    return allTasks.filter(task => {
+      // Search filter
+      const matchesSearch = searchQuery === '' || 
+        task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.notes && task.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        task.phaseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        task.projectName.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Area filter
+      const matchesArea = areaFilter === 'all' || task.area === areaFilter;
+      
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'complete' && task.isComplete) ||
+        (statusFilter === 'in-progress' && task.status === 'in-progress' && !task.isComplete) ||
+        (statusFilter === 'not-started' && task.status === 'not-started' && !task.isComplete) ||
+        (statusFilter === 'pending' && !task.isComplete);
+      
+      return matchesSearch && matchesArea && matchesStatus;
+    });
+  }, [allTasks, searchQuery, areaFilter, statusFilter]);
+
+  // Group tasks by job for the list view
+  const tasksByJob = React.useMemo(() => {
+    if (!filteredTasks || filteredTasks.length === 0) return {};
+    
+    return filteredTasks.reduce<Record<string, Task[]>>((acc, task) => {
+      const jobId = task.jobId || 'unknown';
+      if (!acc[jobId]) {
+        acc[jobId] = [];
+      }
+      acc[jobId].push(task);
+      return acc;
+    }, {});
+  }, [filteredTasks]);
+  
   const handleUpdateTaskStatus = async (task: Task, newStatus: TaskStatus) => {
     try {
       setUpdatingTaskId(task.id);
