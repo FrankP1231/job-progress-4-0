@@ -1,20 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-  getJobById,
-  createNewPhase, 
-  addPhaseToJob 
-} from '@/lib/supabase';
-import { Job, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '@/lib/types';
+import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
+import { Job, Phase, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import TasksContainer from '@/components/production/TasksContainer';
+
+// Import our new components
+import PhaseInfoCard from './phases/PhaseInfoCard';
+import WeldingCard from './phases/WeldingCard';
+import SewingCard from './phases/SewingCard';
+import PowderCoatCard from './phases/PowderCoatCard';
+import InstallationCard from './phases/InstallationCard';
 
 const PhaseForm: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -225,40 +224,6 @@ const PhaseForm: React.FC = () => {
     }
   };
 
-  // Render a task list preview
-  const renderTasksList = (tasks: string[], area: string) => {
-    return (
-      <div className="space-y-2 mt-2">
-        {tasks.map((task, index) => (
-          <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
-            <span className="text-sm">{task}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={() => removeTaskFromArea(area, index)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-        <div className="pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs"
-            onClick={() => {
-              const taskName = prompt('Enter task name:');
-              if (taskName) addTaskToArea(area, taskName);
-            }}
-          >
-            <Plus className="h-3 w-3 mr-1" /> Add Task
-          </Button>
-        </div>
-      </div>
-    );
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -296,251 +261,56 @@ const PhaseForm: React.FC = () => {
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Phase Information</CardTitle>
-            <CardDescription>
-              Enter the basic information for this phase of the project.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="phaseName">Phase Name</Label>
-                <Input
-                  id="phaseName"
-                  placeholder="e.g., Front Entrance Awning"
-                  value={phaseName}
-                  onChange={(e) => setPhaseName(e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phaseNumber">Phase Number</Label>
-                <Input
-                  id="phaseNumber"
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="e.g., 1"
-                  value={phaseNumber}
-                  onChange={(e) => setPhaseNumber(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <PhaseInfoCard 
+          phaseName={phaseName}
+          setPhaseName={setPhaseName}
+          phaseNumber={phaseNumber}
+          setPhaseNumber={setPhaseNumber}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Welding</CardTitle>
-            <CardDescription>
-              Add tasks for welding materials and labor for this phase.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Materials</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for welding materials. Status will be determined by task completion.
-                </p>
-                {renderTasksList(weldingMaterialTasks, 'weldingMaterials')}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Labor</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for welding labor. Status will be determined by task completion.
-                </p>
-                {renderTasksList(weldingLaborTasks, 'weldingLabor')}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <WeldingCard 
+          weldingMaterialTasks={weldingMaterialTasks}
+          weldingLaborTasks={weldingLaborTasks}
+          onAddTask={addTaskToArea}
+          onRemoveTask={removeTaskFromArea}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Sewing</CardTitle>
-            <CardDescription>
-              Add tasks for sewing materials and labor for this phase.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Materials</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for sewing materials. Status will be determined by task completion.
-                </p>
-                {renderTasksList(sewingMaterialTasks, 'sewingMaterials')}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Labor</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for sewing labor. Status will be determined by task completion.
-                </p>
-                {renderTasksList(sewingLaborTasks, 'sewingLabor')}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <SewingCard 
+          sewingMaterialTasks={sewingMaterialTasks}
+          sewingLaborTasks={sewingLaborTasks}
+          onAddTask={addTaskToArea}
+          onRemoveTask={removeTaskFromArea}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Powder Coat</CardTitle>
-            <CardDescription>
-              Add tasks and details for powder coating this phase.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="powderCoatEta">Expected Completion Date (Optional)</Label>
-                <Input
-                  id="powderCoatEta"
-                  type="date"
-                  value={powderCoatEta}
-                  onChange={(e) => setPowderCoatEta(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="powderCoatColor">Color (Optional)</Label>
-                <Input
-                  id="powderCoatColor"
-                  placeholder="Color name or code"
-                  value={powderCoatColor}
-                  onChange={(e) => setPowderCoatColor(e.target.value)}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="powderCoatNotes">Notes (Optional)</Label>
-                <Input
-                  id="powderCoatNotes"
-                  placeholder="Any special notes about powder coating"
-                  value={powderCoatNotes}
-                  onChange={(e) => setPowderCoatNotes(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Tasks</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for powder coating. Status will be determined by task completion.
-                </p>
-                {renderTasksList(powderCoatTasks, 'powderCoat')}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <PowderCoatCard 
+          powderCoatTasks={powderCoatTasks}
+          powderCoatEta={powderCoatEta}
+          powderCoatNotes={powderCoatNotes}
+          powderCoatColor={powderCoatColor}
+          setPowderCoatEta={setPowderCoatEta}
+          setPowderCoatNotes={setPowderCoatNotes}
+          setPowderCoatColor={setPowderCoatColor}
+          onAddTask={addTaskToArea}
+          onRemoveTask={removeTaskFromArea}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle>Installation</CardTitle>
-            <CardDescription>
-              Add tasks and details for installation of this phase.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium mb-2">Installation Materials</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for installation materials. Status will be determined by task completion.
-                </p>
-                {renderTasksList(installationMaterialTasks, 'installationMaterials')}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Crew Information</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="crewMembersNeeded">Crew Members Needed</Label>
-                    <Input
-                      id="crewMembersNeeded"
-                      type="number"
-                      min="1"
-                      placeholder="Number of crew members"
-                      value={crewMembersNeeded}
-                      onChange={(e) => setCrewMembersNeeded(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="crewHoursNeeded">Crew Hours Needed</Label>
-                    <Input
-                      id="crewHoursNeeded"
-                      type="number"
-                      min="0.5"
-                      step="0.5"
-                      placeholder="Estimated hours"
-                      value={crewHoursNeeded}
-                      onChange={(e) => setCrewHoursNeeded(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Schedule</h3>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="siteReadyDate">Site Ready Date</Label>
-                    <Input
-                      id="siteReadyDate"
-                      type="date"
-                      value={siteReadyDate}
-                      onChange={(e) => setSiteReadyDate(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="installDeadline">Installation Deadline</Label>
-                    <Input
-                      id="installDeadline"
-                      type="date"
-                      value={installDeadline}
-                      onChange={(e) => setInstallDeadline(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Installation Tasks</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks for the installation process. Status will be determined by task completion.
-                </p>
-                {renderTasksList(installationTasks, 'installation')}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">Rental Equipment</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Add specific tasks related to rental equipment. Status will be determined by task completion.
-                </p>
-                {renderTasksList(rentalEquipmentTasks, 'rentalEquipment')}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="installNotes">Additional Notes (Optional)</Label>
-                <Input
-                  id="installNotes"
-                  placeholder="Any special notes about the installation"
-                  value={installNotes}
-                  onChange={(e) => setInstallNotes(e.target.value)}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <InstallationCard 
+          installationMaterialTasks={installationMaterialTasks}
+          installationTasks={installationTasks}
+          rentalEquipmentTasks={rentalEquipmentTasks}
+          crewMembersNeeded={crewMembersNeeded}
+          crewHoursNeeded={crewHoursNeeded}
+          siteReadyDate={siteReadyDate}
+          installDeadline={installDeadline}
+          installNotes={installNotes}
+          setCrewMembersNeeded={setCrewMembersNeeded}
+          setCrewHoursNeeded={setCrewHoursNeeded}
+          setSiteReadyDate={setSiteReadyDate}
+          setInstallDeadline={setInstallDeadline}
+          setInstallNotes={setInstallNotes}
+          onAddTask={addTaskToArea}
+          onRemoveTask={removeTaskFromArea}
+        />
         
         <div className="flex justify-end space-x-2">
           <Button 
