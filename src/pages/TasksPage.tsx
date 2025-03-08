@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -277,6 +278,7 @@ const TasksPage: React.FC = () => {
                     <TableHead>Job</TableHead>
                     <TableHead>Phase</TableHead>
                     <TableHead>ETA</TableHead>
+                    <TableHead>Est. Hours</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -312,6 +314,9 @@ const TasksPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {task.eta ? format(new Date(task.eta), 'MMM d, yyyy') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {task.hours ? `${task.hours} hrs` : '-'}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>

@@ -1,4 +1,3 @@
-
 import React, { useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,7 +14,6 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
-  // Fetch all tasks for the job directly instead of relying on tasks embedded in the job object
   const { 
     data: jobTasks, 
     isLoading: tasksLoading,
@@ -40,9 +38,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     
     const enhancedTasks: Array<Task & { phaseName: string; phaseNumber: number }> = [];
     
-    // Process all tasks and attach phase information
     jobTasks.forEach(task => {
-      // Find the phase this task belongs to
       const phase = job.phases.find(p => p.id === task.phaseId);
       if (phase) {
         enhancedTasks.push({
@@ -53,7 +49,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       }
     });
     
-    // Filter tasks that are not completed
     const pendingTasks = enhancedTasks.filter(task => !task.isComplete);
     console.log('All pending tasks collected:', pendingTasks.length);
     return pendingTasks;
@@ -140,12 +135,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
                       <span>•</span>
                       <span>{getAreaLabel(task.area)}</span>
                     </div>
-                    {task.eta && (
-                      <div className="flex items-center mt-1 text-xs">
-                        <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
-                        <span>ETA: {format(new Date(task.eta), 'MMM d, yyyy')}</span>
-                      </div>
-                    )}
+                    <div className="flex flex-wrap items-center mt-1 gap-x-3 gap-y-1">
+                      {task.eta && (
+                        <div className="flex items-center text-xs">
+                          <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                          <span>ETA: {format(new Date(task.eta), 'MMM d, yyyy')}</span>
+                        </div>
+                      )}
+                      {task.hours && (
+                        <div className="flex items-center text-xs">
+                          <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+                          <span>Est. Hours: {task.hours}</span>
+                        </div>
+                      )}
+                    </div>
                     {task.notes && (
                       <p className="mt-1 text-xs text-muted-foreground italic">{task.notes}</p>
                     )}
