@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
@@ -15,6 +14,13 @@ import SewingCard from './phases/SewingCard';
 import PowderCoatCard from './phases/PowderCoatCard';
 import InstallationCard from './phases/InstallationCard';
 
+// Define a task interface
+interface TaskWithMetadata {
+  name: string;
+  hours?: number;
+  eta?: string;
+}
+
 const PhaseForm: React.FC = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
@@ -25,14 +31,14 @@ const PhaseForm: React.FC = () => {
   const [phaseNumber, setPhaseNumber] = useState('');
   
   // Task lists for each area
-  const [weldingMaterialTasks, setWeldingMaterialTasks] = useState<string[]>([]);
-  const [sewingMaterialTasks, setSewingMaterialTasks] = useState<string[]>([]);
-  const [installationMaterialTasks, setInstallationMaterialTasks] = useState<string[]>([]);
-  const [weldingLaborTasks, setWeldingLaborTasks] = useState<string[]>([]);
-  const [sewingLaborTasks, setSewingLaborTasks] = useState<string[]>([]);
-  const [powderCoatTasks, setPowderCoatTasks] = useState<string[]>([]);
-  const [installationTasks, setInstallationTasks] = useState<string[]>([]);
-  const [rentalEquipmentTasks, setRentalEquipmentTasks] = useState<string[]>([]);
+  const [weldingMaterialTasks, setWeldingMaterialTasks] = useState<TaskWithMetadata[]>([]);
+  const [sewingMaterialTasks, setSewingMaterialTasks] = useState<TaskWithMetadata[]>([]);
+  const [installationMaterialTasks, setInstallationMaterialTasks] = useState<TaskWithMetadata[]>([]);
+  const [weldingLaborTasks, setWeldingLaborTasks] = useState<TaskWithMetadata[]>([]);
+  const [sewingLaborTasks, setSewingLaborTasks] = useState<TaskWithMetadata[]>([]);
+  const [powderCoatTasks, setPowderCoatTasks] = useState<TaskWithMetadata[]>([]);
+  const [installationTasks, setInstallationTasks] = useState<TaskWithMetadata[]>([]);
+  const [rentalEquipmentTasks, setRentalEquipmentTasks] = useState<TaskWithMetadata[]>([]);
   
   // Crew information
   const [crewMembersNeeded, setCrewMembersNeeded] = useState('2');
@@ -106,40 +112,28 @@ const PhaseForm: React.FC = () => {
         };
       }
       
-      // Prepare tasks for each area
-      const pendingTasks: Record<string, string[]> = {};
+      // Prepare tasks for each area with metadata
+      const pendingTasks: Record<string, any[]> = {};
       
-      if (weldingMaterialTasks.length > 0) {
-        pendingTasks.weldingMaterials = weldingMaterialTasks;
-      }
+      // Helper function to map tasks with metadata
+      const mapTasks = (tasks: TaskWithMetadata[], area: string) => {
+        if (tasks.length > 0) {
+          pendingTasks[area] = tasks.map(task => ({
+            name: task.name,
+            hours: task.hours,
+            eta: task.eta
+          }));
+        }
+      };
       
-      if (sewingMaterialTasks.length > 0) {
-        pendingTasks.sewingMaterials = sewingMaterialTasks;
-      }
-      
-      if (installationMaterialTasks.length > 0) {
-        pendingTasks.installationMaterials = installationMaterialTasks;
-      }
-      
-      if (weldingLaborTasks.length > 0) {
-        pendingTasks.weldingLabor = weldingLaborTasks;
-      }
-      
-      if (sewingLaborTasks.length > 0) {
-        pendingTasks.sewingLabor = sewingLaborTasks;
-      }
-      
-      if (powderCoatTasks.length > 0) {
-        pendingTasks.powderCoat = powderCoatTasks;
-      }
-      
-      if (installationTasks.length > 0) {
-        pendingTasks.installation = installationTasks;
-      }
-      
-      if (rentalEquipmentTasks.length > 0) {
-        pendingTasks.rentalEquipment = rentalEquipmentTasks;
-      }
+      mapTasks(weldingMaterialTasks, 'weldingMaterials');
+      mapTasks(sewingMaterialTasks, 'sewingMaterials');
+      mapTasks(installationMaterialTasks, 'installationMaterials');
+      mapTasks(weldingLaborTasks, 'weldingLabor');
+      mapTasks(sewingLaborTasks, 'sewingLabor');
+      mapTasks(powderCoatTasks, 'powderCoat');
+      mapTasks(installationTasks, 'installation');
+      mapTasks(rentalEquipmentTasks, 'rentalEquipment');
       
       return addPhaseToJob(jobId, newPhase, pendingTasks);
     },
@@ -164,33 +158,33 @@ const PhaseForm: React.FC = () => {
   };
 
   // Task handlers
-  const addTaskToArea = (area: string, taskName: string) => {
-    if (!taskName.trim()) return;
+  const addTaskToArea = (area: string, task: TaskWithMetadata) => {
+    if (!task.name.trim()) return;
     
     switch (area) {
       case 'weldingMaterials':
-        setWeldingMaterialTasks([...weldingMaterialTasks, taskName]);
+        setWeldingMaterialTasks([...weldingMaterialTasks, task]);
         break;
       case 'sewingMaterials':
-        setSewingMaterialTasks([...sewingMaterialTasks, taskName]);
+        setSewingMaterialTasks([...sewingMaterialTasks, task]);
         break;
       case 'installationMaterials':
-        setInstallationMaterialTasks([...installationMaterialTasks, taskName]);
+        setInstallationMaterialTasks([...installationMaterialTasks, task]);
         break;
       case 'weldingLabor':
-        setWeldingLaborTasks([...weldingLaborTasks, taskName]);
+        setWeldingLaborTasks([...weldingLaborTasks, task]);
         break;
       case 'sewingLabor':
-        setSewingLaborTasks([...sewingLaborTasks, taskName]);
+        setSewingLaborTasks([...sewingLaborTasks, task]);
         break;
       case 'powderCoat':
-        setPowderCoatTasks([...powderCoatTasks, taskName]);
+        setPowderCoatTasks([...powderCoatTasks, task]);
         break;
       case 'installation':
-        setInstallationTasks([...installationTasks, taskName]);
+        setInstallationTasks([...installationTasks, task]);
         break;
       case 'rentalEquipment':
-        setRentalEquipmentTasks([...rentalEquipmentTasks, taskName]);
+        setRentalEquipmentTasks([...rentalEquipmentTasks, task]);
         break;
     }
   };

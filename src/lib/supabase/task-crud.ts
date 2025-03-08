@@ -170,17 +170,27 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
 export const addTasksToPhaseArea = async (
   phaseId: string, 
   area: string, 
-  taskNames: string[]
+  taskNames: string[] | Array<{name: string, hours?: number, eta?: string}>
 ): Promise<Task[]> => {
   const tasksList = taskNames
-    .filter(name => name.trim()) // Filter out empty names
-    .map(name => ({
-      phase_id: phaseId,
-      area,
-      name: name.trim(),
-      is_complete: false,
-      status: 'not-started' as TaskStatus
-    }));
+    .map(task => {
+      const taskName = typeof task === 'string' ? task : task.name;
+      const taskHours = typeof task === 'object' ? task.hours : undefined;
+      const taskEta = typeof task === 'object' ? task.eta : undefined;
+      
+      if (!taskName.trim()) return null;
+      
+      return {
+        phase_id: phaseId,
+        area,
+        name: taskName.trim(),
+        is_complete: false,
+        status: 'not-started' as TaskStatus,
+        hours: taskHours,
+        eta: taskEta
+      };
+    })
+    .filter((task): task is Exclude<typeof task, null> => task !== null);
   
   if (tasksList.length === 0) return [];
   
