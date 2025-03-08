@@ -21,13 +21,19 @@ interface StatusBadgeProps {
   status: StatusType;
   className?: string;
   tasks?: any[]; // Array of tasks to determine status
+  forceTaskStatus?: boolean; // Force using task-based status calculation
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className, tasks }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = ({ 
+  status, 
+  className, 
+  tasks, 
+  forceTaskStatus = true // Default to true to prioritize task-based status
+}) => {
   // If tasks are provided, calculate status based on tasks
   let statusKey = status;
   
-  if (tasks && Array.isArray(tasks)) {
+  if (tasks && Array.isArray(tasks) && (forceTaskStatus || tasks.length > 0)) {
     if (tasks.length === 0) {
       statusKey = 'not-needed';
     } else {

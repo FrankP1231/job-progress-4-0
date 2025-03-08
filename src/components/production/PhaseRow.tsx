@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -91,7 +92,11 @@ const PhaseRow: React.FC<PhaseRowProps> = ({ phase, tabType, isExpanded, onToggl
       </TableCell>
       <TableCell className="py-2">{phase.phaseName}</TableCell>
       <TableCell className="py-2">
-        <StatusBadge status={status} tasks={tasks} />
+        <StatusBadge 
+          status={status} 
+          tasks={tasks} 
+          forceTaskStatus={true}
+        />
       </TableCell>
       <TableCell className="text-right py-2">{hours}</TableCell>
     </TableRow>
