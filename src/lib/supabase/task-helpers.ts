@@ -2,6 +2,37 @@
 import { supabase } from "../supabase/client";
 import { Task, TaskStatus } from '../types';
 
+// Define interfaces to match Supabase's nested response structure
+interface JobResponse {
+  id?: string;
+  job_number?: string;
+  project_name?: string;
+}
+
+interface PhaseResponse {
+  id?: string;
+  phase_name?: string;
+  phase_number?: number;
+  job_id?: string;
+  jobs?: JobResponse;
+}
+
+interface TaskResponse {
+  id: string;
+  phase_id: string;
+  area: string;
+  name: string;
+  is_complete: boolean;
+  status: string;
+  hours?: number;
+  eta?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // The joined data from phases table
+  phases?: PhaseResponse;
+}
+
 // Get job ID for a phase
 export const getJobIdForPhase = async (phaseId: string): Promise<string | null> => {
   const { data, error } = await supabase
@@ -66,17 +97,29 @@ export const getAllTasksWithDetails = async (): Promise<Task[]> => {
     throw error;
   }
   
+  // Cast the data as our defined interface for proper typing
+  const typedData = (data || []) as TaskResponse[];
+  
   // Transform the data to match our Task type
-  return (data || []).map(task => {
-    // Handle the nested structure properly
-    // The phases field contains the joined phase data
-    const phases = task.phases || {};
+  return typedData.map(task => {
+    // Create properly typed default objects for phases and jobs
+    const defaultPhase: PhaseResponse = {
+      phase_name: 'Unknown Phase',
+      phase_number: 0,
+      job_id: '',
+      jobs: {
+        job_number: 'Unknown',
+        project_name: ''
+      }
+    };
     
-    // Get jobs data from the nested structure
-    // In Supabase joins, phases.jobs contains the joined jobs data
-    const jobs = phases.jobs || {};
+    // Get phases data with defaults
+    const phases = task.phases || defaultPhase;
     
-    // Create properly typed variables with fallbacks
+    // Get jobs data with defaults
+    const jobs = phases.jobs || defaultPhase.jobs;
+    
+    // Create properly typed variables with safeguards
     const phaseNumber = phases.phase_number !== undefined ? Number(phases.phase_number) : 0;
     const phaseName = phases.phase_name !== undefined ? String(phases.phase_name) : 'Unknown Phase';
     const jobId = phases.job_id !== undefined ? String(phases.job_id) : '';
