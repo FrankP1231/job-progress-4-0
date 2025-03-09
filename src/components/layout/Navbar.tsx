@@ -39,7 +39,7 @@ const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="mr-4 hidden md:flex">
-          <Link to="/dashboard" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-2">
             <img 
               src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
               alt="USA Canvas Logo" 
@@ -106,7 +106,7 @@ const Navbar: React.FC = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Link to="/dashboard" className="flex items-center">
+          <Link to="/" className="flex items-center">
             <img 
               src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
               alt="USA Canvas Logo" 
