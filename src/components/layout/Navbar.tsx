@@ -10,7 +10,9 @@ import {
   Menu,
   Briefcase,
   Wrench,
-  CheckSquare
+  CheckSquare,
+  User,
+  Users
 } from 'lucide-react';
 import {
   Sheet,
@@ -20,20 +22,58 @@ import {
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import SearchBar from './SearchBar';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
+  // Check if user is a team lead or admin
+  const isAdmin = user.role === 'Front Office' || user.role === 'Lead Welder' || user.role === 'Lead Installer';
+
+  // If not authenticated, show a simplified navbar with login
   if (!user.isAuthenticated) {
-    return null;
+    return (
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center justify-between">
+          <div>
+            <Link to="/" className="flex items-center space-x-2">
+              <img 
+                src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
+                alt="USA Canvas Logo" 
+                className="h-8" 
+              />
+            </Link>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/login">Sign In</Link>
+          </Button>
+        </div>
+      </header>
+    );
   }
+
+  // Get initials for avatar
+  const getInitials = () => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    return user.email?.substring(0, 2).toUpperCase() || 'U';
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -97,6 +137,24 @@ const Navbar: React.FC = () => {
                     Production
                   </Link>
                 </SheetClose>
+                
+                {/* Only show Users menu for admins */}
+                {isAdmin && (
+                  <SheetClose asChild>
+                    <Link to="/admin/users" className="flex items-center py-2">
+                      <Users className="mr-2 h-5 w-5" />
+                      Manage Users
+                    </Link>
+                  </SheetClose>
+                )}
+                
+                <SheetClose asChild>
+                  <Link to="/profile" className="flex items-center py-2">
+                    <User className="mr-2 h-5 w-5" />
+                    My Profile
+                  </Link>
+                </SheetClose>
+                
                 <SheetClose asChild>
                   <Button variant="ghost" className="justify-start px-2" onClick={handleLogout}>
                     <LogOut className="mr-2 h-5 w-5" />
@@ -146,6 +204,16 @@ const Navbar: React.FC = () => {
           >
             Production
           </Link>
+          
+          {/* Only show Users menu for admins */}
+          {isAdmin && (
+            <Link
+              to="/admin/users"
+              className="text-sm font-medium transition-colors hover:text-primary"
+            >
+              Users
+            </Link>
+          )}
         </nav>
         
         {/* Add the search bar */}
@@ -153,11 +221,38 @@ const Navbar: React.FC = () => {
           <SearchBar className="max-w-md hidden md:flex" />
         </div>
         
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1">
-            <LogOut className="h-4 w-4" />
-            <span className="hidden md:inline">Sign Out</span>
-          </Button>
+        <div className="flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials()}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
+                {user.role && (
+                  <div className="text-xs text-muted-foreground">{user.role}</div>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  My Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

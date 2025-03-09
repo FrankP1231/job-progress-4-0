@@ -8,6 +8,9 @@ import { AuthProvider } from "./context/AuthContext";
 import { useEffect } from "react";
 import Layout from "./components/layout/Layout";
 import LoginPage from "./components/auth/LoginPage";
+import AuthPage from "./components/auth/AuthPage";
+import ProfilePage from "./components/profile/ProfilePage";
+import UsersManagementPage from "./components/admin/UsersManagementPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import DashboardPage from "./components/dashboard/DashboardPage";
@@ -51,9 +54,11 @@ const App = () => {
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
+                <Route path="/login" element={<AuthPage />} />
                 
                 {/* Protected routes */}
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/admin/users" element={<UsersManagementPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/projects" element={<ProjectsPage />} />
                 <Route path="/tasks" element={<TasksPage />} />

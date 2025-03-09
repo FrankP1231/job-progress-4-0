@@ -20,6 +20,7 @@ export type Database = {
           new_value: Json | null
           phase_id: string | null
           previous_value: Json | null
+          user_id: string | null
         }
         Insert: {
           activity_type: string
@@ -31,6 +32,7 @@ export type Database = {
           new_value?: Json | null
           phase_id?: string | null
           previous_value?: Json | null
+          user_id?: string | null
         }
         Update: {
           activity_type?: string
@@ -42,6 +44,7 @@ export type Database = {
           new_value?: Json | null
           phase_id?: string | null
           previous_value?: Json | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -158,6 +161,74 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          last_modified_by: string | null
+          last_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          work_area: Database["public"]["Enums"]["work_area"]
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id: string
+          last_modified_by?: string | null
+          last_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          work_area: Database["public"]["Enums"]["work_area"]
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          last_modified_by?: string | null
+          last_name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          work_area?: Database["public"]["Enums"]["work_area"]
+        }
+        Relationships: []
+      }
+      task_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           area: string
@@ -216,7 +287,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "Sewer"
+        | "Lead Welder"
+        | "Welder"
+        | "Welder's Helper"
+        | "Lead Installer"
+        | "Installer's Helper"
+        | "Installer"
+        | "Front Office"
+      work_area: "Sewing" | "Welding" | "Installation" | "Front Office"
     }
     CompositeTypes: {
       [_ in never]: never
