@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LockIcon } from 'lucide-react';
+import { LockIcon, User } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const { user, login } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,22 +21,25 @@ const LoginPage: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
 
-    setTimeout(() => {
-      const success = login(password);
+    try {
+      const success = await login(email, password);
       
       if (success) {
         navigate('/dashboard');
       } else {
-        setError('Invalid password. Please try again.');
+        setError('Invalid credentials. Please try again.');
       }
-      
+    } catch (error) {
+      setError('An error occurred during login. Please try again.');
+      console.error(error);
+    } finally {
       setIsLoading(false);
-    }, 500); // Simulate network request
+    }
   };
 
   return (
@@ -50,7 +54,7 @@ const LoginPage: React.FC = () => {
                 className="w-full" 
               />
             </div>
-            <CardDescription>Enter your password to access the job tracking system</CardDescription>
+            <CardDescription>Enter your credentials to access the job tracking system</CardDescription>
           </CardHeader>
           
           <form onSubmit={handleSubmit}>
@@ -64,12 +68,30 @@ const LoginPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="relative">
                   <Input
+                    id="email"
+                    type="email"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pr-10"
+                    required
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="relative">
+                  <Input
                     id="password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pr-10"
+                    required
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <LockIcon className="h-4 w-4 text-muted-foreground" />

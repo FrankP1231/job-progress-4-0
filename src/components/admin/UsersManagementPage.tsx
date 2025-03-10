@@ -13,16 +13,22 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from 'sonner';
 import { Edit, Search, UserPlus } from 'lucide-react';
 
+// Define type for user roles
+type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office';
+
+// Define type for work areas
+type WorkArea = 'Sewing' | 'Welding' | 'Installation' | 'Front Office';
+
 interface Profile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-  role: string;
-  work_area: string;
+  role: UserRole;
+  work_area: WorkArea;
 }
 
-const roles = [
+const roles: UserRole[] = [
   'Sewer', 
   'Lead Welder', 
   'Welder', 
@@ -33,7 +39,7 @@ const roles = [
   'Front Office'
 ];
 
-const workAreas = [
+const workAreas: WorkArea[] = [
   'Sewing',
   'Welding',
   'Installation',
@@ -278,7 +284,7 @@ const UsersManagementPage: React.FC = () => {
                 <Label htmlFor="editRole">Role</Label>
                 <Select 
                   value={selectedProfile.role}
-                  onValueChange={(value) => setSelectedProfile({
+                  onValueChange={(value: UserRole) => setSelectedProfile({
                     ...selectedProfile,
                     role: value
                   })}
@@ -300,7 +306,7 @@ const UsersManagementPage: React.FC = () => {
                 <Label htmlFor="editWorkArea">Work Area</Label>
                 <Select 
                   value={selectedProfile.work_area}
-                  onValueChange={(value) => setSelectedProfile({
+                  onValueChange={(value: WorkArea) => setSelectedProfile({
                     ...selectedProfile,
                     work_area: value
                   })}
