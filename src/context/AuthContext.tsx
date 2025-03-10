@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -13,6 +12,8 @@ interface AuthContextType {
     lastName?: string;
     role?: string;
     workArea?: string;
+    cellPhoneNumber?: string;
+    profilePictureUrl?: string;
   };
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -34,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Use a simpler query to avoid triggering RLS recursion issues
       const { data, error } = await supabase
         .from('profiles')
-        .select('first_name, last_name, role, work_area, email')
+        .select('first_name, last_name, role, work_area, email, cell_phone_number, profile_picture_url')
         .eq('id', userId)
         .maybeSingle();
       
@@ -51,7 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           firstName: data.first_name,
           lastName: data.last_name,
           role: data.role,
-          workArea: data.work_area
+          workArea: data.work_area,
+          cellPhoneNumber: data.cell_phone_number,
+          profilePictureUrl: data.profile_picture_url
         }));
       } else {
         console.warn('No profile found for user:', userId);

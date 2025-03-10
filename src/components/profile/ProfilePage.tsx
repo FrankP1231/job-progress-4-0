@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, Upload, User } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Profile {
   id: string;
@@ -18,6 +19,8 @@ interface Profile {
   email: string;
   role: string;
   work_area: string;
+  cell_phone_number?: string;
+  profile_picture_url?: string;
 }
 
 const ProfilePage: React.FC = () => {
@@ -25,6 +28,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState<string | null>(null);
   
@@ -44,7 +48,7 @@ const ProfilePage: React.FC = () => {
         // Use a simpler query to avoid triggering RLS recursion issues
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, role, work_area')
+          .select('id, first_name, last_name, email, role, work_area, cell_phone_number, profile_picture_url')
           .eq('id', user.id)
           .maybeSingle();
           
@@ -85,6 +89,7 @@ const ProfilePage: React.FC = () => {
           first_name: profile.first_name,
           last_name: profile.last_name,
           email: profile.email,
+          cell_phone_number: profile.cell_phone_number
           // Note: role and work_area might require admin privileges to change
         })
         .eq('id', profile.id);
@@ -99,6 +104,84 @@ const ProfilePage: React.FC = () => {
       toast.error('Failed to update profile: ' + error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      
+      // Upload the file to Supabase Storage
+      const fileName = `${user.id}_${Date.now()}_${file.name}`;
+      
+      // Check if the bucket exists, create it if not
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const profileBucket = buckets?.find(bucket => bucket.name === 'profile-pictures');
+      
+      if (!profileBucket) {
+        // Create the bucket if it doesn't exist
+        await supabase.storage.createBucket('profile-pictures', {
+          public: true,
+        });
+      }
+      
+      // Upload the file
+      const { data, error } = await supabase.storage
+        .from('profile-pictures')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (error) throw error;
+      
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
+        
+      const publicUrl = publicUrlData.publicUrl;
+      
+      // Update the profile with the new picture URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          profile_picture_url: publicUrl
+        })
+        .eq('id', profile.id);
+        
+      if (updateError) throw updateError;
+      
+      // Update local state
+      setProfile({
+        ...profile,
+        profile_picture_url: publicUrl
+      });
+      
+      // Refresh the profile in auth context
+      await refreshUserProfile();
+      
+      toast.success('Profile picture uploaded successfully');
+    } catch (error: any) {
+      console.error('Error uploading profile picture:', error);
+      toast.error('Failed to upload profile picture: ' + error.message);
+    } finally {
+      setIsUploading(false);
     }
   };
   
@@ -173,65 +256,114 @@ const ProfilePage: React.FC = () => {
           ) : null}
           
           {profile ? (
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={profile.first_name}
-                    onChange={(e) => setProfile({...profile, first_name: e.target.value})}
-                    required
-                  />
+            <div className="space-y-8">
+              {/* Profile Picture Section */}
+              <div className="flex flex-col items-center sm:flex-row sm:space-x-6">
+                <div className="mb-4 sm:mb-0">
+                  <Avatar className="h-24 w-24">
+                    {profile.profile_picture_url ? (
+                      <AvatarImage src={profile.profile_picture_url} alt={`${profile.first_name} ${profile.last_name}`} />
+                    ) : (
+                      <AvatarFallback className="bg-primary text-xl">
+                        {profile.first_name?.[0]}{profile.last_name?.[0]}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={profile.last_name}
-                    onChange={(e) => setProfile({...profile, last_name: e.target.value})}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile.email || ''}
-                  onChange={(e) => setProfile({...profile, email: e.target.value})}
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Input
-                    id="role"
-                    value={profile.role}
-                    readOnly
-                    disabled
-                  />
-                  <p className="text-xs text-muted-foreground">Role can only be changed by admins</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="workArea">Work Area</Label>
-                  <Input
-                    id="workArea"
-                    value={profile.work_area}
-                    readOnly
-                    disabled
-                  />
-                  <p className="text-xs text-muted-foreground">Work area can only be changed by admins</p>
+                <div className="flex-1">
+                  <Label htmlFor="profilePicture" className="block text-gray-700 mb-2">
+                    Profile Picture
+                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureUpload}
+                      disabled={isUploading}
+                      className="flex-1"
+                    />
+                    {isUploading && (
+                      <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload an image (max 5MB)
+                  </p>
                 </div>
               </div>
-              
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </form>
+
+              <form onSubmit={handleProfileUpdate} className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={profile.first_name}
+                      onChange={(e) => setProfile({...profile, first_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={profile.last_name}
+                      onChange={(e) => setProfile({...profile, last_name: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profile.email || ''}
+                    onChange={(e) => setProfile({...profile, email: e.target.value})}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="cellPhone">Cell Phone Number</Label>
+                  <Input
+                    id="cellPhone"
+                    type="tel"
+                    placeholder="(123) 456-7890"
+                    value={profile.cell_phone_number || ''}
+                    onChange={(e) => setProfile({...profile, cell_phone_number: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <Input
+                      id="role"
+                      value={profile.role}
+                      readOnly
+                      disabled
+                    />
+                    <p className="text-xs text-muted-foreground">Role can only be changed by admins</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="workArea">Work Area</Label>
+                    <Input
+                      id="workArea"
+                      value={profile.work_area}
+                      readOnly
+                      disabled
+                    />
+                    <p className="text-xs text-muted-foreground">Work area can only be changed by admins</p>
+                  </div>
+                </div>
+                
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </form>
+            </div>
           ) : !error ? (
             <div className="text-center py-4">
               <p>Loading profile information...</p>
