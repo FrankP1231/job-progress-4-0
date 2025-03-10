@@ -9,9 +9,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import PhaseInfoCard from './phases/PhaseInfoCard';
 import WeldingCard from './phases/WeldingCard';
-import SewingCard from './SewingCard';
-import PowderCoatCard from './PowderCoatCard';
-import InstallationCard from './InstallationCard';
+import SewingCard from './phases/SewingCard';
+import PowderCoatCard from './phases/PowderCoatCard';
+import InstallationCard from './phases/InstallationCard';
 import { assignUserToTask } from '@/lib/supabase/task-helpers';
 
 interface TaskWithMetadata {
@@ -135,13 +135,10 @@ const PhaseForm: React.FC = () => {
       
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Fix the TypeScript error with proper type handling
-      // Check if result exists and has the expected structure
       if (!result || typeof result !== 'object' || !('createdTasks' in result)) {
         throw new Error('Failed to add phase');
       }
       
-      // Now we know result has a createdTasks property
       const createdTasks = result.createdTasks;
       if (typeof createdTasks === 'object') {
         const assignmentPromises: Promise<boolean>[] = [];
@@ -184,11 +181,9 @@ const PhaseForm: React.FC = () => {
     }
   });
 
-  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Add a guard to prevent duplicate submissions
     if (isSubmitting) return;
     
     setIsSubmitting(true);
@@ -255,7 +250,6 @@ const PhaseForm: React.FC = () => {
     }
   };
 
-  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
