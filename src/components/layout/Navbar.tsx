@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import SearchBar from './SearchBar';
+import TimeTracker from '@/components/time-tracking/TimeTracker';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -221,6 +223,11 @@ const Navbar: React.FC = () => {
                     Sign Out
                   </Button>
                 </SheetClose>
+
+                {/* Time tracker for mobile */}
+                <div className="flex items-center justify-center pt-4 mt-4 border-t">
+                  <TimeTracker />
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -281,7 +288,12 @@ const Navbar: React.FC = () => {
           <SearchBar className="max-w-md hidden md:flex" />
         </div>
         
-        <div className="flex items-center">
+        <div className="flex items-center gap-2">
+          {/* Add TimeTracker component */}
+          <div className="hidden md:block">
+            <TimeTracker />
+          </div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">

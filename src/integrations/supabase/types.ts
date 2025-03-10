@@ -235,6 +235,53 @@ export type Database = {
           },
         ]
       }
+      task_time_entries: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          end_time: string | null
+          id: string
+          is_paused: boolean
+          pause_time: string | null
+          start_time: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          end_time?: string | null
+          id?: string
+          is_paused?: boolean
+          pause_time?: string | null
+          start_time?: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          end_time?: string | null
+          id?: string
+          is_paused?: boolean
+          pause_time?: string | null
+          start_time?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_time_entries_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           area: string
@@ -284,6 +331,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      time_entries: {
+        Row: {
+          clock_in_time: string
+          clock_out_time: string | null
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clock_in_time?: string
+          clock_out_time?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clock_in_time?: string
+          clock_out_time?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

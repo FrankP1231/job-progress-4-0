@@ -8,6 +8,7 @@ import { updateTaskStatus, deleteTask } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
+import TaskTimer from '@/components/time-tracking/TaskTimer';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -144,6 +145,26 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     return <Circle className="h-4 w-4 text-gray-400" />;
   };
 
+  const refreshTasks = async () => {
+    if (!phaseId) return;
+    
+    try {
+      // Get jobId to invalidate job-related queries
+      const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
+      const jobId = await getJobIdForPhase(phaseId);
+      
+      // Refresh all task-related data
+      await refreshTasksData(queryClient, jobId, phaseId);
+      
+      // Also invalidate JobTasks query if we have a jobId
+      if (jobId) {
+        queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
+      }
+    } catch (error) {
+      console.error('Error refreshing tasks:', error);
+    }
+  };
+
   return (
     <div className={className}>
       {title && <h4 className="text-sm font-medium mb-2">{title}</h4>}
@@ -191,14 +212,23 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 </span>
               </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 text-destructive hover:bg-destructive/10"
-                onClick={() => setTaskToDelete(task)}
-              >
-                <Trash className="h-3 w-3" />
-              </Button>
+              <div className="flex items-center">
+                {/* Add TaskTimer component */}
+                <TaskTimer 
+                  task={task} 
+                  refreshTasks={refreshTasks}
+                  size="icon"
+                />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                  onClick={() => setTaskToDelete(task)}
+                >
+                  <Trash className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           ))
         ) : (
