@@ -1,4 +1,3 @@
-
 import { supabase } from "../supabase/client";
 import { Task, TaskStatus } from '../types';
 
@@ -209,4 +208,49 @@ export const getTasksForJob = async (jobId: string): Promise<Task[]> => {
       jobId: task.phases?.job_id || jobId
     };
   });
+};
+
+// Function to get the active user for a task
+export const getActiveUserForTask = async (taskId: string) => {
+  try {
+    // First check if there's an active task time entry
+    const { data: timeEntry, error: timeEntryError } = await supabase
+      .from('task_time_entries')
+      .select('user_id')
+      .eq('task_id', taskId)
+      .is('end_time', null)  // not completed
+      .eq('is_paused', false) // not paused
+      .maybeSingle();
+    
+    if (timeEntryError) {
+      console.error('Error fetching active time entry:', timeEntryError);
+      return null;
+    }
+    
+    if (!timeEntry) return null;
+    
+    // Get user profile data
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, profile_picture_url')
+      .eq('id', timeEntry.user_id)
+      .maybeSingle();
+    
+    if (userError) {
+      console.error('Error fetching user profile:', userError);
+      return null;
+    }
+    
+    if (!userProfile) return null;
+    
+    return {
+      userId: timeEntry.user_id,
+      firstName: userProfile.first_name,
+      lastName: userProfile.last_name,
+      profilePictureUrl: userProfile.profile_picture_url
+    };
+  } catch (error) {
+    console.error('Error in getActiveUserForTask:', error);
+    return null;
+  }
 };

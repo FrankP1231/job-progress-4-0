@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (data) {
         console.log('Profile data received:', data);
+        // Ensure we don't lose the authenticated state or user ID when updating profile data
         setUser(prev => ({
           ...prev,
           firstName: data.first_name,
@@ -57,11 +58,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: data.role,
           workArea: data.work_area,
           cellPhoneNumber: data.cell_phone_number,
-          profilePictureUrl: data.profile_picture_url
+          profilePictureUrl: data.profile_picture_url,
+          // Explicitly maintain authentication state
+          isAuthenticated: true
         }));
       } else {
         console.warn('No profile found for user:', userId);
-        // Add a retry mechanism after a short delay
+        // Important: Don't reset authentication state here
+        // Just retry the profile fetch after a delay
         setTimeout(() => {
           console.log('Retrying profile fetch after delay...');
           fetchUserProfile(userId);
@@ -69,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
+      // Don't change authentication state on error
     }
   };
 
@@ -118,6 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          // Always set as authenticated if we have a valid session
           setUser({
             isAuthenticated: true,
             id: session.user.id,
@@ -141,6 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.log('Auth state changed:', event, session?.user?.id);
           
           if (session?.user) {
+            // Always set authenticated to true when we have a valid session
             setUser({
               isAuthenticated: true,
               id: session.user.id,

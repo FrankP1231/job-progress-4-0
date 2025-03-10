@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { getTasksForAllJobs } from '@/lib/supabase/taskUtils';
+import { getActiveUserForTask } from '@/lib/supabase/task-helpers';
 import { Task, TaskStatus } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -31,7 +32,8 @@ import {
   Search, 
   Tag, 
   X,
-  ChevronDown
+  ChevronDown,
+  User
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -44,12 +46,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TasksPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  const [activeUsers, setActiveUsers] = useState<Record<string, {firstName: string, lastName: string, profilePictureUrl?: string}>>({});
   const queryClient = useQueryClient();
 
   const { data: allTasks, isLoading, error, refetch } = useQuery({
@@ -64,6 +69,35 @@ const TasksPage: React.FC = () => {
       console.error('Error loading tasks:', error);
     }
   }, [allTasks, error]);
+
+  // Fetch active users for in-progress tasks
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      if (!allTasks) return;
+      
+      const inProgressTasks = allTasks.filter(task => task.status === 'in-progress');
+      const userMap: Record<string, {firstName: string, lastName: string, profilePictureUrl?: string}> = {};
+      
+      for (const task of inProgressTasks) {
+        try {
+          const activeUser = await getActiveUserForTask(task.id);
+          if (activeUser) {
+            userMap[task.id] = {
+              firstName: activeUser.firstName,
+              lastName: activeUser.lastName,
+              profilePictureUrl: activeUser.profilePictureUrl
+            };
+          }
+        } catch (err) {
+          console.error(`Error fetching active user for task ${task.id}:`, err);
+        }
+      }
+      
+      setActiveUsers(userMap);
+    };
+    
+    fetchActiveUsers();
+  }, [allTasks]);
 
   const filteredTasks = React.useMemo(() => {
     if (!allTasks) return [];
@@ -279,6 +313,7 @@ const TasksPage: React.FC = () => {
                     <TableHead>Phase</TableHead>
                     <TableHead>ETA</TableHead>
                     <TableHead>Est. Hours</TableHead>
+                    <TableHead>Assigned To</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -317,6 +352,37 @@ const TasksPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {task.hours ? `${task.hours} hrs` : '-'}
+                      </TableCell>
+                      <TableCell>
+                        {task.status === 'in-progress' && activeUsers[task.id] ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  <Avatar className="h-6 w-6">
+                                    {activeUsers[task.id].profilePictureUrl && (
+                                      <AvatarImage 
+                                        src={activeUsers[task.id].profilePictureUrl} 
+                                        alt={`${activeUsers[task.id].firstName} ${activeUsers[task.id].lastName}`} 
+                                      />
+                                    )}
+                                    <AvatarFallback className="text-xs">
+                                      {activeUsers[task.id].firstName?.[0]}{activeUsers[task.id].lastName?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <span className="text-xs">
+                                    {activeUsers[task.id].firstName} {activeUsers[task.id].lastName?.[0]}.
+                                  </span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Currently working on this task</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
