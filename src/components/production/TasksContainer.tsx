@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, X, Clock, ChevronDown, Trash, User } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { createTask } from '@/lib/supabase/taskUtils';
+import { createTask } from '@/lib/supabase/task-helpers';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Task } from '@/lib/types';
+import { UserSelector } from '@/components/users/UserSelector';
 
 interface TasksContainerProps {
   tasks: Task[];
@@ -36,10 +37,25 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
   // Determine if this is a labor area
   const isLaborArea = area === 'weldingLabor' || area === 'sewingLabor';
+  
+  // Map area to work area for user filtering
+  const getWorkAreaFromTaskArea = (area: string): string | undefined => {
+    if (area === 'weldingLabor' || area === 'weldingMaterials') {
+      return 'welding';
+    } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
+      return 'sewing';
+    } else if (area === 'installation' || area === 'installationMaterials') {
+      return 'installation';
+    }
+    return undefined;
+  };
+  
+  const workArea = getWorkAreaFromTaskArea(area);
 
   const handleAddNewTask = async (e: React.MouseEvent) => {
     // Critical: Prevent any event bubbling completely
@@ -63,7 +79,8 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         };
 
         const newTask = await createTask(phaseId, area, taskData.name, {
-          hours: taskData.hours
+          hours: taskData.hours,
+          assigneeIds: selectedUsers.length > 0 ? selectedUsers : undefined
         });
         
         if (newTask) {
@@ -76,6 +93,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       
       setNewTaskName('');
       setLaborHours('');
+      setSelectedUsers([]);
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -90,7 +108,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     
     try {
       setIsDeleting(true);
-      const { deleteTask } = await import('@/lib/supabase/taskUtils');
+      const { deleteTask } = await import('@/lib/supabase/task-helpers');
       await deleteTask(taskToDelete.id);
       
       await queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
@@ -151,6 +169,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               setIsAddDialogOpen(false);
               setNewTaskName('');
               setLaborHours('');
+              setSelectedUsers([]);
               return;
             }
             setIsAddDialogOpen(open);
@@ -259,6 +278,19 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                   />
                 </div>
               )}
+              
+              <div className="grid gap-2">
+                <label htmlFor="assignees" className="text-sm font-medium">
+                  {workArea 
+                    ? `${workArea.charAt(0).toUpperCase() + workArea.slice(1)} Assignees (Optional)` 
+                    : 'Assignees (Optional)'}
+                </label>
+                <UserSelector 
+                  selectedUserIds={selectedUsers}
+                  onSelectionChange={setSelectedUsers}
+                  workArea={workArea}
+                />
+              </div>
             </div>
             
             <DialogFooter>
@@ -273,6 +305,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                   }
                   setNewTaskName('');
                   setLaborHours('');
+                  setSelectedUsers([]);
                   setIsAddDialogOpen(false);
                 }}
               >

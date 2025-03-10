@@ -13,33 +13,46 @@ interface User {
   id: string;
   email: string;
   name: string;
+  workArea?: string;
 }
 
 interface UserSelectorProps {
   selectedUserIds: string[];
   onSelectionChange: (selectedIds: string[]) => void;
+  workArea?: string; // Optional prop to filter users by work area
 }
 
 export const UserSelector: React.FC<UserSelectorProps> = ({ 
   selectedUserIds, 
-  onSelectionChange 
+  onSelectionChange,
+  workArea
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: getAllUsers,
+  const { data: users = [], isLoading, error } = useQuery({
+    queryKey: ['users', workArea],
+    queryFn: () => getAllUsers(workArea),
+    staleTime: 60000, // Cache results for 1 minute to reduce API calls
   });
 
+  // Safe handling of user selection to prevent UI crash
   const handleSelect = (userId: string) => {
-    if (selectedUserIds.includes(userId)) {
-      onSelectionChange(selectedUserIds.filter(id => id !== userId));
-    } else {
-      onSelectionChange([...selectedUserIds, userId]);
+    try {
+      if (selectedUserIds.includes(userId)) {
+        onSelectionChange(selectedUserIds.filter(id => id !== userId));
+      } else {
+        onSelectionChange([...selectedUserIds, userId]);
+      }
+    } catch (err) {
+      console.error('Error handling user selection:', err);
     }
   };
 
   const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
+
+  if (error) {
+    console.error('Error loading users:', error);
+  }
 
   return (
     <div className="space-y-2">
@@ -51,15 +64,20 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             aria-expanded={open}
             className="w-full justify-between"
             type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event bubbling
+            }}
           >
             Select users
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0">
+        <PopoverContent className="w-full p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
           <Command>
             <CommandInput placeholder="Search users..." className="h-9" />
-            <CommandEmpty>No users found.</CommandEmpty>
+            <CommandEmpty>
+              {isLoading ? 'Loading...' : workArea ? `No ${workArea} users found.` : 'No users found.'}
+            </CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {isLoading ? (
                 <CommandItem disabled>Loading users...</CommandItem>
@@ -97,7 +115,10 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
               <button
                 type="button"
                 className="h-4 w-4 rounded-full text-xs font-semibold"
-                onClick={() => handleSelect(user.id)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event bubbling
+                  handleSelect(user.id);
+                }}
               >
                 ×
               </button>

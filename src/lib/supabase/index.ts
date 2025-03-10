@@ -59,21 +59,34 @@ export {
 // Import supabase from the correct location
 import { supabase } from "@/integrations/supabase/client";
 
-export const getAllUsers = async () => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, first_name, last_name')
-    .order('first_name');
-  
-  if (error) {
-    console.error('Error fetching users:', error);
-    throw error;
+export const getAllUsers = async (workArea?: string) => {
+  try {
+    let query = supabase
+      .from('profiles')
+      .select('id, email, first_name, last_name, work_area')
+      .order('first_name');
+      
+    // If a specific work area is provided, filter by it
+    if (workArea) {
+      query = query.eq('work_area', workArea);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+    
+    // Map the profile data to match the expected structure in the UserSelector component
+    return data.map(profile => ({
+      id: profile.id,
+      email: profile.email || '',
+      name: `${profile.first_name} ${profile.last_name}`.trim(),
+      workArea: profile.work_area
+    })) || [];
+  } catch (error) {
+    console.error('Error in getAllUsers:', error);
+    return [];
   }
-  
-  // Map the profile data to match the expected structure in the UserSelector component
-  return data.map(profile => ({
-    id: profile.id,
-    email: profile.email || '',
-    name: `${profile.first_name} ${profile.last_name}`.trim()
-  })) || [];
 };

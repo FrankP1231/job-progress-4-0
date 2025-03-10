@@ -37,6 +37,20 @@ const TaskList: React.FC<TaskListProps> = ({
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Map area to work area for user filtering
+  const getWorkAreaFromTaskArea = (area: string): string | undefined => {
+    if (area === 'weldingLabor' || area === 'weldingMaterials') {
+      return 'welding';
+    } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
+      return 'sewing';
+    } else if (area === 'installation' || area === 'installationMaterials') {
+      return 'installation';
+    }
+    return undefined;
+  };
+  
+  const workArea = getWorkAreaFromTaskArea(area);
+  
   const handleAddTask = () => {
     if (!newTaskName.trim()) return;
     
@@ -64,11 +78,14 @@ const TaskList: React.FC<TaskListProps> = ({
               type="button" 
               size="sm" 
               className="flex items-center gap-1"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent event bubbling
+              }}
             >
               <Plus className="h-4 w-4" /> Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent onClick={(e) => e.stopPropagation()}>
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
             </DialogHeader>
@@ -111,10 +128,15 @@ const TaskList: React.FC<TaskListProps> = ({
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="assignees">Assignees (Optional)</Label>
+                <Label htmlFor="assignees">
+                  {workArea 
+                    ? `${workArea.charAt(0).toUpperCase() + workArea.slice(1)} Assignees (Optional)` 
+                    : 'Assignees (Optional)'}
+                </Label>
                 <UserSelector 
                   selectedUserIds={selectedUsers}
                   onSelectionChange={setSelectedUsers}
+                  workArea={workArea}
                 />
               </div>
               
@@ -122,13 +144,19 @@ const TaskList: React.FC<TaskListProps> = ({
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDialogOpen(false);
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="button"
-                  onClick={handleAddTask}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddTask();
+                  }}
                   disabled={!newTaskName.trim()}
                 >
                   Add Task
@@ -163,7 +191,10 @@ const TaskList: React.FC<TaskListProps> = ({
                 type="button"
                 variant="ghost" 
                 size="icon"
-                onClick={() => onRemove(area, index)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(area, index);
+                }}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
               </Button>
