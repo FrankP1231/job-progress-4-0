@@ -1,23 +1,22 @@
+
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
-  getTasksForPhase, 
-  getTasksForPhaseArea, 
-  getTasksForAllJobs, 
-  updateTask as updateTaskData,
-  deleteTask as deleteTaskRecord,
-  addTasksToPhaseArea as addTasksToArea
+  updateTask as updateTaskFunction,
+  deleteTask as deleteTaskFunction,
+  addTasksToPhaseArea as addTasksToPhaseAreaFunction
 } from './task-crud';
 
-// Export renamed functions to avoid conflicts
-export { updateTask as updateTaskData, deleteTask as deleteTaskRecord } from './task-crud';
+// Export functions from task-crud directly, no need to import them first
+export { 
+  getTasksForPhase,
+  getTasksForPhaseArea, 
+  getTasksForAllJobs 
+} from './task-crud';
 
-// Re-export functions from task-crud
-export const getTasksForPhase = getTasksForPhase;
-export const getTasksForPhaseArea = getTasksForPhaseArea;
-export const getTasksForAllJobs = getTasksForAllJobs;
-export const updateTask = updateTaskData;
-export const deleteTask = deleteTaskRecord;
+// Re-export renamed functions
+export const updateTask = updateTaskFunction;
+export const deleteTask = deleteTaskFunction;
 
 // Re-implement addTasksToPhaseArea with support for assignees
 export async function addTasksToPhaseArea(

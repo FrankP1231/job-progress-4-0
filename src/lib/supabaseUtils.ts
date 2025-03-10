@@ -5,8 +5,12 @@ export * from './supabase/phaseUtils';
 export * from './supabase/dashboardUtils';
 export * from './supabase/statusUtils';
 export * from './supabase/task-helpers';
-export * from './supabase/task-crud';
 export * from './supabase/taskUtils';
+
+// Export task-crud without those functions that are overridden in taskUtils
+export {
+  addSampleTasksToPhases
+} from './supabase/task-crud';
 
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 

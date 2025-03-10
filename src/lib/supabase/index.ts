@@ -5,8 +5,12 @@ export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './statusUtils';
 export * from './task-helpers';
-export * from './task-crud';
 export * from './taskUtils';
+
+// Export task-crud without those functions that are overridden in taskUtils
+export {
+  addSampleTasksToPhases
+} from './task-crud';
 
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 
