@@ -32,13 +32,18 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
 }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
+  const [laborHours, setLaborHours] = useState('');
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingTask, setIsAddingTask] = useState(false);
   const queryClient = useQueryClient();
 
+  // Determine if this is a labor area
+  const isLaborArea = area === 'weldingLabor' || area === 'sewingLabor';
+
   const handleAddNewTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     
     if (!newTaskName.trim()) return;
 
@@ -49,7 +54,14 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         await onAddTask(newTaskName.trim());
       } 
       else if (phaseId) {
-        const newTask = await createTask(phaseId, area, newTaskName.trim());
+        const taskData = {
+          name: newTaskName.trim(),
+          hours: isLaborArea && laborHours ? Number(laborHours) : undefined
+        };
+
+        const newTask = await createTask(phaseId, area, taskData.name, {
+          hours: taskData.hours
+        });
         
         if (newTask) {
           await queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
@@ -60,6 +72,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       }
       
       setNewTaskName('');
+      setLaborHours('');
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -157,6 +170,24 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
+
+                {isLaborArea && (
+                  <div className="grid gap-2">
+                    <label htmlFor="laborHours" className="text-sm font-medium">
+                      Estimated Hours
+                    </label>
+                    <Input
+                      id="laborHours"
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={laborHours}
+                      onChange={(e) => setLaborHours(e.target.value)}
+                      placeholder="Enter estimated hours"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
               </div>
               <DialogFooter>
                 <Button 
@@ -166,6 +197,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                     e.preventDefault();
                     e.stopPropagation();
                     setNewTaskName('');
+                    setLaborHours('');
                     setIsAddDialogOpen(false);
                   }}
                 >

@@ -27,18 +27,25 @@ interface StatusBadgeProps {
 const StatusBadge: React.FC<StatusBadgeProps> = ({ 
   status, 
   className, 
-  tasks, 
-  forceTaskStatus = true // Default to true to prioritize task-based status
+  tasks = [], // Default to empty array to simplify logic
+  forceTaskStatus = false
 }) => {
-  // If tasks are provided, calculate status based on tasks
+  // Determine status based on tasks
   let statusKey = status;
   
-  if (tasks && (forceTaskStatus || tasks.length === 0)) {
-    // Key change: For material types, show "not-needed" when there are no tasks
-    if (tasks.length === 0 && 
-        (status === 'not-ordered' || status === 'ordered' || status === 'received')) {
-      statusKey = 'not-needed';
-    } else if (tasks.length > 0) {
+  // If tasks are provided, we need to determine if this should show as 'not-needed'
+  if (tasks) {
+    if (tasks.length === 0) {
+      // For material statuses, show "not-needed" when there are no tasks
+      if (
+        status === 'not-ordered' || 
+        status === 'ordered' || 
+        status === 'received'
+      ) {
+        statusKey = 'not-needed';
+      }
+    } else if (forceTaskStatus) {
+      // Only apply task-based status logic if forceTaskStatus is true
       const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
       const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
       
