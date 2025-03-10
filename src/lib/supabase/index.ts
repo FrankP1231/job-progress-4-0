@@ -58,8 +58,9 @@ export {
 
 // Import supabase from the correct location
 import { supabase } from "@/integrations/supabase/client";
+import { WorkArea } from "@/lib/types";
 
-export const getAllUsers = async (workArea?: string) => {
+export const getAllUsers = async (workArea?: WorkArea) => {
   try {
     let query = supabase
       .from('profiles')

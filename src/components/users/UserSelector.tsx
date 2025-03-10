@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { getAllUsers } from '@/lib/supabase';
+import { WorkArea } from '@/lib/types';
 
 interface User {
   id: string;
@@ -19,7 +20,7 @@ interface User {
 interface UserSelectorProps {
   selectedUserIds: string[];
   onSelectionChange: (selectedIds: string[]) => void;
-  workArea?: string; // Optional prop to filter users by work area
+  workArea?: WorkArea; // Updated to use WorkArea type
 }
 
 export const UserSelector: React.FC<UserSelectorProps> = ({ 

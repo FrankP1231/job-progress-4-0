@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { createTask } from '@/lib/supabase/task-helpers';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Task } from '@/lib/types';
+import { Task, WorkArea } from '@/lib/types';
 import { UserSelector } from '@/components/users/UserSelector';
 
 interface TasksContainerProps {
@@ -44,13 +44,17 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const isLaborArea = area === 'weldingLabor' || area === 'sewingLabor';
   
   // Map area to work area for user filtering
-  const getWorkAreaFromTaskArea = (area: string): string | undefined => {
+  const getWorkAreaFromTaskArea = (area: string): WorkArea | undefined => {
     if (area === 'weldingLabor' || area === 'weldingMaterials') {
-      return 'welding';
+      return 'Welding';
     } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
-      return 'sewing';
+      return 'Sewing';
     } else if (area === 'installation' || area === 'installationMaterials') {
-      return 'installation';
+      return 'Installation';
+    } else if (area === 'rentalEquipment') {
+      return 'Installation'; // Rental equipment is typically for installation
+    } else if (area === 'powderCoat') {
+      return 'Welding'; // PowderCoat is typically managed by welding team
     }
     return undefined;
   };

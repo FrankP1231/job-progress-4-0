@@ -6,6 +6,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UserSelector } from '@/components/users/UserSelector';
+import { WorkArea } from '@/lib/types';
 
 interface TaskWithMetadata {
   name: string;
@@ -38,13 +39,17 @@ const TaskList: React.FC<TaskListProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Map area to work area for user filtering
-  const getWorkAreaFromTaskArea = (area: string): string | undefined => {
+  const getWorkAreaFromTaskArea = (area: string): WorkArea | undefined => {
     if (area === 'weldingLabor' || area === 'weldingMaterials') {
-      return 'welding';
+      return 'Welding';
     } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
-      return 'sewing';
+      return 'Sewing';
     } else if (area === 'installation' || area === 'installationMaterials') {
-      return 'installation';
+      return 'Installation';
+    } else if (area === 'rentalEquipment') {
+      return 'Installation'; // Rental equipment is typically for installation
+    } else if (area === 'powderCoat') {
+      return 'Welding'; // PowderCoat is typically managed by welding team
     }
     return undefined;
   };
@@ -130,7 +135,7 @@ const TaskList: React.FC<TaskListProps> = ({
               <div className="space-y-2">
                 <Label htmlFor="assignees">
                   {workArea 
-                    ? `${workArea.charAt(0).toUpperCase() + workArea.slice(1)} Assignees (Optional)` 
+                    ? `${workArea} Assignees (Optional)` 
                     : 'Assignees (Optional)'}
                 </Label>
                 <UserSelector 
