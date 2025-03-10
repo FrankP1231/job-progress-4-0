@@ -41,9 +41,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   // Determine if this is a labor area
   const isLaborArea = area === 'weldingLabor' || area === 'sewingLabor';
 
-  const handleAddNewTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation(); // Prevent event bubbling
+  const handleAddNewTask = async (e: React.MouseEvent) => {
+    // Critical: Prevent any event bubbling completely
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     if (!newTaskName.trim()) return;
 
@@ -101,13 +104,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     }
   };
 
-  // This safely stops event propagation to prevent form submission in parent components
-  const handleDialogClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
-    <div className={`space-y-2 ${className || ''}`}>
+    <div 
+      className={`space-y-2 ${className || ''}`}
+      // Add stopPropagation to the container too
+      onClick={(e) => e.stopPropagation()}
+    >
       {title && <h3 className="font-medium text-sm mb-2">{title}</h3>}
       
       {tasks.map((task) => (
@@ -132,6 +134,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               e.preventDefault();
               setTaskToDelete(task);
             }}
+            type="button"
           >
             <Trash className="h-4 w-4" />
           </Button>
@@ -143,16 +146,14 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
           open={isAddDialogOpen}
           modal={true} // Force modal behavior
           onOpenChange={(open) => {
+            // Critical: Immediately prevent event bubbling by returning if closing
             if (!open) {
-              // Use setTimeout to ensure this runs after any clicks are processed
-              setTimeout(() => {
-                setIsAddDialogOpen(false);
-                setNewTaskName('');
-                setLaborHours('');
-              }, 0);
-            } else {
-              setIsAddDialogOpen(true);
+              setIsAddDialogOpen(false);
+              setNewTaskName('');
+              setLaborHours('');
+              return;
             }
+            setIsAddDialogOpen(open);
           }}
         >
           <DialogTrigger asChild>
@@ -162,9 +163,13 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               className="w-full mt-2 text-xs h-8"
               disabled={isDisabled || isAddingTask}
               onClick={(e) => {
-                // Completely prevent event bubbling and default behavior
+                // Aggressively prevent any event handling by parent components
                 e.stopPropagation();
                 e.preventDefault();
+                if (e.nativeEvent) {
+                  e.nativeEvent.stopImmediatePropagation();
+                  e.nativeEvent.preventDefault();
+                }
                 setIsAddDialogOpen(true);
               }}
               type="button" // Explicitly set type to button to prevent form submission
@@ -176,26 +181,26 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
           <DialogContent 
             className="sm:max-w-[425px]" 
             onPointerDownOutside={(e) => {
-              // Critical: Prevent pointer events from reaching parent forms
+              // Critical: Prevent ALL pointer events
               e.preventDefault();
               e.stopPropagation();
             }}
             onEscapeKeyDown={(e) => {
-              // Prevent escape key from submitting parent forms
+              // Prevent escape key events
               e.preventDefault();
               e.stopPropagation();
             }}
             onInteractOutside={(e) => {
-              // Prevent any interaction outside from closing and bubbling
+              // Prevent any interaction outside
               e.preventDefault();
               e.stopPropagation();
             }}
             onOpenAutoFocus={(e) => {
-              // Prevent autofocus from triggering anything in parent forms
+              // Prevent autofocus triggers
               e.preventDefault();
             }}
             onClick={(e) => {
-              // Stop click events from bubbling to parent forms
+              // Explicitly stop clicks
               e.stopPropagation();
             }}
           >
@@ -206,8 +211,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               </DialogDescription>
             </DialogHeader>
             
-            {/* Isolated task form that doesn't propagate events to parent forms */}
-            <div className="grid gap-4 py-4">
+            {/* Isolated task entry that doesn't use a form element */}
+            <div 
+              className="grid gap-4 py-4"
+              // Additional layer of click protection
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="grid gap-2">
                 <Input
                   id="taskName"
@@ -216,6 +225,13 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                   placeholder="Enter task name"
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
+                  // Prevent Enter key from submitting parent forms
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                  }}
                 />
               </div>
 
@@ -233,6 +249,13 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                     onChange={(e) => setLaborHours(e.target.value)}
                     placeholder="Enter estimated hours"
                     onClick={(e) => e.stopPropagation()}
+                    // Prevent Enter key from submitting parent forms
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -245,6 +268,9 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  if (e.nativeEvent) {
+                    e.nativeEvent.stopImmediatePropagation();
+                  }
                   setNewTaskName('');
                   setLaborHours('');
                   setIsAddDialogOpen(false);
@@ -253,11 +279,14 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 Cancel
               </Button>
               <Button 
-                type="button" // Important: Not submit type
+                type="button" // Critical: Must be button type
                 disabled={isAddingTask || !newTaskName.trim()}
                 onClick={(e) => {
-                  e.preventDefault();
+                  e.preventDefault(); 
                   e.stopPropagation();
+                  if (e.nativeEvent) {
+                    e.nativeEvent.stopImmediatePropagation();
+                  }
                   handleAddNewTask(e);
                 }}
               >
@@ -284,7 +313,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       >
         <DialogContent 
           className="sm:max-w-[425px]" 
-          onClick={handleDialogClick}
+          onClick={(e) => e.stopPropagation()}
           onPointerDownOutside={(e) => {
             e.preventDefault();
             e.stopPropagation();

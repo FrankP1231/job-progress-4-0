@@ -9,9 +9,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import PhaseInfoCard from './phases/PhaseInfoCard';
 import WeldingCard from './phases/WeldingCard';
-import SewingCard from './phases/SewingCard';
-import PowderCoatCard from './phases/PowderCoatCard';
-import InstallationCard from './phases/InstallationCard';
+import SewingCard from './SewingCard';
+import PowderCoatCard from './PowderCoatCard';
+import InstallationCard from './InstallationCard';
 import { assignUserToTask } from '@/lib/supabase/task-helpers';
 
 interface TaskWithMetadata {
@@ -32,6 +32,7 @@ const PhaseForm: React.FC = () => {
   
   const [phaseName, setPhaseName] = useState('');
   const [phaseNumber, setPhaseNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [weldingMaterialTasks, setWeldingMaterialTasks] = useState<TaskWithMetadata[]>([]);
   const [sewingMaterialTasks, setSewingMaterialTasks] = useState<TaskWithMetadata[]>([]);
@@ -174,6 +175,7 @@ const PhaseForm: React.FC = () => {
       navigate(`/jobs/${jobId}`);
     },
     onError: (error: any) => {
+      setIsSubmitting(false);
       let errorMessage = 'Failed to add phase';
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -185,6 +187,11 @@ const PhaseForm: React.FC = () => {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Add a guard to prevent duplicate submissions
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     addPhaseMutation.mutate();
   };
 
@@ -285,7 +292,15 @@ const PhaseForm: React.FC = () => {
         </div>
       </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form 
+        onSubmit={handleSubmit} 
+        className="space-y-6"
+        onClick={(e) => {
+          if (e.currentTarget === e.target) {
+            e.stopPropagation();
+          }
+        }}
+      >
         <PhaseInfoCard 
           phaseName={phaseName}
           setPhaseName={setPhaseName}
@@ -342,12 +357,15 @@ const PhaseForm: React.FC = () => {
             type="button" 
             variant="outline" 
             onClick={() => navigate(`/jobs/${jobId}`)}
-            disabled={addPhaseMutation.isPending}
+            disabled={addPhaseMutation.isPending || isSubmitting}
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={addPhaseMutation.isPending}>
-            {addPhaseMutation.isPending ? 'Adding...' : 'Add Phase'}
+          <Button 
+            type="submit" 
+            disabled={addPhaseMutation.isPending || isSubmitting}
+          >
+            {addPhaseMutation.isPending || isSubmitting ? 'Adding...' : 'Add Phase'}
           </Button>
         </div>
       </form>
