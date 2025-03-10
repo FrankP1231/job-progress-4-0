@@ -5,6 +5,8 @@ export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './statusUtils';
 export * from './task-helpers';
+export * from './task-crud';
+export * from './taskUtils';
 
 // Explicitly export from task-crud to avoid conflict with task-status
 export {
@@ -14,7 +16,8 @@ export {
   createTask,
   updateTask,
   addTasksToPhaseArea,
-  addSampleTasksToPhases
+  addSampleTasksToPhases,
+  deleteTask
 } from './task-crud';
 
 // Explicitly export from task-status

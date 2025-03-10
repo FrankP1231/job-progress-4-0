@@ -1,6 +1,21 @@
 
-import { supabase } from '../supabase/client';
+import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
+
+// Helper to transform task data from database to Task type
+const transformTask = (task: any): Task => ({
+  id: task.id,
+  phaseId: task.phase_id,
+  area: task.area,
+  name: task.name,
+  isComplete: task.is_complete,
+  status: task.status as TaskStatus,
+  hours: task.hours,
+  eta: task.eta,
+  notes: task.notes,
+  createdAt: task.created_at,
+  updatedAt: task.updated_at
+});
 
 export async function getTasksForPhase(phaseId: string): Promise<Task[]> {
   if (!phaseId) {
@@ -20,7 +35,7 @@ export async function getTasksForPhase(phaseId: string): Promise<Task[]> {
       throw error;
     }
 
-    return data as Task[];
+    return (data || []).map(transformTask);
   } catch (error) {
     console.error('Error in getTasksForPhase:', error);
     return [];
@@ -46,7 +61,7 @@ export async function getTasksForPhaseArea(phaseId: string, area: string): Promi
       throw error;
     }
 
-    return data as Task[];
+    return (data || []).map(transformTask);
   } catch (error) {
     console.error('Error in getTasksForPhaseArea:', error);
     return [];
@@ -132,13 +147,70 @@ export async function addTasksToPhaseArea(phaseId: string, area: string, tasks: 
   }
 }
 
+export async function createTask(
+  phaseId: string,
+  area: string,
+  name: string,
+  options?: {
+    status?: TaskStatus;
+    hours?: number;
+    eta?: string;
+    notes?: string;
+  }
+): Promise<Task | null> {
+  if (!phaseId || !area || !name) {
+    console.error('Phase ID, area, and name are required to create a task');
+    return null;
+  }
+
+  try {
+    const taskData = {
+      phase_id: phaseId,
+      area,
+      name,
+      status: options?.status || 'not-started',
+      hours: options?.hours,
+      eta: options?.eta,
+      notes: options?.notes
+    };
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .insert(taskData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating task:', error);
+      return null;
+    }
+
+    return transformTask(data);
+  } catch (error) {
+    console.error('Error in createTask:', error);
+    return null;
+  }
+}
+
 export async function updateTask(taskId: string, updates: Partial<Task>): Promise<boolean> {
   if (!taskId) return false;
 
   try {
+    // Convert Task interface properties to database column names
+    const dbUpdates: Record<string, any> = {};
+    
+    if (updates.phaseId !== undefined) dbUpdates.phase_id = updates.phaseId;
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.area !== undefined) dbUpdates.area = updates.area;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.isComplete !== undefined) dbUpdates.is_complete = updates.isComplete;
+    if (updates.hours !== undefined) dbUpdates.hours = updates.hours;
+    if (updates.eta !== undefined) dbUpdates.eta = updates.eta;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+
     const { error } = await supabase
       .from('tasks')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', taskId);
 
     if (error) {

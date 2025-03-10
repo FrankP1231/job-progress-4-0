@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Clock } from 'lucide-react';
 import TasksContainer from '@/components/production/TasksContainer';
-import { addTasksToPhaseArea, getTasksForPhaseArea } from '@/lib/supabase/taskUtils';
+import { addTasksToPhaseArea, getTasksForPhaseArea } from '@/lib/supabaseUtils';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';

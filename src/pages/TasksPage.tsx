@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { getTasksForAllJobs } from '@/lib/supabase/taskUtils';
+import { getTasksForAllJobs } from '@/lib/supabaseUtils';
 import { getActiveUserForTask } from '@/lib/supabase/task-helpers';
 import { Task, TaskStatus } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -104,8 +104,8 @@ const TasksPage: React.FC = () => {
       const matchesSearch = searchQuery === '' || 
         task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (task.notes && task.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        task.phaseName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.projectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (task.phaseName && task.phaseName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (task.projectName && task.projectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (task.jobNumber && task.jobNumber.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesArea = areaFilter === 'all' || task.area === areaFilter;

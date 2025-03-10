@@ -1,4 +1,5 @@
-import { supabase } from '../supabase/client';
+
+import { supabase } from './client';
 import { Job, Task, TaskStatus } from '../types';
 
 export async function getTasksForJob(jobId: string): Promise<Task[]> {
@@ -50,9 +51,9 @@ export function transformTaskData(task: any): Task {
     createdAt: task.created_at,
     updatedAt: task.updated_at,
     // These might be null if not joined with other tables
-    phaseNumber: task.phase_number,
-    phaseName: task.phase_name,
-    jobId: task.job_id,
+    phaseNumber: task.phases?.phase_number,
+    phaseName: task.phases?.phase_name,
+    jobId: task.phases?.job_id,
     jobNumber: task.job_number,
     projectName: task.project_name,
   };
@@ -176,7 +177,12 @@ export async function getActiveUserForTask(taskId: string) {
     }
 
     // Make sure we're accessing the profile data correctly
-    const profile = data.profiles as any;
+    const profile = data.profiles as {
+      id: string;
+      first_name: string;
+      last_name: string;
+      profile_picture_url?: string;
+    };
     
     // Make sure we have valid profile data with required fields
     if (!profile || !profile.id) {
@@ -187,7 +193,7 @@ export async function getActiveUserForTask(taskId: string) {
       userId: profile.id,
       firstName: profile.first_name,
       lastName: profile.last_name,
-      profilePictureUrl: profile.profile_picture_url
+      profilePictureUrl: profile.profile_picture_url || null
     };
   } catch (error) {
     console.error('Error getting active user for task:', error);
@@ -220,14 +226,23 @@ export async function getTaskAssignees(taskId: string) {
     }
 
     // Transform data to a more usable format
-    return (data || []).map(item => ({
-      id: item.id,
-      userId: item.user_id,
-      assignedAt: item.assigned_at,
-      firstName: item.profiles?.first_name,
-      lastName: item.profiles?.last_name,
-      profilePictureUrl: item.profiles?.profile_picture_url
-    }));
+    return (data || []).map(item => {
+      const profile = item.profiles as {
+        id: string;
+        first_name: string;
+        last_name: string;
+        profile_picture_url?: string;
+      } | null;
+      
+      return {
+        id: item.id,
+        userId: item.user_id,
+        assignedAt: item.assigned_at,
+        firstName: profile?.first_name || '',
+        lastName: profile?.last_name || '',
+        profilePictureUrl: profile?.profile_picture_url || null
+      };
+    });
   } catch (error) {
     console.error('Error getting task assignees:', error);
     return [];
