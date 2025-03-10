@@ -136,7 +136,7 @@ const TimeTrackingTab: React.FC = () => {
       Object.values(weeklyTotals).forEach(weekTotal => {
         if (weekTotal > secondsInWorkWeek) {
           overtimeSeconds += (weekTotal - secondsInWorkWeek);
-          regularSeconds -= (weekTotal - secondsWorkWeek);
+          regularSeconds -= (weekTotal - secondsInWorkWeek);
         }
       });
       

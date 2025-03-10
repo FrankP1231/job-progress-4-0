@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const TimeTracker: React.FC = () => {
   const { user } = useAuth();
@@ -31,6 +32,7 @@ const TimeTracker: React.FC = () => {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // If user is not authenticated, don't show anything
   if (!user.isAuthenticated) {
@@ -50,13 +52,22 @@ const TimeTracker: React.FC = () => {
   };
   
   const handleClockOut = async () => {
-    await clockOutHandler(notes);
-    setNotes('');
-    setIsDialogOpen(false);
-    // Add a refresh after a short delay
-    setTimeout(() => {
-      refreshTimeTracking();
-    }, 1000);
+    try {
+      setIsSubmitting(true);
+      await clockOutHandler(notes);
+      setNotes('');
+      setIsDialogOpen(false);
+      toast.success('Clocked out successfully');
+      // Add a refresh after a short delay
+      setTimeout(() => {
+        refreshTimeTracking();
+      }, 1000);
+    } catch (error: any) {
+      toast.error(`Error clocking out: ${error.message || 'Unknown error'}`);
+      console.error('Clock out error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleCancelClockOut = () => {
@@ -127,11 +138,22 @@ const TimeTracker: React.FC = () => {
             </div>
             
             <DialogFooter>
-              <Button variant="outline" onClick={handleCancelClockOut}>
+              <Button variant="outline" onClick={handleCancelClockOut} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button onClick={handleClockOut} variant="default">
-                Clock Out
+              <Button 
+                onClick={handleClockOut} 
+                variant="default"
+                disabled={isSubmitting || isClockingOut}
+              >
+                {isSubmitting || isClockingOut ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 rounded-full border-2 border-primary-foreground/30 border-t-transparent animate-spin" />
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  'Clock Out'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
