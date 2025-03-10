@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { Button } from "@/components/ui/button";
@@ -104,8 +103,8 @@ const TaskTimer: React.FC<TaskTimerProps> = ({
         await updateTaskStatus(task.id, 'in-progress');
       }
       
-      // Start the timer
-      const entry = await startTaskTimer(task.id);
+      // Start the timer - pass task name as second parameter
+      const entry = await startTaskTimer(task.id, task.name);
       setTaskTimeEntry(entry);
       
       // Refresh task data

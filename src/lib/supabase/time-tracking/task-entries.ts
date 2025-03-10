@@ -1,4 +1,3 @@
-
 // Implementation may vary based on your actual file structure
 
 import { supabase } from '@/integrations/supabase/client';
@@ -56,7 +55,7 @@ export const startTaskTimer = async (taskId: string, taskName: string): Promise<
     // Before starting the timer, check if the user is assigned to this task
     // If not, try to add them as an assignee (self-assignment)
     const { data: assignmentCheck, error: assignmentCheckError } = await supabase
-      .from('task_assignees')
+      .from('task_assignments')
       .select('*')
       .eq('task_id', taskId)
       .eq('user_id', user.id)
@@ -71,11 +70,11 @@ export const startTaskTimer = async (taskId: string, taskName: string): Promise<
     if (!assignmentCheck) {
       try {
         await supabase
-          .from('task_assignees')
+          .from('task_assignments')
           .insert({
             task_id: taskId,
             user_id: user.id,
-            role: 'Worker'
+            assigned_by: user.id
           });
       } catch (assignError) {
         console.error('Failed to auto-assign user to task, continuing with timer:', assignError);
@@ -105,14 +104,14 @@ export const startTaskTimer = async (taskId: string, taskName: string): Promise<
   } catch (error: any) {
     console.error('Error starting task timer:', error);
     toast.error(`Failed to start timer: ${error.message}`);
-    throw error;
+    return null;
   }
 };
 
 /**
  * Pauses an active timer for a specific task
  */
-export const pauseTaskTimer = async (taskId: string): Promise<TaskTimeEntry | null> => {
+export const pauseTaskTimer = async (taskEntryId: string): Promise<TaskTimeEntry | null> => {
   try {
     // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -126,7 +125,7 @@ export const pauseTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
     const { data: activeEntry, error: checkError } = await supabase
       .from('task_time_entries')
       .select('*')
-      .eq('task_id', taskId)
+      .eq('id', taskEntryId)
       .eq('user_id', user.id)
       .is('end_time', null)
       .single();
@@ -168,7 +167,7 @@ export const pauseTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
   } catch (error: any) {
     console.error('Error pausing task timer:', error);
     toast.error(`Failed to pause timer: ${error.message}`);
-    throw error;
+    return null;
   }
 };
 
@@ -324,9 +323,7 @@ export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | 
       .from('task_time_entries')
       .select(`
         *,
-        phases:phase_id(*),
-        jobs:phases->jobs(*),
-        task:task_id(*)
+        phases:phase_id (*)
       `)
       .eq('task_id', taskId)
       .eq('user_id', user.id)

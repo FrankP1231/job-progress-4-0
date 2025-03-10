@@ -175,9 +175,11 @@ export async function getActiveUserForTask(taskId: string) {
       return null;
     }
 
-    // Fix the type issue by properly checking if profiles exists and has the right properties
+    // Fix the type issue by properly checking and accessing the profiles object
     const profile = data.profiles;
-    if (!profile) {
+    
+    // Make sure we have valid profile data
+    if (!profile || typeof profile.id === 'undefined') {
       return null;
     }
 
