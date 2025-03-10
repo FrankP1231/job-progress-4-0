@@ -1,4 +1,3 @@
-
 // Re-export all utilities for easy importing
 export * from './jobUtils';
 export * from './phaseUtils';
@@ -19,3 +18,16 @@ export {
   initSampleData
 } from './initUtils';
 
+export const getAllUsers = async () => {
+  const { data, error } = await supabaseClient
+    .from('users')
+    .select('id, email, name')
+    .order('name');
+  
+  if (error) {
+    console.error('Error fetching users:', error);
+    throw error;
+  }
+  
+  return data || [];
+};
