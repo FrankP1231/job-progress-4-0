@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -29,7 +28,6 @@ const BadgeProfilePage: React.FC = () => {
   
   // States
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
@@ -121,8 +119,15 @@ const BadgeProfilePage: React.FC = () => {
     }
   };
   
-  // Handle profile picture upload
+  // Profile picture upload function - disabled but kept for future use
+  // This function is kept but not used in the UI currently
   const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Functionality temporarily disabled
+    console.log('Profile picture upload is currently disabled');
+    return;
+    
+    // Keep the original code commented out for future reference
+    /*
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -205,6 +210,7 @@ const BadgeProfilePage: React.FC = () => {
     } finally {
       setIsUploading(false);
     }
+    */
   };
   
   // Handle password reset
@@ -246,43 +252,11 @@ const BadgeProfilePage: React.FC = () => {
         <Card className="w-full max-w-xl overflow-hidden bg-white shadow-lg border-2 border-[#E5DEFF]">
           <div className="bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] h-20 relative flex items-center justify-center">
             <div className="absolute -bottom-16 w-32 h-32 border-4 border-white rounded-full overflow-hidden bg-white shadow-lg">
-              {profileData.profilePictureUrl ? (
-                <Avatar className="w-full h-full">
-                  <AvatarImage 
-                    src={profileData.profilePictureUrl} 
-                    alt="Profile picture" 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Error loading image:', e);
-                      // If image fails to load, show fallback
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                  <AvatarFallback className="w-full h-full text-3xl font-bold text-[#8B5CF6] bg-[#E5DEFF]">
-                    {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
-                  </AvatarFallback>
-                </Avatar>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
-                  {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
-                </div>
-              )}
-              {isEditMode && (
-                <label className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer">
-                  {isUploading ? (
-                    <div className="text-white">Uploading...</div>
-                  ) : (
-                    <span className="text-white text-sm font-medium">Change</span>
-                  )}
-                  <Input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleProfilePictureUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </label>
-              )}
+              {/* Display profile initials - no upload functionality */}
+              <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
+                {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
+              </div>
+              {/* Upload functionality is disabled, so no label is shown in edit mode */}
             </div>
           </div>
           
