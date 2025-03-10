@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase/client';
 import { Job, Task, TaskStatus } from '../types';
 
@@ -9,30 +8,19 @@ export async function getTasksForJob(jobId: string): Promise<Task[]> {
   }
 
   try {
-    // First, get all phase IDs for this job
-    const { data: phaseData, error: phaseError } = await supabase
-      .from('phases')
-      .select('id')
-      .eq('job_id', jobId);
-      
-    if (phaseError) {
-      console.error('Error fetching phases for job:', phaseError);
-      return [];
-    }
-    
-    // Extract phase IDs from the result
-    const phaseIds = phaseData.map(phase => phase.id);
-    
-    if (phaseIds.length === 0) {
-      console.log('No phases found for job:', jobId);
-      return [];
-    }
-    
-    // Now fetch tasks for these phases using 'in' operator
+    // Optimize by using a direct join instead of multiple queries
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
-      .in('phase_id', phaseIds)
+      .select(`
+        *,
+        phases:phase_id (
+          id,
+          phase_name,
+          phase_number,
+          job_id
+        )
+      `)
+      .eq('phases.job_id', jobId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -93,13 +81,24 @@ export async function getJobIdForPhase(phaseId: string): Promise<string | null> 
   }
 }
 
-// Get all tasks with details (used in tasks page)
+// Get all tasks with details (used in tasks page) - Optimized for better performance
 export async function getAllTasksWithDetails(): Promise<Task[]> {
   try {
+    // Optimize by selecting only needed fields and using more efficient join
     const { data, error } = await supabase
       .from('tasks')
       .select(`
-        *,
+        id,
+        phase_id,
+        area,
+        name,
+        is_complete,
+        status,
+        hours,
+        eta,
+        notes,
+        created_at,
+        updated_at,
         phases:phase_id (
           id,
           phase_name,
@@ -112,7 +111,8 @@ export async function getAllTasksWithDetails(): Promise<Task[]> {
           )
         )
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(500); // Add reasonable limit for better performance
       
     if (error) {
       console.error('Error fetching tasks with details:', error);
@@ -144,41 +144,42 @@ export async function getAllTasksWithDetails(): Promise<Task[]> {
   }
 }
 
+// Optimized query for active user on a task
 export async function getActiveUserForTask(taskId: string) {
   try {
-    // First, get the active task time entry for this task
-    const { data: taskTimeEntry, error: taskError } = await supabase
+    // Use a more efficient join query
+    const { data, error } = await supabase
       .from('task_time_entries')
-      .select('*')
+      .select(`
+        user_id,
+        profiles:user_id (
+          id,
+          first_name,
+          last_name,
+          profile_picture_url
+        )
+      `)
       .eq('task_id', taskId)
       .is('end_time', null)
       .order('start_time', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (taskError) {
-      console.error('Error fetching active task time entry:', taskError);
+    if (error) {
+      console.error('Error fetching active task time entry:', error);
       return null;
     }
 
-    if (!taskTimeEntry) {
-      // No active time entry found
+    if (!data || !data.profiles) {
       return null;
     }
 
-    // Get the user details
-    const { data: userData, error: userError } = await supabase
-      .from('profiles')
-      .select('userId:id, firstName:first_name, lastName:last_name, profilePictureUrl:profile_picture_url')
-      .eq('id', taskTimeEntry.user_id)
-      .maybeSingle();
-
-    if (userError) {
-      console.error('Error fetching user data:', userError);
-      return null;
-    }
-
-    return userData;
+    return {
+      userId: data.profiles.id,
+      firstName: data.profiles.first_name,
+      lastName: data.profiles.last_name,
+      profilePictureUrl: data.profiles.profile_picture_url
+    };
   } catch (error) {
     console.error('Error getting active user for task:', error);
     return null;

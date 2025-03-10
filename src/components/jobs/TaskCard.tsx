@@ -1,8 +1,7 @@
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Clock, AlertCircle, User } from 'lucide-react';
+import { CheckCircle, Circle, Clock, AlertCircle } from 'lucide-react';
 import { Job, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -24,7 +23,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
   } = useQuery({
     queryKey: ['jobTasks', job.id],
     queryFn: () => getTasksForJob(job.id),
-    enabled: !!job.id
+    enabled: !!job.id,
+    staleTime: 60000,
+    cacheTime: 300000
   });
   
   useEffect(() => {
@@ -83,7 +84,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     }
   };
 
-  // Component to display the active user for a task
   const ActiveUserDisplay = ({ taskId }: { taskId: string }) => {
     const [activeUser, setActiveUser] = useState<{
       userId: string;
@@ -94,18 +94,25 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+      let isMounted = true;
       const fetchActiveUser = async () => {
         try {
           const user = await getActiveUserForTask(taskId);
-          setActiveUser(user);
+          if (isMounted) {
+            setActiveUser(user);
+            setLoading(false);
+          }
         } catch (error) {
           console.error('Error fetching active user:', error);
-        } finally {
-          setLoading(false);
+          if (isMounted) {
+            setLoading(false);
+          }
         }
       };
 
       fetchActiveUser();
+      
+      return () => { isMounted = false };
     }, [taskId]);
 
     if (loading) return null;

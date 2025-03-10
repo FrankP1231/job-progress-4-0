@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash, User } from 'lucide-react';
+import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash } from 'lucide-react';
 import { updateTaskStatus, deleteTask } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -59,29 +58,47 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     lastName: string;
     profilePictureUrl: string | null;
   } | null>>({});
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const queryClient = useQueryClient();
 
-  // Fetch active users for all tasks
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchActiveUsers = async () => {
-      const userPromises = tasks.map(async (task) => {
-        const user = await getActiveUserForTask(task.id);
-        return { taskId: task.id, user };
-      });
-
-      const results = await Promise.all(userPromises);
-      const usersMap: Record<string, any> = {};
+      if (tasks.length === 0) {
+        setIsLoadingUsers(false);
+        return;
+      }
       
-      results.forEach(({ taskId, user }) => {
-        usersMap[taskId] = user;
-      });
+      setIsLoadingUsers(true);
+      try {
+        const userPromises = tasks.map(async (task) => {
+          const user = await getActiveUserForTask(task.id);
+          return { taskId: task.id, user };
+        });
 
-      setActiveUsers(usersMap);
+        const results = await Promise.all(userPromises);
+        
+        if (!isMounted) return;
+        
+        const usersMap: Record<string, any> = {};
+        results.forEach(({ taskId, user }) => {
+          usersMap[taskId] = user;
+        });
+
+        setActiveUsers(usersMap);
+      } catch (error) {
+        console.error('Error fetching active users:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoadingUsers(false);
+        }
+      }
     };
 
-    if (tasks.length > 0) {
-      fetchActiveUsers();
-    }
+    fetchActiveUsers();
+    
+    return () => { isMounted = false };
   }, [tasks]);
 
   const handleUpdateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
@@ -91,19 +108,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       setUpdatingTaskId(taskId);
       await updateTaskStatus(taskId, newStatus);
       
-      // Get jobId to invalidate job-related queries
       const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
       const jobId = await getJobIdForPhase(phaseId);
       
-      // Refresh all task-related data
       await refreshTasksData(queryClient, jobId, phaseId);
       
-      // Also invalidate JobTasks query if we have a jobId
       if (jobId) {
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
       
-      // Refresh active users
       const updatedUser = await getActiveUserForTask(taskId);
       setActiveUsers(prev => ({
         ...prev,
@@ -132,14 +145,11 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       setIsDeleting(true);
       await deleteTask(taskToDelete.id);
       
-      // Get jobId to invalidate job-related queries
       const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
       const jobId = await getJobIdForPhase(phaseId);
       
-      // Refresh all task-related data
       await refreshTasksData(queryClient, jobId, phaseId);
       
-      // Also invalidate JobTasks query if we have a jobId
       if (jobId) {
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
@@ -154,7 +164,6 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     }
   };
 
-  // Legacy toggle function for compatibility
   const handleToggleTaskCompletion = async (taskId: string, isComplete: boolean) => {
     const newStatus: TaskStatus = isComplete ? 'not-started' : 'complete';
     await handleUpdateTaskStatus(taskId, newStatus);
@@ -188,34 +197,23 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     if (!phaseId) return;
     
     try {
-      // Get jobId to invalidate job-related queries
       const { getJobIdForPhase } = await import('@/lib/supabase/task-helpers');
       const jobId = await getJobIdForPhase(phaseId);
       
-      // Refresh all task-related data
       await refreshTasksData(queryClient, jobId, phaseId);
       
-      // Also invalidate JobTasks query if we have a jobId
       if (jobId) {
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
-      
-      // Refresh active users
-      const updatedUsers: Record<string, any> = {};
-      for (const task of tasks) {
-        const updatedUser = await getActiveUserForTask(task.id);
-        updatedUsers[task.id] = updatedUser;
-      }
-      setActiveUsers(updatedUsers);
     } catch (error) {
       console.error('Error refreshing tasks:', error);
     }
   };
 
-  // Active user display component
   const ActiveUserDisplay = ({ taskId }: { taskId: string }) => {
     const activeUser = activeUsers[taskId];
     
+    if (isLoadingUsers) return null;
     if (!activeUser) return null;
     
     return (
@@ -285,7 +283,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 <span className={task.isComplete ? 'line-through text-gray-400' : ''}>
                   {task.name}
                 </span>
-                {activeUsers[task.id] && (
+                {!isLoadingUsers && activeUsers[task.id] && (
                   <div className="ml-2">
                     <ActiveUserDisplay taskId={task.id} />
                   </div>
@@ -360,7 +358,6 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         )}
       </div>
 
-      {/* Delete Task Confirmation Dialog */}
       <Dialog open={taskToDelete !== null} onOpenChange={(open) => !open && setTaskToDelete(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

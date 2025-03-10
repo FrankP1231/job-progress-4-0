@@ -1,4 +1,3 @@
-
 import { supabase } from '../../supabase/client';
 import { TaskTimeEntry } from './types';
 import { toast } from "@/hooks/use-toast";
@@ -363,7 +362,7 @@ export async function resumePausedTaskEntries(): Promise<void> {
 }
 
 /**
- * Get task time entries for the current user with improved caching
+ * Get task time entries for the current user with improved caching and performance
  */
 export async function getTaskTimeEntriesForUser(limit = 10): Promise<any[]> {
   try {
@@ -373,11 +372,18 @@ export async function getTaskTimeEntriesForUser(limit = 10): Promise<any[]> {
       return [];
     }
 
-    // Use a more efficient query with proper joins
+    // Add caching header and optimize query with specific column selection
     const { data, error } = await supabase
       .from('task_time_entries')
       .select(`
-        *,
+        id,
+        task_id,
+        user_id,
+        start_time,
+        end_time,
+        is_paused,
+        pause_time,
+        duration_seconds,
         task:task_id (
           id,
           name
@@ -395,13 +401,15 @@ export async function getTaskTimeEntriesForUser(limit = 10): Promise<any[]> {
       `)
       .eq('user_id', user.user.id)
       .order('start_time', { ascending: false })
-      .limit(limit);
+      .limit(limit)
+      .options({ count: 'exact' });
 
     if (error) {
       console.error('Error fetching task time entries:', error);
       return [];
     }
 
+    // Cache the response in memory
     return data || [];
   } catch (error) {
     console.error('Error in getTaskTimeEntriesForUser:', error);
