@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 
@@ -196,7 +195,6 @@ export async function updateTask(taskId: string, updates: Partial<Task>): Promis
   if (!taskId) return false;
 
   try {
-    // Convert Task interface properties to database column names
     const dbUpdates: Record<string, any> = {};
     
     if (updates.phaseId !== undefined) dbUpdates.phase_id = updates.phaseId;
@@ -247,44 +245,6 @@ export async function deleteTask(taskId: string): Promise<boolean> {
 }
 
 export async function addSampleTasksToPhases(): Promise<void> {
-  try {
-    const { data: phases, error: phasesError } = await supabase
-      .from('phases')
-      .select('id');
-
-    if (phasesError) throw phasesError;
-
-    if (!phases?.length) {
-      console.log('No phases found to add sample tasks to');
-      return;
-    }
-
-    const sampleTasks = [
-      { area: 'weldingLabor', name: 'Cut materials' },
-      { area: 'weldingLabor', name: 'Weld frame' },
-      { area: 'sewingLabor', name: 'Cut fabric' },
-      { area: 'sewingLabor', name: 'Sew panels' },
-      { area: 'installation', name: 'Install frame' },
-      { area: 'installation', name: 'Install fabric' }
-    ];
-
-    for (const phase of phases) {
-      const tasksToInsert = sampleTasks.map(task => ({
-        phase_id: phase.id,
-        area: task.area,
-        name: task.name,
-        status: 'not-started' as TaskStatus
-      }));
-
-      const { error: insertError } = await supabase
-        .from('tasks')
-        .insert(tasksToInsert);
-
-      if (insertError) {
-        console.error(`Error adding sample tasks to phase ${phase.id}:`, insertError);
-      }
-    }
-  } catch (error) {
-    console.error('Error in addSampleTasksToPhases:', error);
-  }
+  console.log("Sample task creation has been disabled");
+  return Promise.resolve();
 }

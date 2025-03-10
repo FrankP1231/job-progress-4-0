@@ -4,23 +4,18 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllJobs } from '@/lib/supabase/jobUtils';
 import { getTasksForPhase } from '@/lib/supabase/taskUtils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Wrench, Scissors, PackageCheck, Plus } from 'lucide-react';
+import { Wrench, Scissors, PackageCheck } from 'lucide-react';
 import { useProductionPhases, PhaseWithJob } from '@/hooks/useProductionPhases';
 import WeldingTabContent from './WeldingTabContent';
 import SewingTabContent from './SewingTabContent';
 import ReadyForInstallTabContent from './ReadyForInstallTabContent';
 import { Phase, Task } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { addSampleTasksToPhases } from '@/lib/supabaseUtils';
-import { useToast } from '@/components/ui/use-toast';
 
 const ProductionOverview: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'welding' | 'sewing' | 'readyForInstall'>('welding');
   const [phaseTasks, setPhaseTasks] = useState<Record<string, Task[]>>({});
-  const [isAddingSampleData, setIsAddingSampleData] = useState(false);
-  const { toast } = useToast();
   
-  const { data: jobs, isLoading, error, refetch } = useQuery({
+  const { data: jobs, isLoading, error } = useQuery({
     queryKey: ['jobs'],
     queryFn: getAllJobs
   });
@@ -65,28 +60,28 @@ const ProductionOverview: React.FC = () => {
     }
   }, [jobs, weldingPhases, sewingPhases, readyForInstallPhases]);
 
-  // Handle adding sample tasks
-  const handleAddSampleTasks = async () => {
-    try {
-      setIsAddingSampleData(true);
-      await addSampleTasksToPhases();
-      await refetch();
-      toast({
-        title: "Sample Tasks Added",
-        description: "Sample tasks have been added to your phases successfully.",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error adding sample tasks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add sample tasks. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingSampleData(false);
-    }
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-48">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-opacity-20 border-t-primary rounded-full" />
+    </div>;
+  }
+
+  if (error) {
+    console.error('Error fetching jobs:', error);
+    return <div className="text-red-500">Error loading jobs</div>;
+  }
+
+  // Convert PhaseWithJob objects to Phase objects
+  const extractPhases = (phaseWithJobArray: PhaseWithJob[]): Phase[] => {
+    return phaseWithJobArray.map(item => item.phase);
   };
+
+  // Use tasksMap variable name consistently
+  const tasksMap = phaseTasks;
+  
+  const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
+  const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
+  const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
 
   // Enhance phases with tasks
   const enhancePhaseWithTasks = (phases: Phase[]): Phase[] => {
@@ -131,42 +126,11 @@ const ProductionOverview: React.FC = () => {
     });
   };
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-48">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-opacity-20 border-t-primary rounded-full" />
-    </div>;
-  }
-
-  if (error) {
-    console.error('Error fetching jobs:', error);
-    return <div className="text-red-500">Error loading jobs</div>;
-  }
-
-  // Convert PhaseWithJob objects to Phase objects
-  const extractPhases = (phaseWithJobArray: PhaseWithJob[]): Phase[] => {
-    return phaseWithJobArray.map(item => item.phase);
-  };
-
-  // Use tasksMap variable name consistently
-  const tasksMap = phaseTasks;
-  
-  const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
-  const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
-  const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
-
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Production Overview</h1>
-        <Button 
-          variant="default" 
-          className="flex items-center gap-2"
-          onClick={handleAddSampleTasks}
-          disabled={isAddingSampleData}
-        >
-          <Plus className="h-4 w-4" />
-          {isAddingSampleData ? "Adding Sample Tasks..." : "Add Sample Tasks"}
-        </Button>
+        {/* Sample data button removed */}
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'welding' | 'sewing' | 'readyForInstall')} className="w-full">
