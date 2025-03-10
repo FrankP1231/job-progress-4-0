@@ -9,15 +9,30 @@ export async function getTasksForJob(jobId: string): Promise<Task[]> {
   }
 
   try {
+    // First, get all phase IDs for this job
+    const { data: phaseData, error: phaseError } = await supabase
+      .from('phases')
+      .select('id')
+      .eq('job_id', jobId);
+      
+    if (phaseError) {
+      console.error('Error fetching phases for job:', phaseError);
+      return [];
+    }
+    
+    // Extract phase IDs from the result
+    const phaseIds = phaseData.map(phase => phase.id);
+    
+    if (phaseIds.length === 0) {
+      console.log('No phases found for job:', jobId);
+      return [];
+    }
+    
+    // Now fetch tasks for these phases using 'in' operator
     const { data, error } = await supabase
       .from('tasks')
       .select('*')
-      .eq('phase_id', (
-        await supabase
-          .from('phases')
-          .select('id')
-          .eq('job_id', jobId)
-      ).data?.map(phase => phase.id))
+      .in('phase_id', phaseIds)
       .order('created_at', { ascending: false });
 
     if (error) {
