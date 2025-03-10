@@ -15,8 +15,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format } from 'date-fns';
+import { useAuth } from '@/context/AuthContext';
 
 const TimeTracker: React.FC = () => {
+  const { user } = useAuth();
   const { 
     isClockingIn, 
     isClockingOut, 
@@ -29,6 +31,11 @@ const TimeTracker: React.FC = () => {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [notes, setNotes] = useState('');
+  
+  // If user is not authenticated, don't show anything
+  if (!user.isAuthenticated) {
+    return null;
+  }
   
   const handleClockIn = async () => {
     await clockInHandler();

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { format, formatDistance } from 'date-fns';
 import { toast } from 'sonner';
@@ -45,10 +44,19 @@ export interface TaskTimeEntry {
 // User Clock In/Out Functions
 export const clockIn = async (): Promise<TimeEntry | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
     // Check if user is already clocked in
     const { data: activeSession, error: checkError } = await supabase
       .from('time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .is('clock_out_time', null)
       .order('clock_in_time', { ascending: false })
       .limit(1)
@@ -62,12 +70,6 @@ export const clockIn = async (): Promise<TimeEntry | null> => {
     if (activeSession) {
       toast.error('You are already clocked in');
       return activeSession;
-    }
-    
-    // Get the current user's ID
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
     }
     
     // No active session found, create new clock-in with user_id
@@ -84,25 +86,31 @@ export const clockIn = async (): Promise<TimeEntry | null> => {
       throw error;
     }
     
-    toast.success('Clocked in successfully');
-    
     // Check for paused task time entries and resume them
     await resumePausedTaskEntries();
     
     return data;
   } catch (error: any) {
     console.error('Error during clock in:', error);
-    toast.error('Failed to clock in: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
 export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
     // Get the active time entry
     const { data: activeSession, error: checkError } = await supabase
       .from('time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .is('clock_out_time', null)
       .order('clock_in_time', { ascending: false })
       .limit(1)
@@ -140,24 +148,30 @@ export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
       throw error;
     }
     
-    toast.success('Clocked out successfully');
-    
     // Pause any active task time entries
     await pauseActiveTaskEntries();
     
     return data;
   } catch (error: any) {
     console.error('Error during clock out:', error);
-    toast.error('Failed to clock out: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
 export const getCurrentTimeEntry = async (): Promise<TimeEntry | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
     const { data, error } = await supabase
       .from('time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .is('clock_out_time', null)
       .order('clock_in_time', { ascending: false })
       .limit(1)
@@ -177,9 +191,18 @@ export const getCurrentTimeEntry = async (): Promise<TimeEntry | null> => {
 
 export const getTimeEntries = async (limit: number = 10): Promise<TimeEntry[]> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .order('clock_in_time', { ascending: false })
       .limit(limit);
       
@@ -198,6 +221,14 @@ export const getTimeEntries = async (limit: number = 10): Promise<TimeEntry[]> =
 // Task Time Tracking Functions
 export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
     // Check if user is clocked in
     const timeEntry = await getCurrentTimeEntry();
     if (!timeEntry) {
@@ -210,6 +241,7 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
       .from('task_time_entries')
       .select('*')
       .eq('task_id', taskId)
+      .eq('user_id', user.id)
       .is('end_time', null)
       .maybeSingle();
       
@@ -226,12 +258,6 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
       
       toast.info('Task timer is already running');
       return existingEntry;
-    }
-    
-    // Get the current user's ID
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
     }
     
     // Create new task time entry
@@ -254,8 +280,7 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
     return data;
   } catch (error: any) {
     console.error('Error starting task timer:', error);
-    toast.error('Failed to start task timer: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
@@ -279,8 +304,7 @@ export const pauseTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeE
     return data;
   } catch (error: any) {
     console.error('Error pausing task timer:', error);
-    toast.error('Failed to pause task timer: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
@@ -321,8 +345,7 @@ export const resumeTaskTimer = async (taskTimeEntryId: string): Promise<TaskTime
     return data;
   } catch (error: any) {
     console.error('Error resuming task timer:', error);
-    toast.error('Failed to resume task timer: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
@@ -372,17 +395,25 @@ export const stopTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEn
     return data;
   } catch (error: any) {
     console.error('Error stopping task timer:', error);
-    toast.error('Failed to stop task timer: ' + error.message);
-    return null;
+    throw error;
   }
 };
 
 export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | null> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('task_time_entries')
       .select('*')
       .eq('task_id', taskId)
+      .eq('user_id', user.id)
       .is('end_time', null)
       .order('start_time', { ascending: false })
       .limit(1)
@@ -402,10 +433,19 @@ export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | 
 
 export const pauseActiveTaskEntries = async (): Promise<void> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return;
+    }
+    
     // Find all active task entries for the current user
     const { data, error } = await supabase
       .from('task_time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .is('end_time', null)
       .eq('is_paused', false);
       
@@ -425,10 +465,19 @@ export const pauseActiveTaskEntries = async (): Promise<void> => {
 
 export const resumePausedTaskEntries = async (): Promise<void> => {
   try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return;
+    }
+    
     // Find all paused task entries for the current user
     const { data, error } = await supabase
       .from('task_time_entries')
       .select('*')
+      .eq('user_id', user.id)
       .is('end_time', null)
       .eq('is_paused', true);
       

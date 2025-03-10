@@ -1,6 +1,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { toast } from 'sonner';
 import { 
   clockIn, 
   clockOut, 
@@ -53,7 +54,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   // Load initial time entry and set up interval to update time elapsed
   useEffect(() => {
-    refreshTimeTracking();
+    if (user.isAuthenticated) {
+      refreshTimeTracking();
+    } else {
+      setIsClockingLoading(false);
+    }
     
     // Set up interval to update time elapsed
     const intervalId = setInterval(() => {
@@ -85,14 +90,22 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   // Clock in handler
   const clockInHandler = async () => {
-    if (!user.isAuthenticated) return;
+    if (!user.isAuthenticated) {
+      toast.error('You must be logged in to clock in');
+      return;
+    }
     
     try {
       setIsClockingIn(true);
       const entry = await clockIn();
-      setCurrentTimeEntry(entry);
-    } catch (error) {
+      
+      if (entry) {
+        setCurrentTimeEntry(entry);
+        toast.success('Clocked in successfully');
+      }
+    } catch (error: any) {
       console.error('Error in clock in handler:', error);
+      toast.error(`Failed to clock in: ${error.message}`);
     } finally {
       setIsClockingIn(false);
     }
@@ -100,14 +113,23 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   
   // Clock out handler
   const clockOutHandler = async (notes?: string) => {
-    if (!user.isAuthenticated || !currentTimeEntry) return;
+    if (!user.isAuthenticated || !currentTimeEntry) {
+      toast.error('You must be logged in and clocked in to clock out');
+      return;
+    }
     
     try {
       setIsClockingOut(true);
-      await clockOut(notes);
+      const result = await clockOut(notes);
+      
+      if (result) {
+        toast.success('Clocked out successfully');
+      }
+      
       await refreshTimeTracking();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in clock out handler:', error);
+      toast.error(`Failed to clock out: ${error.message}`);
     } finally {
       setIsClockingOut(false);
     }
