@@ -1,3 +1,4 @@
+
 import { supabase, Json } from "./client";
 import { Phase, Material, Labor, PowderCoat, Installation, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '../types';
 import { logActivity } from "./activityLogUtils";
