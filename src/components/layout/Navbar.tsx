@@ -72,59 +72,6 @@ const Navbar: React.FC = () => {
     );
   }
 
-  // Show a restricted navbar for users without roles
-  if (!user.role) {
-    return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between">
-          <div>
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
-                alt="USA Canvas Logo" 
-                className="h-8" 
-              />
-            </Link>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Your account is awaiting role assignment</span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {user.firstName && user.lastName ? 
-                        `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 
-                        user.email?.substring(0, 2).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  {user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
-                  <div className="text-xs text-muted-foreground">Pending role assignment</div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/profile" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
   // Get initials for avatar
   const getInitials = () => {
     if (user.firstName && user.lastName) {

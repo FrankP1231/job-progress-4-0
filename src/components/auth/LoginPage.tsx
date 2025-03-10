@@ -15,7 +15,6 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showRoleMessage, setShowRoleMessage] = useState(false);
 
   // If user is already authenticated, redirect to dashboard
   if (user.isAuthenticated) {
@@ -26,23 +25,13 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-    setShowRoleMessage(false);
 
     try {
       const success = await login(email, password);
       
       if (success) {
-        // Successful login, but check if they have a role before navigating
-        // We'll handle the navigation logic directly in the component
-        setTimeout(() => {
-          // This checks if the user has a role after logging in
-          if (user.isAuthenticated && !user.role) {
-            setShowRoleMessage(true);
-            setIsLoading(false);
-          } else {
-            navigate('/dashboard');
-          }
-        }, 1500);
+        // Success, navigate to dashboard
+        navigate('/dashboard');
       } else {
         setError('Invalid credentials. Please try again.');
         setIsLoading(false);
@@ -74,15 +63,6 @@ const LoginPage: React.FC = () => {
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              {showRoleMessage && (
-                <Alert className="bg-amber-50 border-amber-200">
-                  <AlertCircle className="h-4 w-4 text-amber-500 mr-2" />
-                  <AlertDescription>
-                    Your account is awaiting role assignment. Please contact an administrator.
-                  </AlertDescription>
                 </Alert>
               )}
               
@@ -122,7 +102,7 @@ const LoginPage: React.FC = () => {
             </CardContent>
             
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full" disabled={isLoading || showRoleMessage}>
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
