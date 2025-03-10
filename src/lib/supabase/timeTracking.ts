@@ -64,10 +64,18 @@ export const clockIn = async (): Promise<TimeEntry | null> => {
       return activeSession;
     }
     
-    // No active session found, create new clock-in
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
+    // No active session found, create new clock-in with user_id
     const { data, error } = await supabase
       .from('time_entries')
-      .insert({})
+      .insert({
+        user_id: user.id
+      })
       .select()
       .single();
       
@@ -220,12 +228,19 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
       return existingEntry;
     }
     
+    // Get the current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+    
     // Create new task time entry
     const { data, error } = await supabase
       .from('task_time_entries')
       .insert({
         task_id: taskId,
-        is_paused: false
+        is_paused: false,
+        user_id: user.id
       })
       .select()
       .single();
