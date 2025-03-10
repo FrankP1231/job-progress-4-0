@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { Edit, Search, UserPlus } from 'lucide-react';
 
 // Define type for user roles
-type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office';
+type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office' | 'Master Admin';
 
 // Define type for work areas
 type WorkArea = 'Sewing' | 'Welding' | 'Installation' | 'Front Office';
@@ -36,7 +36,8 @@ const roles: UserRole[] = [
   'Lead Installer', 
   'Installer\'s Helper', 
   'Installer', 
-  'Front Office'
+  'Front Office',
+  'Master Admin'
 ];
 
 const workAreas: WorkArea[] = [
@@ -73,7 +74,7 @@ const UsersManagementPage: React.FC = () => {
           
         if (error) throw error;
         
-        const isUserAdmin = ['Front Office', 'Lead Welder', 'Lead Installer'].includes(data.role);
+        const isUserAdmin = ['Front Office', 'Lead Welder', 'Lead Installer', 'Master Admin'].includes(data.role);
         setIsAdmin(isUserAdmin);
         
         if (!isUserAdmin) {

@@ -42,8 +42,11 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // Check if user is a team lead or admin
-  const isAdmin = user.role === 'Front Office' || user.role === 'Lead Welder' || user.role === 'Lead Installer';
+  // Check if user is a team lead, admin, or master admin
+  const isAdmin = user.role === 'Front Office' || 
+                  user.role === 'Lead Welder' || 
+                  user.role === 'Lead Installer' || 
+                  user.role === 'Master Admin';
 
   // If not authenticated, show a simplified navbar with login
   if (!user.isAuthenticated) {
