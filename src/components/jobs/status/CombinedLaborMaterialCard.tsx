@@ -64,6 +64,10 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
     try {
       setIsAddingTask(true);
       console.log(`Adding task "${taskName}" to ${area} in phase ${phaseId}`);
+      
+      // Prevent form submission
+      await new Promise(resolve => setTimeout(resolve, 0));
+      
       const result = await addTasksToPhaseArea(phaseId, area, [taskName]);
       toast.success('Task added successfully');
       

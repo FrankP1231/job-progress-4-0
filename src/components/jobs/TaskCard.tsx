@@ -41,7 +41,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     
     try {
       // Check if the task name is a JSON string
-      if (task.name.startsWith('{') && task.name.includes('name')) {
+      if (typeof task.name === 'string' && task.name.startsWith('{') && task.name.includes('name')) {
         const parsed = JSON.parse(task.name);
         return parsed.name || task.name;
       }

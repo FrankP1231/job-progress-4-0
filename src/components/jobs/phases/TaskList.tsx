@@ -40,7 +40,6 @@ const TaskList: React.FC<TaskListProps> = ({
   
   // Map area to work area for user filtering
   const getWorkAreaFromTaskArea = (area: string): WorkArea | undefined => {
-    console.log(`Mapping task area: ${area} to work area`);
     if (area === 'weldingLabor' || area === 'weldingMaterials') {
       return 'Welding';
     } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
@@ -56,13 +55,16 @@ const TaskList: React.FC<TaskListProps> = ({
   };
   
   const workArea = getWorkAreaFromTaskArea(area);
-  console.log(`Determined work area: ${workArea || 'none'} for task area: ${area}`);
   
-  const handleAddTask = () => {
+  const handleAddTask = (e: React.MouseEvent) => {
+    // Prevent default form submission behavior
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!newTaskName.trim()) return;
     
     const task: TaskWithMetadata = {
-      name: newTaskName,
+      name: newTaskName.trim(),
       ...(isLaborArea && newTaskHours ? { hours: parseFloat(newTaskHours) } : {}),
       ...(isMaterialArea && newTaskEta ? { eta: newTaskEta } : {}),
       ...(selectedUsers.length > 0 ? { assigneeIds: selectedUsers } : {})
@@ -96,6 +98,16 @@ const TaskList: React.FC<TaskListProps> = ({
           </DialogTrigger>
           <DialogContent 
             onClick={(e) => e.stopPropagation()}
+            onPointerDownOutside={(e) => {
+              // Prevent clicking outside from submitting the form
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            onEscapeKeyDown={(e) => {
+              // Prevent the Escape key from submitting the form
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onInteractOutside={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -113,6 +125,13 @@ const TaskList: React.FC<TaskListProps> = ({
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    // Prevent Enter key from submitting the form
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }
+                  }}
                 />
               </div>
               
@@ -128,6 +147,13 @@ const TaskList: React.FC<TaskListProps> = ({
                     value={newTaskHours}
                     onChange={(e) => setNewTaskHours(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      // Prevent Enter key from submitting the form
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -141,6 +167,13 @@ const TaskList: React.FC<TaskListProps> = ({
                     value={newTaskEta}
                     onChange={(e) => setNewTaskEta(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      // Prevent Enter key from submitting the form
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
                   />
                 </div>
               )}
@@ -172,11 +205,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 </Button>
                 <Button 
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleAddTask();
-                  }}
+                  onClick={handleAddTask}
                   disabled={!newTaskName.trim()}
                 >
                   Add Task

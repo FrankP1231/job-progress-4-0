@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
@@ -168,18 +169,38 @@ export const deleteTask = async (taskId: string): Promise<void> => {
   }
 };
 
-export const addTasksToPhaseArea = async (phaseId: string, area: string, tasks: string[]): Promise<{ createdTasks: Record<string, any[]> }> => {
+export const addTasksToPhaseArea = async (phaseId: string, area: string, tasks: string[] | Record<string, any>[]): Promise<{ createdTasks: Record<string, any[]> }> => {
   if (!phaseId || !area || !tasks.length) {
     throw new Error('Phase ID, area, and tasks are required');
   }
 
   try {
-    const tasksToInsert = tasks.map(task => ({
-      phase_id: phaseId,
-      area,
-      name: task,
-      status: 'not-started' as TaskStatus
-    }));
+    // Handle both string array and objects with metadata
+    const tasksToInsert = tasks.map(task => {
+      if (typeof task === 'string') {
+        return {
+          phase_id: phaseId,
+          area,
+          name: task,
+          status: 'not-started' as TaskStatus
+        };
+      } else {
+        // If it's an object, ensure we're storing the name as plain text, not a JSON string
+        const taskName = typeof task.name === 'object' 
+          ? JSON.stringify(task.name) 
+          : task.name;
+          
+        return {
+          phase_id: phaseId,
+          area,
+          name: taskName,
+          status: 'not-started' as TaskStatus,
+          hours: task.hours,
+          eta: task.eta,
+          notes: task.notes
+        };
+      }
+    });
 
     const { data, error } = await supabase
       .from('tasks')
