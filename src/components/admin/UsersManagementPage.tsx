@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -48,10 +49,19 @@ const UsersManagementPage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  const [newUser, setNewUser] = useState({
+    email: '',
+    first_name: '',
+    last_name: '',
+    role: 'Installer' as UserRole,
+    work_area: 'Installation' as WorkArea,
+    password: ''
+  });
 
-  // Check if current user is admin
+  // Check if current user is Master Admin
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user.isAuthenticated || !user.id) {
@@ -68,10 +78,10 @@ const UsersManagementPage: React.FC = () => {
           
         if (error) throw error;
         
-        const isUserAdmin = ['Front Office', 'Lead Welder', 'Lead Installer', 'Master Admin'].includes(data.role);
-        setIsAdmin(isUserAdmin);
+        const isMasterAdminUser = data.role === 'Master Admin';
+        setIsMasterAdmin(isMasterAdminUser);
         
-        if (!isUserAdmin) {
+        if (!isMasterAdminUser) {
           toast.error('You do not have permission to access this page');
           navigate('/');
         }
@@ -86,7 +96,7 @@ const UsersManagementPage: React.FC = () => {
 
   // Fetch all profiles
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isMasterAdmin) return;
     
     const fetchProfiles = async () => {
       try {
@@ -106,7 +116,7 @@ const UsersManagementPage: React.FC = () => {
     };
     
     fetchProfiles();
-  }, [isAdmin]);
+  }, [isMasterAdmin]);
 
   const handleUpdateProfile = async () => {
     if (!selectedProfile) return;
@@ -130,10 +140,74 @@ const UsersManagementPage: React.FC = () => {
         p.id === selectedProfile.id ? selectedProfile : p
       ));
       
-      setIsDialogOpen(false);
+      setIsEditDialogOpen(false);
       toast.success('User updated successfully');
     } catch (error: any) {
       toast.error('Failed to update user: ' + error.message);
+    }
+  };
+
+  const handleAddUser = async () => {
+    if (!newUser.email || !newUser.first_name || !newUser.last_name || !newUser.password) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    try {
+      // First create the auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email: newUser.email,
+        password: newUser.password,
+        email_confirm: true,
+      });
+      
+      if (authError) throw authError;
+      
+      if (!authData.user) {
+        throw new Error('Failed to create user');
+      }
+      
+      // Then update the profile with additional information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: newUser.first_name,
+          last_name: newUser.last_name,
+          role: newUser.role,
+          work_area: newUser.work_area,
+          last_modified_by: user.id
+        })
+        .eq('id', authData.user.id);
+        
+      if (profileError) throw profileError;
+      
+      // Fetch the newly created profile
+      const { data: newProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // Add the new profile to the local state
+      setProfiles([...profiles, newProfile]);
+      
+      // Reset the new user form
+      setNewUser({
+        email: '',
+        first_name: '',
+        last_name: '',
+        role: 'Installer',
+        work_area: 'Installation',
+        password: ''
+      });
+      
+      setIsAddDialogOpen(false);
+      toast.success('User added successfully');
+    } catch (error: any) {
+      console.error('Error adding user:', error);
+      toast.error('Failed to add user: ' + error.message);
     }
   };
 
@@ -148,7 +222,7 @@ const UsersManagementPage: React.FC = () => {
     );
   });
 
-  if (!isAdmin) {
+  if (!isMasterAdmin) {
     return null;
   }
 
@@ -160,12 +234,15 @@ const UsersManagementPage: React.FC = () => {
             <div>
               <CardTitle>Manage Users</CardTitle>
               <CardDescription>
-                View and update user information
+                View, add, and update user information
               </CardDescription>
             </div>
-            <Button variant="outline" disabled>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddDialogOpen(true)}
+            >
               <UserPlus className="mr-2 h-4 w-4" />
-              Invite User
+              Add User
             </Button>
           </div>
         </CardHeader>
@@ -222,7 +299,7 @@ const UsersManagementPage: React.FC = () => {
                             size="sm"
                             onClick={() => {
                               setSelectedProfile(profile);
-                              setIsDialogOpen(true);
+                              setIsEditDialogOpen(true);
                             }}
                           >
                             <Edit className="h-4 w-4" />
@@ -240,7 +317,7 @@ const UsersManagementPage: React.FC = () => {
       </Card>
 
       {/* Edit User Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
@@ -321,11 +398,131 @@ const UsersManagementPage: React.FC = () => {
             </div>
           )}
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setIsDialogOpen(false)}>
+            <Button type="button" variant="secondary" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button type="button" onClick={handleUpdateProfile}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New User</DialogTitle>
+            <DialogDescription>
+              Create a new user account
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="addEmail">Email *</Label>
+              <Input
+                id="addEmail"
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({
+                  ...newUser,
+                  email: e.target.value
+                })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="addPassword">Password *</Label>
+              <Input
+                id="addPassword"
+                type="password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({
+                  ...newUser,
+                  password: e.target.value
+                })}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="addFirstName">First Name *</Label>
+                <Input
+                  id="addFirstName"
+                  value={newUser.first_name}
+                  onChange={(e) => setNewUser({
+                    ...newUser,
+                    first_name: e.target.value
+                  })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="addLastName">Last Name *</Label>
+                <Input
+                  id="addLastName"
+                  value={newUser.last_name}
+                  onChange={(e) => setNewUser({
+                    ...newUser,
+                    last_name: e.target.value
+                  })}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="addRole">Role</Label>
+              <Select 
+                value={newUser.role}
+                onValueChange={(value: UserRole) => setNewUser({
+                  ...newUser,
+                  role: value
+                })}
+              >
+                <SelectTrigger id="addRole">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map(role => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="addWorkArea">Work Area</Label>
+              <Select 
+                value={newUser.work_area}
+                onValueChange={(value: WorkArea) => setNewUser({
+                  ...newUser,
+                  work_area: value
+                })}
+              >
+                <SelectTrigger id="addWorkArea">
+                  <SelectValue placeholder="Select work area" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workAreas.map(area => (
+                    <SelectItem key={area} value={area}>
+                      {area}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleAddUser}>
+              Add User
             </Button>
           </DialogFooter>
         </DialogContent>
