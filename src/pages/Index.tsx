@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -55,20 +56,11 @@ const Index: React.FC = () => {
           return false;
         }
       }
-      // Also include phases where welding is due soon
+      // For welding labor, we should check hours instead of eta since Labor type doesn't have eta
       if (phase.weldingLabor && 
           phase.weldingLabor.hasOwnProperty('hours') &&
-          phase.weldingLabor.eta && 
           phase.weldingLabor.status !== 'complete') {
-        try {
-          const dueDate = new Date(phase.weldingLabor.eta);
-          const now = new Date();
-          const diffTime = dueDate.getTime() - now.getTime();
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          return diffDays >= 0 && diffDays <= 7;
-        } catch (error) {
-          return false;
-        }
+        return true; // Include phases where welding labor is not complete
       }
       return false;
     })
@@ -78,9 +70,6 @@ const Index: React.FC = () => {
         let dates = [];
         if (item.phase.installation?.hasOwnProperty('installStartDate') && item.phase.installation.installStartDate) {
           dates.push(new Date(item.phase.installation.installStartDate));
-        }
-        if (item.phase.weldingLabor?.hasOwnProperty('eta') && item.phase.weldingLabor.eta) {
-          dates.push(new Date(item.phase.weldingLabor.eta));
         }
         return dates.length ? Math.min(...dates.map(d => d.getTime())) : Infinity;
       };
@@ -192,11 +181,9 @@ const Index: React.FC = () => {
                     const now = new Date();
                     dueDays = Math.ceil((installDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                     dueText = `Installation due in ${dueDays} day${dueDays !== 1 ? 's' : ''}`;
-                  } else if (phase.weldingLabor?.hasOwnProperty('eta') && phase.weldingLabor.eta) {
-                    const dueDate = new Date(phase.weldingLabor.eta);
-                    const now = new Date();
-                    dueDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                    dueText = `Welding due in ${dueDays} day${dueDays !== 1 ? 's' : ''}`;
+                  } else if (phase.weldingLabor && phase.weldingLabor.status !== 'complete') {
+                    // For welding labor, just show that it's pending since we don't have an eta
+                    dueText = "Welding labor pending";
                   }
                   
                   return (

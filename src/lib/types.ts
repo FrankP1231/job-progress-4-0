@@ -1,4 +1,3 @@
-
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';

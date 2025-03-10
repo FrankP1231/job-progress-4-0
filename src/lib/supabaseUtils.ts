@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
@@ -204,7 +203,6 @@ export const addSampleTasksToPhases = async (): Promise<void> => {
   return Promise.resolve();
 };
 
-// Add missing functions that are imported elsewhere
 export const getJobById = async (jobId: string) => {
   try {
     const { data, error } = await supabase
@@ -222,7 +220,6 @@ export const getJobById = async (jobId: string) => {
       return null;
     }
 
-    // Transform the data to match our Job type
     const job = {
       id: data.id,
       jobNumber: data.job_number,
