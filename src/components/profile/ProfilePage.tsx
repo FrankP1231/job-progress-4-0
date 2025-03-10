@@ -40,9 +40,11 @@ const ProfilePage: React.FC = () => {
         setError(null);
         
         console.log('Fetching profile from ProfilePage, user ID:', user.id);
+        
+        // Use a simpler query to avoid triggering RLS recursion issues
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, first_name, last_name, email, role, work_area')
           .eq('id', user.id)
           .maybeSingle();
           
@@ -113,7 +115,7 @@ const ProfilePage: React.FC = () => {
       
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, first_name, last_name, email, role, work_area')
         .eq('id', user.id)
         .maybeSingle();
         

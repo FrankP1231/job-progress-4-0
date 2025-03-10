@@ -30,9 +30,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log('Fetching profile for user:', userId);
+      
+      // Use a simpler query to avoid triggering RLS recursion issues
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('first_name, last_name, role, work_area, email')
         .eq('id', userId)
         .maybeSingle();
       
@@ -61,9 +63,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Function to manually refresh the user profile
   const refreshUserProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await fetchUserProfile(session.user.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+        return;
+      }
+      console.warn('No active session found when trying to refresh profile');
+    } catch (err) {
+      console.error('Error in refreshUserProfile:', err);
     }
   };
 
@@ -72,23 +80,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       setLoading(true);
       
-      // Check current session
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser({
-          isAuthenticated: true,
-          id: session.user.id,
-          email: session.user.email
-        });
+      try {
+        // Check current session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Fetch additional user profile data
-        await fetchUserProfile(session.user.id);
-      } else {
-        setUser({ isAuthenticated: false });
+        if (session?.user) {
+          setUser({
+            isAuthenticated: true,
+            id: session.user.id,
+            email: session.user.email
+          });
+          
+          // Fetch additional user profile data
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUser({ isAuthenticated: false });
+        }
+      } catch (err) {
+        console.error('Error initializing auth:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
       
       // Set up auth state change listener
       const { data: { subscription } } = await supabase.auth.onAuthStateChange(
