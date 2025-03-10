@@ -1,3 +1,4 @@
+
 // Re-export all utilities for easy importing
 export * from './jobUtils';
 export * from './phaseUtils';
@@ -5,6 +6,9 @@ export * from './dashboardUtils';
 export * from './statusUtils';
 export * from './task-helpers';
 export * from './taskUtils';
+
+// Import supabaseClient from the correct location
+import { supabaseClient } from './client';
 
 // Export task-crud without those functions that are overridden in taskUtils
 export {
