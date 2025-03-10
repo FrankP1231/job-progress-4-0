@@ -85,7 +85,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
       <Popover open={open} onOpenChange={(newOpen) => {
         try {
           setOpen(newOpen);
@@ -109,7 +109,11 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <PopoverContent 
+          className="w-full p-0" 
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onClick={(e) => e.stopPropagation()}
+        >
           <Command>
             <CommandInput placeholder="Search users..." className="h-9" />
             <CommandEmpty>

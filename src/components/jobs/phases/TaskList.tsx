@@ -77,7 +77,7 @@ const TaskList: React.FC<TaskListProps> = ({
   };
   
   return (
-    <div>
+    <div className="space-y-2">
       <div className="mb-4">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -87,13 +87,20 @@ const TaskList: React.FC<TaskListProps> = ({
               className="flex items-center gap-1"
               onClick={(e) => {
                 e.preventDefault();
-                e.stopPropagation(); // Prevent event bubbling
+                e.stopPropagation();
+                setIsDialogOpen(true);
               }}
             >
               <Plus className="h-4 w-4" /> Add Task
             </Button>
           </DialogTrigger>
-          <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogContent 
+            onClick={(e) => e.stopPropagation()}
+            onInteractOutside={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+          >
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
             </DialogHeader>
@@ -105,6 +112,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   placeholder="Enter task name"
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               
@@ -119,6 +127,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     placeholder="Enter estimated hours"
                     value={newTaskHours}
                     onChange={(e) => setNewTaskHours(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               )}
@@ -131,6 +140,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     type="date"
                     value={newTaskEta}
                     onChange={(e) => setNewTaskEta(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               )}
