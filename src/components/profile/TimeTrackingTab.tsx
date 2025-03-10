@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -66,65 +66,9 @@ const TimeTrackingTab: React.FC = () => {
   const [taskEntries, setTaskEntries] = useState<TaskTimeSummary[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [periodSummaries, setPeriodSummaries] = useState<TimePeriodSummary[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   
-  useEffect(() => {
-    const fetchTimeTrackingData = async () => {
-      if (!user.isAuthenticated) return;
-      
-      try {
-        setIsLoading(true);
-        
-        const entries = await getTimeEntries(50);
-        
-        const formattedEntries = entries.map(entry => ({
-          id: entry.id,
-          clockIn: new Date(entry.clock_in_time),
-          clockOut: entry.clock_out_time ? new Date(entry.clock_out_time) : null,
-          duration: entry.duration_seconds,
-          notes: entry.notes
-        }));
-        
-        setTimeEntries(formattedEntries);
-        
-        try {
-          const taskTimeEntries = await getTaskTimeEntriesForUser(30);
-          
-          const formattedTaskEntries = taskTimeEntries.map(entry => ({
-            id: entry.id,
-            taskId: entry.task_id,
-            taskName: entry.task?.name || 'Unknown Task',
-            phaseName: entry.phase?.phase_name || 'Unknown Phase',
-            jobNumber: entry.job?.job_number || 'Unknown Job',
-            projectName: entry.job?.project_name || 'Unknown Project',
-            startTime: new Date(entry.start_time),
-            endTime: entry.end_time ? new Date(entry.end_time) : null,
-            duration: entry.duration_seconds
-          }));
-          
-          setTaskEntries(formattedTaskEntries);
-        } catch (taskError) {
-          console.error('Error fetching task entries:', taskError);
-          setTaskEntries([]);
-        }
-        
-        calculateTodayTotal(formattedEntries, []);
-        
-        calculateTimePeriodSummaries(formattedEntries);
-        
-      } catch (error) {
-        console.error('Error fetching time tracking data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchTimeTrackingData();
-    
-    const intervalId = setInterval(fetchTimeTrackingData, 60000);
-    return () => clearInterval(intervalId);
-  }, [user.isAuthenticated, currentTimeEntry]);
-  
-  const calculateTodayTotal = (clockEntries: TimeEntrySummary[], taskEntries: TaskTimeSummary[]) => {
+  const calculateTodayTotal = useCallback((clockEntries: TimeEntrySummary[]) => {
     const now = new Date();
     const startOfToday = startOfDay(now);
     const endOfToday = endOfDay(now);
@@ -142,9 +86,9 @@ const TimeTrackingTab: React.FC = () => {
     });
     
     setTodayTotal(totalSeconds);
-  };
+  }, []);
   
-  const calculateTimePeriodSummaries = (entries: TimeEntrySummary[]) => {
+  const calculateTimePeriodSummaries = useCallback((entries: TimeEntrySummary[]) => {
     const now = new Date();
     
     const periods = [
@@ -192,7 +136,7 @@ const TimeTrackingTab: React.FC = () => {
       Object.values(weeklyTotals).forEach(weekTotal => {
         if (weekTotal > secondsInWorkWeek) {
           overtimeSeconds += (weekTotal - secondsInWorkWeek);
-          regularSeconds -= (weekTotal - secondsInWorkWeek);
+          regularSeconds -= (weekTotal - secondsWorkWeek);
         }
       });
       
@@ -205,7 +149,82 @@ const TimeTrackingTab: React.FC = () => {
     });
     
     setPeriodSummaries(summaries);
-  };
+  }, []);
+  
+  const fetchTimeTrackingData = useCallback(async (forceRefresh = false) => {
+    if (!user.isAuthenticated) return;
+    
+    const now = new Date();
+    const timeSinceLastUpdate = differenceInSeconds(now, lastUpdate);
+    if (timeSinceLastUpdate < 60 && !forceRefresh && !isLoading) {
+      return;
+    }
+    
+    try {
+      if (isLoading || forceRefresh) {
+        setIsLoading(true);
+      }
+      
+      const entries = await getTimeEntries(50);
+      
+      const formattedEntries = entries.map(entry => ({
+        id: entry.id,
+        clockIn: new Date(entry.clock_in_time),
+        clockOut: entry.clock_out_time ? new Date(entry.clock_out_time) : null,
+        duration: entry.duration_seconds,
+        notes: entry.notes
+      }));
+      
+      setTimeEntries(formattedEntries);
+      
+      try {
+        const taskTimeEntries = await getTaskTimeEntriesForUser(30);
+        
+        const formattedTaskEntries = taskTimeEntries.map(entry => ({
+          id: entry.id,
+          taskId: entry.task_id,
+          taskName: entry.task?.name || 'Unknown Task',
+          phaseName: entry.phase?.phase_name || 'Unknown Phase',
+          jobNumber: entry.job?.job_number || 'Unknown Job',
+          projectName: entry.job?.project_name || 'Unknown Project',
+          startTime: new Date(entry.start_time),
+          endTime: entry.end_time ? new Date(entry.end_time) : null,
+          duration: entry.duration_seconds
+        }));
+        
+        setTaskEntries(formattedTaskEntries);
+      } catch (taskError) {
+        console.error('Error fetching task entries:', taskError);
+      }
+      
+      calculateTodayTotal(formattedEntries);
+      calculateTimePeriodSummaries(formattedEntries);
+      
+      setLastUpdate(now);
+    } catch (error) {
+      console.error('Error fetching time tracking data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user.isAuthenticated, isLoading, lastUpdate, calculateTodayTotal, calculateTimePeriodSummaries]);
+  
+  useEffect(() => {
+    fetchTimeTrackingData(true);
+  }, [fetchTimeTrackingData]);
+  
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchTimeTrackingData(false);
+    }, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [fetchTimeTrackingData]);
+  
+  useEffect(() => {
+    if (currentTimeEntry) {
+      fetchTimeTrackingData(true);
+    }
+  }, [currentTimeEntry, fetchTimeTrackingData]);
   
   const formatTimeDisplay = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
@@ -213,7 +232,7 @@ const TimeTrackingTab: React.FC = () => {
     return `${hours}h ${minutes}m`;
   };
   
-  if (isLoading) {
+  if (isLoading && timeEntries.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -236,9 +255,9 @@ const TimeTrackingTab: React.FC = () => {
               <div>
                 <p className="text-muted-foreground">Status</p>
                 <div className="mt-1 flex items-center">
-                  {currentTimeEntry ? (
+                  {currentTimeEntry && !currentTimeEntry.clock_out_time ? (
                     <Badge variant="outline" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-                      Clocked In ({timeElapsed})
+                      Clocked In {timeElapsed && `(${timeElapsed})`}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="bg-slate-100 text-slate-700 hover:bg-slate-100">
@@ -250,7 +269,7 @@ const TimeTrackingTab: React.FC = () => {
               <div>
                 <p className="text-muted-foreground">Clock In Time</p>
                 <p className="mt-1 font-medium">
-                  {currentTimeEntry ? (
+                  {currentTimeEntry && !currentTimeEntry.clock_out_time ? (
                     format(new Date(currentTimeEntry.clock_in_time), 'h:mm a')
                   ) : (
                     '—'
@@ -363,7 +382,7 @@ const TimeTrackingTab: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       {entry.duration ? formatDuration(entry.duration) : (
-                        timeElapsed
+                        timeElapsed || 'In progress'
                       )}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">

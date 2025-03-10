@@ -26,7 +26,6 @@ const TimeTracker: React.FC = () => {
     currentTimeEntry, 
     clockInHandler, 
     clockOutHandler,
-    timeElapsed,
     refreshTimeTracking
   } = useTimeTracking();
   
@@ -92,7 +91,7 @@ const TimeTracker: React.FC = () => {
                 ) : (
                   <Timer className="h-4 w-4" />
                 )}
-                <span>{timeElapsed}</span>
+                <span>Clocked In</span>
                 <LogOut className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -110,8 +109,7 @@ const TimeTracker: React.FC = () => {
             <DialogHeader>
               <DialogTitle>Clock Out</DialogTitle>
               <DialogDescription>
-                You've been clocked in since {format(new Date(currentTimeEntry.clock_in_time), 'h:mm a')}. 
-                Total time: {timeElapsed}.
+                You've been clocked in since {format(new Date(currentTimeEntry.clock_in_time), 'h:mm a')}
               </DialogDescription>
             </DialogHeader>
             

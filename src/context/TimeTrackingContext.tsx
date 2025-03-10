@@ -32,9 +32,16 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [isClockingLoading, setIsClockingLoading] = useState(true);
   const [currentTimeEntry, setCurrentTimeEntry] = useState<TimeEntry | null>(null);
   const [timeElapsed, setTimeElapsed] = useState('0 seconds');
+  const [lastRefresh, setLastRefresh] = useState(0);
   
-  // Function to refresh time tracking data
+  // Function to refresh time tracking data with throttling
   const refreshTimeTracking = async () => {
+    // Don't refresh if it's been less than 5 seconds since the last refresh
+    const now = Date.now();
+    if (now - lastRefresh < 5000 && lastRefresh !== 0) {
+      return;
+    }
+    
     if (!user.isAuthenticated) {
       setCurrentTimeEntry(null);
       setIsClockingLoading(false);
@@ -45,6 +52,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setIsClockingLoading(true);
       const entry = await getCurrentTimeEntry();
       setCurrentTimeEntry(entry);
+      setLastRefresh(Date.now());
     } catch (error) {
       console.error('Error refreshing time tracking:', error);
     } finally {
@@ -60,7 +68,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setIsClockingLoading(false);
     }
     
-    // Set up interval to update time elapsed
+    // Set up interval to update time elapsed (every 15 seconds instead of every second)
     const intervalId = setInterval(() => {
       if (currentTimeEntry && !currentTimeEntry.clock_out_time) {
         const start = new Date(currentTimeEntry.clock_in_time);
@@ -70,20 +78,17 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // Format the elapsed time
         const hours = Math.floor(diffInSeconds / 3600);
         const minutes = Math.floor((diffInSeconds % 3600) / 60);
-        const seconds = diffInSeconds % 60;
         
+        // Simplify the display format - no seconds to reduce constant updates
         let timeString = '';
         if (hours > 0) {
           timeString += `${hours}h `;
         }
-        if (hours > 0 || minutes > 0) {
-          timeString += `${minutes}m `;
-        }
-        timeString += `${seconds}s`;
+        timeString += `${minutes}m`;
         
         setTimeElapsed(timeString);
       }
-    }, 1000);
+    }, 15000); // Update every 15 seconds instead of every second
     
     return () => clearInterval(intervalId);
   }, [user.isAuthenticated, currentTimeEntry]);
@@ -103,12 +108,10 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setCurrentTimeEntry(entry);
         toast.success('Clocked in successfully');
       }
-      
-      // Add this line to ensure the loading state is properly reset
-      setIsClockingIn(false);
     } catch (error: any) {
       console.error('Error in clock in handler:', error);
       toast.error(`Failed to clock in: ${error.message}`);
+    } finally {
       setIsClockingIn(false);
     }
   };
