@@ -178,7 +178,9 @@ const TimeTrackingTab: React.FC = () => {
       setTimeEntries(formattedEntries);
       
       try {
+        console.log('About to fetch task time entries...');
         const taskTimeEntries = await getTaskTimeEntriesForUser(30);
+        console.log('Task time entries fetched:', taskTimeEntries);
         
         const formattedTaskEntries = taskTimeEntries.map(entry => ({
           id: entry.id,
@@ -192,6 +194,7 @@ const TimeTrackingTab: React.FC = () => {
           duration: entry.duration_seconds
         }));
         
+        console.log('Formatted task entries:', formattedTaskEntries);
         setTaskEntries(formattedTaskEntries);
       } catch (taskError) {
         console.error('Error fetching task entries:', taskError);
@@ -405,49 +408,56 @@ const TimeTrackingTab: React.FC = () => {
           <CardDescription>Recent time tracked on specific tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Task</TableHead>
-                <TableHead>Project</TableHead>
-                <TableHead>Duration</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {taskEntries.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-2" />
+              <span className="text-sm text-muted-foreground">Loading task entries...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                    No task time entries found
-                  </TableCell>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Task</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Duration</TableHead>
                 </TableRow>
-              ) : (
-                taskEntries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium">
-                      {format(entry.startTime, 'MMM d, yyyy')}
-                      {isToday(entry.startTime) && (
-                        <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">Today</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{entry.taskName}</div>
-                      <div className="text-xs text-muted-foreground">{entry.phaseName}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div>{entry.jobNumber}</div>
-                      <div className="text-xs text-muted-foreground">{entry.projectName}</div>
-                    </TableCell>
-                    <TableCell>
-                      {entry.duration ? formatDuration(entry.duration) : (
-                        <Badge variant="outline" className="bg-amber-50 text-amber-700">In Progress</Badge>
-                      )}
+              </TableHeader>
+              <TableBody>
+                {taskEntries.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                      No task time entries found. Try tracking time on a task.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  taskEntries.map((entry) => (
+                    <TableRow key={entry.id}>
+                      <TableCell className="font-medium">
+                        {format(entry.startTime, 'MMM d, yyyy')}
+                        {isToday(entry.startTime) && (
+                          <Badge variant="outline" className="ml-2 bg-blue-50 text-blue-700 text-xs">Today</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-medium">{entry.taskName}</div>
+                        <div className="text-xs text-muted-foreground">{entry.phaseName}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>{entry.jobNumber}</div>
+                        <div className="text-xs text-muted-foreground">{entry.projectName}</div>
+                      </TableCell>
+                      <TableCell>
+                        {entry.duration ? formatDuration(entry.duration) : (
+                          <Badge variant="outline" className="bg-amber-50 text-amber-700">In Progress</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -265,8 +265,9 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
       .from('task_time_entries')
       .insert({
         task_id: taskId,
+        user_id: user.id,
         is_paused: false,
-        user_id: user.id
+        start_time: new Date().toISOString()  // Explicitly set start_time to ensure it's recorded
       })
       .select()
       .single();
@@ -277,6 +278,7 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
     }
     
     toast.success('Task timer started');
+    console.log('Created task time entry:', data);
     return data;
   } catch (error: any) {
     console.error('Error starting task timer:', error);
@@ -391,6 +393,7 @@ export const stopTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEn
       throw error;
     }
     
+    console.log('Stopped task time entry:', data);
     toast.success('Task timer stopped');
     return data;
   } catch (error: any) {
@@ -524,11 +527,35 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
       return [];
     }
     
-    // Fetch only task time entries without trying to join with other tables
-    // This avoids the relationship error with phases
+    console.log('Fetching task time entries for user:', user.id);
+    
+    // Fetch task time entries with proper joins
     const { data, error } = await supabase
       .from('task_time_entries')
-      .select('*')
+      .select(`
+        id, 
+        task_id,
+        user_id,
+        start_time,
+        end_time,
+        duration_seconds,
+        is_paused,
+        pause_time,
+        created_at,
+        updated_at,
+        tasks:task_id (
+          name,
+          phase_id,
+          phases:phase_id (
+            phase_name,
+            job_id,
+            jobs:job_id (
+              job_number,
+              project_name
+            )
+          )
+        )
+      `)
       .eq('user_id', user.id)
       .order('start_time', { ascending: false })
       .limit(limit);
@@ -538,12 +565,15 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
       throw error;
     }
     
-    // For each task time entry, fetch the related task data separately
-    const taskTimeEntries: TaskTimeEntry[] = [];
+    console.log('Fetched task time entries:', data);
     
-    for (const entry of (data || [])) {
-      // Create base task time entry with the data we have
-      const taskTimeEntry: TaskTimeEntry = {
+    // Transform the data to match the expected TaskTimeEntry format
+    const taskTimeEntries: TaskTimeEntry[] = data.map(entry => {
+      const task = entry.tasks;
+      const phase = task?.phases;
+      const job = phase?.jobs;
+      
+      return {
         id: entry.id,
         task_id: entry.task_id,
         user_id: entry.user_id,
@@ -554,61 +584,20 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
         pause_time: entry.pause_time,
         created_at: entry.created_at,
         updated_at: entry.updated_at,
-        task: null,
-        phase: null,
-        job: null
+        task: task ? {
+          name: task.name,
+          phase_id: task.phase_id
+        } : null,
+        phase: phase ? {
+          phase_name: phase.phase_name,
+          job_id: phase.job_id
+        } : null,
+        job: job ? {
+          job_number: job.job_number,
+          project_name: job.project_name
+        } : null
       };
-      
-      // Fetch task info if we have a task_id
-      if (entry.task_id) {
-        const { data: taskData } = await supabase
-          .from('tasks')
-          .select('name, phase_id')
-          .eq('id', entry.task_id)
-          .maybeSingle();
-        
-        if (taskData) {
-          taskTimeEntry.task = {
-            name: taskData.name || 'Unknown Task',
-            phase_id: taskData.phase_id || ''
-          };
-          
-          // If we have a phase_id, fetch phase info
-          if (taskData.phase_id) {
-            const { data: phaseData } = await supabase
-              .from('phases')
-              .select('phase_name, job_id')
-              .eq('id', taskData.phase_id)
-              .maybeSingle();
-            
-            if (phaseData) {
-              taskTimeEntry.phase = {
-                phase_name: phaseData.phase_name || 'Unknown Phase',
-                job_id: phaseData.job_id || ''
-              };
-              
-              // If we have a job_id, fetch job info
-              if (phaseData.job_id) {
-                const { data: jobData } = await supabase
-                  .from('jobs')
-                  .select('job_number, project_name')
-                  .eq('id', phaseData.job_id)
-                  .maybeSingle();
-                
-                if (jobData) {
-                  taskTimeEntry.job = {
-                    job_number: jobData.job_number || 'Unknown Job',
-                    project_name: jobData.project_name || ''
-                  };
-                }
-              }
-            }
-          }
-        }
-      }
-      
-      taskTimeEntries.push(taskTimeEntry);
-    }
+    });
     
     return taskTimeEntries;
   } catch (error: any) {
