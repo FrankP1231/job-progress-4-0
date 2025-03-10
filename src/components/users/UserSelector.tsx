@@ -86,13 +86,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 
   return (
     <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-      <Popover open={open} onOpenChange={(newOpen) => {
-        try {
-          setOpen(newOpen);
-        } catch (err) {
-          console.error('Error toggling popover state:', err);
-        }
-      }}>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"

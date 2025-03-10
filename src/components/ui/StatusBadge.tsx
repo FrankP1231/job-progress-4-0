@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Badge } from './badge';
 import { cn } from '@/lib/utils';
@@ -35,8 +34,8 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   
   // If tasks are provided, we need to determine if this should show as 'not-needed'
   if (tasks) {
-    if (tasks.length === 0) {
-      // For material statuses, show "not-needed" when there are no tasks
+    if (tasks.length === 0 && !forceTaskStatus) {
+      // For material statuses, show "not-needed" when there are no tasks (only for non-forced task status)
       if (
         status === 'not-ordered' || 
         status === 'ordered' || 
@@ -49,13 +48,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
       const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
       const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
       
-      if (completedTasks.length === tasks.length) {
+      if (completedTasks.length === tasks.length && tasks.length > 0) {
         statusKey = 'complete';
       } else if (completedTasks.length > 0 || inProgressTasks.length > 0) {
         statusKey = 'in-progress';
-      } else {
+      } else if (tasks.length > 0) {
         statusKey = 'not-started';
       }
+      // If tasks.length is 0 and forceTaskStatus is true, keep the original status
     }
   }
   
