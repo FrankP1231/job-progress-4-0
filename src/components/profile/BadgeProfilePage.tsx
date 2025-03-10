@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -7,11 +8,17 @@ import {
   CardContent, 
   CardFooter
 } from '@/components/ui/card';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Badge, Edit, Key, User } from 'lucide-react';
+import { Badge, Edit, Key, User, Clock } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Dialog, 
@@ -21,6 +28,7 @@ import {
   DialogHeader, 
   DialogTitle
 } from '@/components/ui/dialog';
+import TimeTrackingTab from './TimeTrackingTab';
 
 const BadgeProfilePage: React.FC = () => {
   const { user, refreshUserProfile } = useAuth();
@@ -32,6 +40,7 @@ const BadgeProfilePage: React.FC = () => {
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [isSendingReset, setIsSendingReset] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
   
   // Profile data states
   const [profileData, setProfileData] = useState({
@@ -247,123 +256,144 @@ const BadgeProfilePage: React.FC = () => {
   
   return (
     <div className="container max-w-4xl py-10">
-      <div className="flex flex-col items-center">
-        {/* Badge-like card */}
-        <Card className="w-full max-w-xl overflow-hidden bg-white shadow-lg border-2 border-[#E5DEFF]">
-          <div className="bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] h-20 relative flex items-center justify-center">
-            <div className="absolute -bottom-16 w-32 h-32 border-4 border-white rounded-full overflow-hidden bg-white shadow-lg">
-              {/* Display profile initials - no upload functionality */}
-              <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
-                {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
-              </div>
-              {/* Upload functionality is disabled, so no label is shown in edit mode */}
-            </div>
-          </div>
-          
-          <CardContent className="pt-20 pb-4 px-6">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">
-                {isEditMode ? (
-                  <div className="flex gap-2 mb-2">
-                    <Input 
-                      value={profileData.firstName}
-                      onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
-                      placeholder="First Name"
-                      className="text-center"
-                    />
-                    <Input 
-                      value={profileData.lastName}
-                      onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
-                      placeholder="Last Name"
-                      className="text-center"
-                    />
+      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-center mb-6">
+          <TabsList className="grid grid-cols-2 w-[400px]">
+            <TabsTrigger value="profile" className="flex items-center">
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="time-tracking" className="flex items-center">
+              <Clock className="mr-2 h-4 w-4" />
+              Time Tracking
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="profile" className="space-y-4">
+          <div className="flex flex-col items-center">
+            {/* Badge-like card */}
+            <Card className="w-full max-w-xl overflow-hidden bg-white shadow-lg border-2 border-[#E5DEFF]">
+              <div className="bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] h-20 relative flex items-center justify-center">
+                <div className="absolute -bottom-16 w-32 h-32 border-4 border-white rounded-full overflow-hidden bg-white shadow-lg">
+                  {/* Display profile initials - no upload functionality */}
+                  <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
+                    {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
                   </div>
+                  {/* Upload functionality is disabled, so no label is shown in edit mode */}
+                </div>
+              </div>
+              
+              <CardContent className="pt-20 pb-4 px-6">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {isEditMode ? (
+                      <div className="flex gap-2 mb-2">
+                        <Input 
+                          value={profileData.firstName}
+                          onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                          placeholder="First Name"
+                          className="text-center"
+                        />
+                        <Input 
+                          value={profileData.lastName}
+                          onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                          placeholder="Last Name"
+                          className="text-center"
+                        />
+                      </div>
+                    ) : (
+                      `${profileData.firstName} ${profileData.lastName}`
+                    )}
+                  </h2>
+                  <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#E5DEFF] text-[#8B5CF6]">
+                    {profileData.role}
+                  </div>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                    <User className="h-5 w-5 text-[#8B5CF6]" />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500">Work Area</p>
+                      <p className="font-medium">{profileData.workArea}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                    <Badge className="h-5 w-5 text-[#8B5CF6]" />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500">Email</p>
+                      {isEditMode ? (
+                        <Input 
+                          value={profileData.email}
+                          onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                          placeholder="Email"
+                          className="h-8 mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{profileData.email}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                    <Badge className="h-5 w-5 text-[#8B5CF6]" />
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500">Phone Number</p>
+                      {isEditMode ? (
+                        <Input 
+                          value={profileData.cellPhoneNumber}
+                          onChange={(e) => setProfileData({...profileData, cellPhoneNumber: e.target.value})}
+                          placeholder="Phone Number"
+                          className="h-8 mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{profileData.cellPhoneNumber || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+              
+              <CardFooter className="flex justify-between px-6 pb-6 pt-0">
+                {isEditMode ? (
+                  <>
+                    <Button variant="outline" onClick={() => setIsEditMode(false)}
+                      className="border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]">
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveProfile}
+                      className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED]">
+                      Save Changes
+                    </Button>
+                  </>
                 ) : (
-                  `${profileData.firstName} ${profileData.lastName}`
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsResetPasswordOpen(true)}
+                      className="gap-2 border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]"
+                    >
+                      <Key className="h-4 w-4" /> Reset Password
+                    </Button>
+                    <Button 
+                      onClick={() => setIsEditMode(true)}
+                      className="gap-2 bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
+                    >
+                      <Edit className="h-4 w-4" /> Edit Profile
+                    </Button>
+                  </>
                 )}
-              </h2>
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#E5DEFF] text-[#8B5CF6]">
-                {profileData.role}
-              </div>
-            </div>
-            
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
-                <User className="h-5 w-5 text-[#8B5CF6]" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Work Area</p>
-                  <p className="font-medium">{profileData.workArea}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
-                <Badge className="h-5 w-5 text-[#8B5CF6]" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Email</p>
-                  {isEditMode ? (
-                    <Input 
-                      value={profileData.email}
-                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                      placeholder="Email"
-                      className="h-8 mt-1"
-                    />
-                  ) : (
-                    <p className="font-medium">{profileData.email}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
-                <Badge className="h-5 w-5 text-[#8B5CF6]" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-500">Phone Number</p>
-                  {isEditMode ? (
-                    <Input 
-                      value={profileData.cellPhoneNumber}
-                      onChange={(e) => setProfileData({...profileData, cellPhoneNumber: e.target.value})}
-                      placeholder="Phone Number"
-                      className="h-8 mt-1"
-                    />
-                  ) : (
-                    <p className="font-medium">{profileData.cellPhoneNumber || 'Not provided'}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter className="flex justify-between px-6 pb-6 pt-0">
-            {isEditMode ? (
-              <>
-                <Button variant="outline" onClick={() => setIsEditMode(false)}
-                  className="border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]">
-                  Cancel
-                </Button>
-                <Button onClick={handleSaveProfile}
-                  className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED]">
-                  Save Changes
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsResetPasswordOpen(true)}
-                  className="gap-2 border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]"
-                >
-                  <Key className="h-4 w-4" /> Reset Password
-                </Button>
-                <Button 
-                  onClick={() => setIsEditMode(true)}
-                  className="gap-2 bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
-                >
-                  <Edit className="h-4 w-4" /> Edit Profile
-                </Button>
-              </>
-            )}
-          </CardFooter>
-        </Card>
-      </div>
+              </CardFooter>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="time-tracking">
+          <TimeTrackingTab />
+        </TabsContent>
+      </Tabs>
       
       {/* Password Reset Dialog */}
       <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>

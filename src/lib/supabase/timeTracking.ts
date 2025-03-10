@@ -513,3 +513,38 @@ export const formatDuration = (seconds: number): string => {
   }
   return `${minutes} min`;
 };
+
+export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<TaskTimeEntry[]> => {
+  try {
+    // Get the current user's ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      return [];
+    }
+    
+    // Fetch task time entries with related data from tasks, phases, and jobs
+    const { data, error } = await supabase
+      .from('task_time_entries')
+      .select(`
+        *,
+        task:tasks(name, phase_id),
+        phase:phases(phase_name, job_id),
+        job:jobs(job_number, project_name)
+      `)
+      .eq('user_id', user.id)
+      .order('start_time', { ascending: false })
+      .limit(limit);
+      
+    if (error) {
+      console.error('Error fetching task time entries:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error: any) {
+    console.error('Error getting task time entries for user:', error);
+    return [];
+  }
+};
