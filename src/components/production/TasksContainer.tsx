@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +14,9 @@ interface TasksContainerProps {
   area: string;
   isEditing?: boolean;
   isDisabled?: boolean;
+  title?: string;
+  className?: string;
+  onAddTask?: (taskName: string) => Promise<void>;
 }
 
 const TasksContainer: React.FC<TasksContainerProps> = ({
@@ -22,33 +24,47 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   phaseId,
   area,
   isEditing = false,
-  isDisabled = false
+  isDisabled = false,
+  title,
+  className,
+  onAddTask
 }) => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAddingTask, setIsAddingTask] = useState(false);
   const queryClient = useQueryClient();
 
   const handleAddNewTask = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newTaskName.trim() || !phaseId) return;
+    if (!newTaskName.trim()) return;
 
     try {
-      const newTask = await createTask(phaseId, area, newTaskName.trim());
+      setIsAddingTask(true);
       
-      if (newTask) {
-        await queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
-        toast.success('Task added successfully');
-        setNewTaskName('');
-        setIsAddDialogOpen(false);
-      } else {
-        toast.error('Failed to add task');
+      if (onAddTask) {
+        await onAddTask(newTaskName.trim());
+      } 
+      else if (phaseId) {
+        const newTask = await createTask(phaseId, area, newTaskName.trim());
+        
+        if (newTask) {
+          await queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
+          toast.success('Task added successfully');
+        } else {
+          toast.error('Failed to add task');
+        }
       }
+      
+      setNewTaskName('');
+      setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Error adding task:', error);
       toast.error('Failed to add task');
+    } finally {
+      setIsAddingTask(false);
     }
   };
 
@@ -72,7 +88,9 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   };
 
   return (
-    <div className="space-y-2">
+    <div className={`space-y-2 ${className || ''}`}>
+      {title && <h3 className="font-medium text-sm mb-2">{title}</h3>}
+      
       {tasks.map((task) => (
         <div key={task.id} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
           <div className="flex items-center space-x-2">
@@ -103,13 +121,12 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
           size="sm"
           className="w-full mt-2 text-xs h-8"
           onClick={() => setIsAddDialogOpen(true)}
-          disabled={isDisabled}
+          disabled={isDisabled || isAddingTask}
         >
           <Plus className="h-3 w-3 mr-1" /> Add Task
         </Button>
       )}
 
-      {/* Add Task Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -141,13 +158,24 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Task</Button>
+              <Button 
+                type="submit"
+                disabled={isAddingTask || !newTaskName.trim()}
+              >
+                {isAddingTask ? (
+                  <span className="flex items-center">
+                    <span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    Adding...
+                  </span>
+                ) : (
+                  'Add Task'
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={taskToDelete !== null} onOpenChange={() => setTaskToDelete(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

@@ -33,10 +33,12 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   // If tasks are provided, calculate status based on tasks
   let statusKey = status;
   
-  if (tasks && Array.isArray(tasks) && (forceTaskStatus || tasks.length > 0)) {
-    if (tasks.length === 0) {
+  if (tasks && (forceTaskStatus || tasks.length === 0)) {
+    // Key change: For material types, show "not-needed" when there are no tasks
+    if (tasks.length === 0 && 
+        (status === 'not-ordered' || status === 'ordered' || status === 'received')) {
       statusKey = 'not-needed';
-    } else {
+    } else if (tasks.length > 0) {
       const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
       const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
       
