@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserRole, WorkArea } from '@/lib/types';
 
 const AuthPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -45,17 +45,11 @@ const AuthPage: React.FC = () => {
     
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const success = await login(email, password);
       
-      if (error) {
-        throw error;
+      if (success) {
+        navigate('/');
       }
-      
-      toast.success('Logged in successfully');
-      navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Failed to login');
     } finally {
