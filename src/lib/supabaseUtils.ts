@@ -8,26 +8,6 @@ export * from './supabase/task-helpers';
 export * from './supabase/task-crud';
 export * from './supabase/taskUtils';
 
-// Explicitly export from task-crud to avoid conflict with task-status
-export {
-  getTasksForPhase,
-  getTasksForAllJobs,
-  getTasksForPhaseArea,
-  createTask,
-  updateTask,
-  addTasksToPhaseArea,
-  addSampleTasksToPhases,
-  deleteTask
-} from './supabase/task-crud';
-
-// Explicitly export from task-status
-export {
-  updateTaskStatus,
-  deleteTask as deleteTaskStatus,
-  refreshTasksData,
-  calculateAreaStatus
-} from './supabase/task-status';
-
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 
   createNewPhase as initCreateNewPhase, 

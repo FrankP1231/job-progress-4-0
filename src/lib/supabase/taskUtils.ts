@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
@@ -9,6 +8,9 @@ import {
   deleteTask as deleteTaskRecord,
   addTasksToPhaseArea as addTasksToArea
 } from './task-crud';
+
+// Export renamed functions to avoid conflicts
+export { updateTask as updateTaskData, deleteTask as deleteTaskRecord } from './task-crud';
 
 // Re-export functions from task-crud
 export const getTasksForPhase = getTasksForPhase;
