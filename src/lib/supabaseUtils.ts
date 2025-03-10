@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase/client';
 import { Task, TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
@@ -41,7 +40,19 @@ export const getTasksForPhaseArea = async (phaseId: string, area: string): Promi
       return [];
     }
 
-    return data || [];
+    return (data || []).map(task => ({
+      id: task.id,
+      phaseId: task.phase_id,
+      area: task.area,
+      name: task.name,
+      isComplete: task.is_complete,
+      status: task.status as TaskStatus,
+      hours: task.hours,
+      eta: task.eta,
+      notes: task.notes,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at
+    }));
   } catch (error) {
     console.error('Error fetching tasks for phase area:', error);
     toast.error('Failed to fetch tasks for phase area');
@@ -67,7 +78,19 @@ export const getTasksForPhase = async (phaseId: string): Promise<Task[]> => {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(task => ({
+      id: task.id,
+      phaseId: task.phase_id,
+      area: task.area,
+      name: task.name,
+      isComplete: task.is_complete,
+      status: task.status as TaskStatus,
+      hours: task.hours,
+      eta: task.eta,
+      notes: task.notes,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at
+    }));
   } catch (error) {
     console.error('Error fetching tasks for phase:', error);
     toast.error('Failed to fetch tasks for phase');
@@ -87,7 +110,19 @@ export const getTasksForAllJobs = async (): Promise<Task[]> => {
       return [];
     }
 
-    return data || [];
+    return (data || []).map(task => ({
+      id: task.id,
+      phaseId: task.phase_id,
+      area: task.area,
+      name: task.name,
+      isComplete: task.is_complete,
+      status: task.status as TaskStatus,
+      hours: task.hours,
+      eta: task.eta,
+      notes: task.notes,
+      createdAt: task.created_at,
+      updatedAt: task.updated_at
+    }));
   } catch (error) {
     console.error('Error fetching tasks for all jobs:', error);
     toast.error('Failed to fetch tasks for all jobs');
@@ -163,7 +198,6 @@ export const addTasksToPhaseArea = async (phaseId: string, area: string, tasks: 
   }
 };
 
-// Disable the sample task generation - ensures no automatic task creation
 export const addSampleTasksToPhases = async (): Promise<void> => {
   console.log("Sample task creation has been disabled");
   return Promise.resolve();

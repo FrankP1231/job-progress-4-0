@@ -15,5 +15,7 @@ export {
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 
   createNewPhase as initCreateNewPhase, 
-  addPhaseToJob as initAddPhaseToJob 
+  addPhaseToJob as initAddPhaseToJob,
+  initSampleData
 } from './initUtils';
+
