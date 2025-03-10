@@ -1,3 +1,4 @@
+
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
@@ -27,6 +28,15 @@ export interface Task {
   projectName?: string;
   phaseNumber?: number;
   phaseName?: string;
+}
+
+// Add the TaskWithMetadata interface which extends Task with additional fields needed for UI
+export interface TaskWithMetadata {
+  name: string;
+  hours?: number;
+  eta?: string;
+  assigneeIds?: string[]; // Used to track assigned users during creation
+  _assigneeIds?: string[]; // Used internally when saving to the database
 }
 
 export interface Material {
