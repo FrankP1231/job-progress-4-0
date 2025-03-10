@@ -7,7 +7,6 @@ import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Import our new components
 import PhaseInfoCard from './phases/PhaseInfoCard';
 import WeldingCard from './phases/WeldingCard';
 import SewingCard from './phases/SewingCard';
@@ -15,7 +14,6 @@ import PowderCoatCard from './phases/PowderCoatCard';
 import InstallationCard from './phases/InstallationCard';
 import { assignUserToTask } from '@/lib/supabase/task-helpers';
 
-// Define a task interface
 interface TaskWithMetadata {
   name: string;
   hours?: number;
@@ -23,7 +21,6 @@ interface TaskWithMetadata {
   assigneeIds?: string[];
 }
 
-// Define the result type to avoid TS errors
 interface AddPhaseResult {
   createdTasks: Record<string, any[]>;
 }
@@ -33,11 +30,9 @@ const PhaseForm: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Basic phase info
   const [phaseName, setPhaseName] = useState('');
   const [phaseNumber, setPhaseNumber] = useState('');
   
-  // Task lists for each area
   const [weldingMaterialTasks, setWeldingMaterialTasks] = useState<TaskWithMetadata[]>([]);
   const [sewingMaterialTasks, setSewingMaterialTasks] = useState<TaskWithMetadata[]>([]);
   const [installationMaterialTasks, setInstallationMaterialTasks] = useState<TaskWithMetadata[]>([]);
@@ -47,7 +42,6 @@ const PhaseForm: React.FC = () => {
   const [installationTasks, setInstallationTasks] = useState<TaskWithMetadata[]>([]);
   const [rentalEquipmentTasks, setRentalEquipmentTasks] = useState<TaskWithMetadata[]>([]);
   
-  // Crew information
   const [crewMembersNeeded, setCrewMembersNeeded] = useState('2');
   const [crewHoursNeeded, setCrewHoursNeeded] = useState('4');
   const [siteReadyDate, setSiteReadyDate] = useState('');
@@ -93,10 +87,8 @@ const PhaseForm: React.FC = () => {
         throw new Error('Please enter a valid phase number');
       }
       
-      // Create a new phase with proper typing
       const newPhase = createNewPhase(jobId, phaseName, Number(phaseNumber));
       
-      // Add installation details
       newPhase.installation = {
         status: 'not-started' as InstallationStatus,
         crewMembersNeeded: Number(crewMembersNeeded),
@@ -109,7 +101,6 @@ const PhaseForm: React.FC = () => {
         }
       };
       
-      // Add powder coat details
       if (powderCoatEta || powderCoatNotes || powderCoatColor) {
         newPhase.powderCoat = {
           status: 'not-started' as PowderCoatStatus,
@@ -119,17 +110,14 @@ const PhaseForm: React.FC = () => {
         };
       }
       
-      // Prepare tasks for each area with metadata
       const pendingTasks: Record<string, any[]> = {};
       
-      // Helper function to map tasks with metadata
       const mapTasks = (tasks: TaskWithMetadata[], area: string) => {
         if (tasks.length > 0) {
           pendingTasks[area] = tasks.map(task => ({
             name: task.name,
             hours: task.hours,
             eta: task.eta,
-            // Store assigneeIds temporarily so we can use them after task creation
             _assigneeIds: task.assigneeIds
           }));
         }
@@ -144,25 +132,22 @@ const PhaseForm: React.FC = () => {
       mapTasks(installationTasks, 'installation');
       mapTasks(rentalEquipmentTasks, 'rentalEquipment');
       
-      // Add the phase and get created task IDs back
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Process task assignments if there are any
-      // FIX: Add proper null checking before accessing properties on the result
-      if (result && typeof result === 'object' && result !== null && 'createdTasks' in result) {
+      if (result && 
+          typeof result === 'object' && 
+          result !== null && 
+          'createdTasks' in result && 
+          result.createdTasks !== null) {
         const typedResult = result as AddPhaseResult;
         const assignmentPromises: Promise<boolean>[] = [];
         
-        // For each area with tasks
         Object.keys(typedResult.createdTasks).forEach(area => {
           const tasks = typedResult.createdTasks[area];
           
-          // For each task in the area
           tasks.forEach((task, index) => {
-            // Get the original task data with assigneeIds
             const originalTaskData = pendingTasks[area]?.[index];
             
-            // If there are assignees, create assignments
             if (originalTaskData?._assigneeIds && originalTaskData._assigneeIds.length > 0) {
               for (const userId of originalTaskData._assigneeIds) {
                 assignmentPromises.push(assignUserToTask(task.id, userId));
@@ -171,7 +156,6 @@ const PhaseForm: React.FC = () => {
           });
         });
         
-        // Wait for all assignment operations to complete
         if (assignmentPromises.length > 0) {
           await Promise.all(assignmentPromises);
         }
