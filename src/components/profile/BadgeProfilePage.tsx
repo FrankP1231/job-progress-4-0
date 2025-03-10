@@ -139,21 +139,12 @@ const BadgeProfilePage: React.FC = () => {
     
     try {
       setIsUploading(true);
+      console.log('Uploading profile picture...');
       
       // Generate unique filename
       const fileName = `${user.id}_${Date.now()}_${file.name}`;
       
-      // Check if bucket exists, create if not
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const profileBucket = buckets?.find(bucket => bucket.name === 'profile-pictures');
-      
-      if (!profileBucket) {
-        await supabase.storage.createBucket('profile-pictures', {
-          public: true,
-        });
-      }
-      
-      // Upload file
+      // Upload file directly to the profile-pictures bucket we just created
       const { data, error } = await supabase.storage
         .from('profile-pictures')
         .upload(fileName, file, {
@@ -161,7 +152,12 @@ const BadgeProfilePage: React.FC = () => {
           upsert: true
         });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Upload error:', error);
+        throw error;
+      }
+      
+      console.log('File uploaded successfully:', data);
       
       // Get public URL
       const { data: publicUrlData } = supabase.storage
@@ -169,6 +165,7 @@ const BadgeProfilePage: React.FC = () => {
         .getPublicUrl(fileName);
         
       const publicUrl = publicUrlData.publicUrl;
+      console.log('Public URL:', publicUrl);
       
       // Update profile with new picture URL
       const { error: updateError } = await supabase
@@ -178,7 +175,10 @@ const BadgeProfilePage: React.FC = () => {
         })
         .eq('id', user.id);
         
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        throw updateError;
+      }
       
       // Update local state
       setProfileData({
