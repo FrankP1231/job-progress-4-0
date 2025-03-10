@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ import {
   TimeEntry, 
   TaskTimeEntry, 
   getTaskTimeEntry 
-} from '@/lib/supabase/timeTracking';
+} from '@/lib/supabase/time-tracking';
 
 interface TimeTrackingContextType {
   isClockingIn: boolean;
@@ -34,9 +33,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [timeElapsed, setTimeElapsed] = useState('0 seconds');
   const [lastRefresh, setLastRefresh] = useState(0);
   
-  // Function to refresh time tracking data with throttling
   const refreshTimeTracking = async () => {
-    // Don't refresh if it's been less than 5 seconds since the last refresh
     const now = Date.now();
     if (now - lastRefresh < 5000 && lastRefresh !== 0) {
       return;
@@ -60,7 +57,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
   
-  // Load initial time entry and set up interval to update time elapsed
   useEffect(() => {
     if (user.isAuthenticated) {
       refreshTimeTracking();
@@ -68,18 +64,15 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setIsClockingLoading(false);
     }
     
-    // Set up interval to update time elapsed (every 15 seconds instead of every second)
     const intervalId = setInterval(() => {
       if (currentTimeEntry && !currentTimeEntry.clock_out_time) {
         const start = new Date(currentTimeEntry.clock_in_time);
         const now = new Date();
         const diffInSeconds = Math.floor((now.getTime() - start.getTime()) / 1000);
         
-        // Format the elapsed time
         const hours = Math.floor(diffInSeconds / 3600);
         const minutes = Math.floor((diffInSeconds % 3600) / 60);
         
-        // Simplify the display format - no seconds to reduce constant updates
         let timeString = '';
         if (hours > 0) {
           timeString += `${hours}h `;
@@ -88,12 +81,11 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
         
         setTimeElapsed(timeString);
       }
-    }, 15000); // Update every 15 seconds instead of every second
+    }, 15000);
     
     return () => clearInterval(intervalId);
   }, [user.isAuthenticated, currentTimeEntry]);
   
-  // Clock in handler
   const clockInHandler = async () => {
     if (!user.isAuthenticated) {
       toast.error('You must be logged in to clock in');
@@ -116,7 +108,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
   
-  // Clock out handler
   const clockOutHandler = async (notes?: string) => {
     if (!user.isAuthenticated || !currentTimeEntry) {
       toast.error('You must be logged in and clocked in to clock out');
@@ -140,7 +131,6 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
   
-  // Get active task time entry
   const getActiveTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | null> => {
     if (!user.isAuthenticated) return null;
     return await getTaskTimeEntry(taskId);

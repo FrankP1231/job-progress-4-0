@@ -25,7 +25,7 @@ export async function getTasksForJob(jobId: string): Promise<Task[]> {
       throw error;
     }
 
-    return data || [];
+    return data as Task[] || [];
   } catch (error) {
     console.error('Error in getTasksForJob:', error);
     return [];

@@ -3,7 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { Button } from "@/components/ui/button";
 import { Clock, Play, Pause, CheckCircle, StopCircle } from 'lucide-react';
-import { TaskTimeEntry, startTaskTimer, pauseTaskTimer, resumeTaskTimer, stopTaskTimer, formatTimeSpent } from '@/lib/supabase/timeTracking';
+import { 
+  TaskTimeEntry, 
+  startTaskTimer, 
+  pauseTaskTimer, 
+  resumeTaskTimer, 
+  stopTaskTimer, 
+  formatTimeSpent 
+} from '@/lib/supabase/time-tracking';
 import { Task, TaskStatus } from '@/lib/types';
 import { updateTaskStatus } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';

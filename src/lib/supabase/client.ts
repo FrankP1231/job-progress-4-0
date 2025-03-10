@@ -16,7 +16,7 @@ import {
   formatDuration,
   type TimeEntry,
   type TaskTimeEntry
-} from '@/lib/supabase/timeTracking';
+} from '@/lib/supabase/time-tracking';
 
 // Export all time tracking related functions
 export {

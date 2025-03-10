@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { useAuth } from '@/context/AuthContext';
@@ -24,7 +25,11 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { getTimeEntries, formatDuration, getTaskTimeEntriesForUser } from '@/lib/supabase/timeTracking';
+import { 
+  getTimeEntries, 
+  formatDuration, 
+  getTaskTimeEntriesForUser 
+} from '@/lib/supabase/time-tracking';
 import { format, isToday, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek, 
   startOfMonth, endOfMonth, startOfYear, endOfYear, differenceInSeconds, 
   addWeeks, isWithinInterval, isSameDay } from 'date-fns';
