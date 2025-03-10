@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Profile {
@@ -21,7 +21,7 @@ interface Profile {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,15 +39,20 @@ const ProfilePage: React.FC = () => {
         setIsLoading(true);
         setError(null);
         
+        console.log('Fetching profile from ProfilePage, user ID:', user.id);
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Failed to load profile:', error);
+          throw error;
+        }
         
         if (data) {
+          console.log('Profile data loaded:', data);
           setProfile(data);
         } else {
           setError('No profile found. Please contact an administrator.');
@@ -84,11 +89,46 @@ const ProfilePage: React.FC = () => {
         
       if (error) throw error;
       
+      // Refresh the profile in auth context
+      await refreshUserProfile();
+      
       toast.success('Profile updated successfully');
     } catch (error: any) {
       toast.error('Failed to update profile: ' + error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  const handleRetry = async () => {
+    // Clear any error
+    setError(null);
+    
+    // Try to refresh user profile in auth context
+    await refreshUserProfile();
+    
+    // Then refetch the profile
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (error) throw error;
+      
+      if (data) {
+        setProfile(data);
+      } else {
+        setError('No profile found. Please contact an administrator.');
+      }
+    } catch (error: any) {
+      setError(`Failed to load profile: ${error.message}`);
+      toast.error('Failed to load profile: ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -114,10 +154,20 @@ const ProfilePage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {error ? (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4 mr-2" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="space-y-4">
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+              <Button 
+                onClick={handleRetry} 
+                variant="outline"
+                className="w-full"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry Loading Profile
+              </Button>
+            </div>
           ) : null}
           
           {profile ? (
