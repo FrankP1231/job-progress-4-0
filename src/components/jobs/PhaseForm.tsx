@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
@@ -134,16 +135,15 @@ const PhaseForm: React.FC = () => {
       
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
+      // Fixed null check for result and result.createdTasks
       if (result && 
           typeof result === 'object' && 
-          result !== null && 
-          'createdTasks' in result && 
-          result.createdTasks !== null) {
-        const typedResult = result as AddPhaseResult;
+          'createdTasks' in result &&
+          result.createdTasks) {
         const assignmentPromises: Promise<boolean>[] = [];
         
-        Object.keys(typedResult.createdTasks).forEach(area => {
-          const tasks = typedResult.createdTasks[area];
+        Object.keys(result.createdTasks).forEach(area => {
+          const tasks = result.createdTasks[area];
           
           tasks.forEach((task, index) => {
             const originalTaskData = pendingTasks[area]?.[index];

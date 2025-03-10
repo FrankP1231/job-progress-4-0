@@ -79,7 +79,9 @@ const TaskList: React.FC<TaskListProps> = ({
     fetchUsers();
   }, [isLaborArea, isDialogOpen]);
 
-  const handleAddTask = () => {
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent form submission
+    
     if (!newTaskName.trim()) return;
 
     const task: TaskWithMetadata = {
@@ -194,80 +196,86 @@ const TaskList: React.FC<TaskListProps> = ({
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="taskName">Task Name</Label>
-              <Input
-                id="taskName"
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                placeholder="Enter task name"
-                autoFocus
-              />
-            </div>
-            
-            {isLaborArea && (
-              <>
-                <div className="grid gap-2">
-                  <Label htmlFor="laborHours">Labor Hours</Label>
-                  <Input
-                    id="laborHours"
-                    type="number"
-                    min="0.5"
-                    step="0.5"
-                    value={laborHours}
-                    onChange={(e) => setLaborHours(e.target.value)}
-                    placeholder="Enter estimated hours"
-                  />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="assignees">Assign To</Label>
-                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
-                    {availableUsers.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No users available</p>
-                    ) : (
-                      availableUsers.map((user) => (
-                        <div key={user.id} className="flex items-center space-x-2 mb-2">
-                          <input
-                            type="checkbox"
-                            id={`user-${user.id}`}
-                            className="rounded"
-                            checked={selectedAssignees.includes(user.id)}
-                            onChange={() => handleAssigneeChange(user.id)}
-                          />
-                          <label htmlFor={`user-${user.id}`} className="text-sm">
-                            {user.firstName} {user.lastName}
-                          </label>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-            
-            {isMaterialArea && (
+          <form onSubmit={handleAddTask}>
+            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="materialEta">Estimated Arrival Date</Label>
+                <Label htmlFor="taskName">Task Name</Label>
                 <Input
-                  id="materialEta"
-                  type="date"
-                  value={materialEta}
-                  onChange={(e) => setMaterialEta(e.target.value)}
+                  id="taskName"
+                  value={newTaskName}
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  placeholder="Enter task name"
+                  autoFocus
                 />
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              resetForm();
-              setIsDialogOpen(false);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddTask}>Add Task</Button>
-          </DialogFooter>
+              
+              {isLaborArea && (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="laborHours">Labor Hours</Label>
+                    <Input
+                      id="laborHours"
+                      type="number"
+                      min="0.5"
+                      step="0.5"
+                      value={laborHours}
+                      onChange={(e) => setLaborHours(e.target.value)}
+                      placeholder="Enter estimated hours"
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="assignees">Assign To</Label>
+                    <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+                      {availableUsers.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No users available</p>
+                      ) : (
+                        availableUsers.map((user) => (
+                          <div key={user.id} className="flex items-center space-x-2 mb-2">
+                            <input
+                              type="checkbox"
+                              id={`user-${user.id}`}
+                              className="rounded"
+                              checked={selectedAssignees.includes(user.id)}
+                              onChange={() => handleAssigneeChange(user.id)}
+                            />
+                            <label htmlFor={`user-${user.id}`} className="text-sm">
+                              {user.firstName} {user.lastName}
+                            </label>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {isMaterialArea && (
+                <div className="grid gap-2">
+                  <Label htmlFor="materialEta">Estimated Arrival Date</Label>
+                  <Input
+                    id="materialEta"
+                    type="date"
+                    value={materialEta}
+                    onChange={(e) => setMaterialEta(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  resetForm();
+                  setIsDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Add Task</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
