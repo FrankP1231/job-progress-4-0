@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { format, formatDistance } from 'date-fns';
 import { toast } from 'sonner';
@@ -525,15 +524,11 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
       return [];
     }
     
-    // Fetch task time entries with related data from tasks, phases, and jobs
+    // Fetch only task time entries without trying to join with other tables
+    // This avoids the relationship error with phases
     const { data, error } = await supabase
       .from('task_time_entries')
-      .select(`
-        *,
-        task:tasks(name, phase_id),
-        phase:phases(phase_name, job_id),
-        job:jobs(job_number, project_name)
-      `)
+      .select('*')
       .eq('user_id', user.id)
       .order('start_time', { ascending: false })
       .limit(limit);
@@ -543,9 +538,11 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
       throw error;
     }
     
-    // Map the data to ensure it matches our TypeScript interface
-    const mappedData: TaskTimeEntry[] = (data || []).map(entry => {
-      // Create a properly typed TaskTimeEntry object
+    // For each task time entry, fetch the related task data separately
+    const taskTimeEntries: TaskTimeEntry[] = [];
+    
+    for (const entry of (data || [])) {
+      // Create base task time entry with the data we have
       const taskTimeEntry: TaskTimeEntry = {
         id: entry.id,
         task_id: entry.task_id,
@@ -557,28 +554,63 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
         pause_time: entry.pause_time,
         created_at: entry.created_at,
         updated_at: entry.updated_at,
-        
-        // Safely handle nested objects that might be null or have a different structure
-        task: Array.isArray(entry.task) && entry.task.length > 0 ? {
-          name: entry.task[0].name || '',
-          phase_id: entry.task[0].phase_id || ''
-        } : null,
-        
-        phase: Array.isArray(entry.phase) && entry.phase.length > 0 ? {
-          phase_name: entry.phase[0].phase_name || '',
-          job_id: entry.phase[0].job_id || ''
-        } : null,
-        
-        job: Array.isArray(entry.job) && entry.job.length > 0 ? {
-          job_number: entry.job[0].job_number || '',
-          project_name: entry.job[0].project_name || ''
-        } : null
+        task: null,
+        phase: null,
+        job: null
       };
       
-      return taskTimeEntry;
-    });
+      // Fetch task info if we have a task_id
+      if (entry.task_id) {
+        const { data: taskData } = await supabase
+          .from('tasks')
+          .select('name, phase_id')
+          .eq('id', entry.task_id)
+          .maybeSingle();
+        
+        if (taskData) {
+          taskTimeEntry.task = {
+            name: taskData.name || 'Unknown Task',
+            phase_id: taskData.phase_id || ''
+          };
+          
+          // If we have a phase_id, fetch phase info
+          if (taskData.phase_id) {
+            const { data: phaseData } = await supabase
+              .from('phases')
+              .select('phase_name, job_id')
+              .eq('id', taskData.phase_id)
+              .maybeSingle();
+            
+            if (phaseData) {
+              taskTimeEntry.phase = {
+                phase_name: phaseData.phase_name || 'Unknown Phase',
+                job_id: phaseData.job_id || ''
+              };
+              
+              // If we have a job_id, fetch job info
+              if (phaseData.job_id) {
+                const { data: jobData } = await supabase
+                  .from('jobs')
+                  .select('job_number, project_name')
+                  .eq('id', phaseData.job_id)
+                  .maybeSingle();
+                
+                if (jobData) {
+                  taskTimeEntry.job = {
+                    job_number: jobData.job_number || 'Unknown Job',
+                    project_name: jobData.project_name || ''
+                  };
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      taskTimeEntries.push(taskTimeEntry);
+    }
     
-    return mappedData;
+    return taskTimeEntries;
   } catch (error: any) {
     console.error('Error getting task time entries for user:', error);
     return [];

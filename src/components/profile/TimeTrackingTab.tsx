@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { useAuth } from '@/context/AuthContext';
@@ -31,7 +30,6 @@ import { format, isToday, parseISO, startOfDay, endOfDay, startOfWeek, endOfWeek
   addWeeks, isWithinInterval, isSameDay } from 'date-fns';
 import { Clock, Timer, Calendar, ListChecks, BadgeDollarSign } from 'lucide-react';
 
-// Types for time entry data
 interface TimeEntrySummary {
   id: string;
   clockIn: Date;
@@ -63,14 +61,12 @@ const TimeTrackingTab: React.FC = () => {
   const { user } = useAuth();
   const { currentTimeEntry, timeElapsed } = useTimeTracking();
   
-  // States for time tracking data
   const [isLoading, setIsLoading] = useState(true);
   const [timeEntries, setTimeEntries] = useState<TimeEntrySummary[]>([]);
   const [taskEntries, setTaskEntries] = useState<TaskTimeSummary[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
   const [periodSummaries, setPeriodSummaries] = useState<TimePeriodSummary[]>([]);
   
-  // Fetch all time tracking data
   useEffect(() => {
     const fetchTimeTrackingData = async () => {
       if (!user.isAuthenticated) return;
@@ -78,8 +74,7 @@ const TimeTrackingTab: React.FC = () => {
       try {
         setIsLoading(true);
         
-        // Get clock in/out entries
-        const entries = await getTimeEntries(50); // Limit to 50 entries for performance
+        const entries = await getTimeEntries(50);
         
         const formattedEntries = entries.map(entry => ({
           id: entry.id,
@@ -91,27 +86,29 @@ const TimeTrackingTab: React.FC = () => {
         
         setTimeEntries(formattedEntries);
         
-        // Get task time entries
-        const taskTimeEntries = await getTaskTimeEntriesForUser(30); // Limit to 30 entries
+        try {
+          const taskTimeEntries = await getTaskTimeEntriesForUser(30);
+          
+          const formattedTaskEntries = taskTimeEntries.map(entry => ({
+            id: entry.id,
+            taskId: entry.task_id,
+            taskName: entry.task?.name || 'Unknown Task',
+            phaseName: entry.phase?.phase_name || 'Unknown Phase',
+            jobNumber: entry.job?.job_number || 'Unknown Job',
+            projectName: entry.job?.project_name || 'Unknown Project',
+            startTime: new Date(entry.start_time),
+            endTime: entry.end_time ? new Date(entry.end_time) : null,
+            duration: entry.duration_seconds
+          }));
+          
+          setTaskEntries(formattedTaskEntries);
+        } catch (taskError) {
+          console.error('Error fetching task entries:', taskError);
+          setTaskEntries([]);
+        }
         
-        const formattedTaskEntries = taskTimeEntries.map(entry => ({
-          id: entry.id,
-          taskId: entry.task_id,
-          taskName: entry.task?.name || 'Unknown Task',
-          phaseName: entry.phase?.phase_name || 'Unknown Phase',
-          jobNumber: entry.job?.job_number || 'Unknown Job',
-          projectName: entry.job?.project_name || 'Unknown Project',
-          startTime: new Date(entry.start_time),
-          endTime: entry.end_time ? new Date(entry.end_time) : null,
-          duration: entry.duration_seconds
-        }));
+        calculateTodayTotal(formattedEntries, []);
         
-        setTaskEntries(formattedTaskEntries);
-        
-        // Calculate today's total
-        calculateTodayTotal(formattedEntries, formattedTaskEntries);
-        
-        // Calculate time period summaries
         calculateTimePeriodSummaries(formattedEntries);
         
       } catch (error) {
@@ -123,12 +120,10 @@ const TimeTrackingTab: React.FC = () => {
     
     fetchTimeTrackingData();
     
-    // Refresh data every minute
     const intervalId = setInterval(fetchTimeTrackingData, 60000);
     return () => clearInterval(intervalId);
   }, [user.isAuthenticated, currentTimeEntry]);
   
-  // Calculate total time for today
   const calculateTodayTotal = (clockEntries: TimeEntrySummary[], taskEntries: TaskTimeSummary[]) => {
     const now = new Date();
     const startOfToday = startOfDay(now);
@@ -136,29 +131,22 @@ const TimeTrackingTab: React.FC = () => {
     
     let totalSeconds = 0;
     
-    // Add up completed clock entries for today
     clockEntries.forEach(entry => {
       if (isWithinInterval(entry.clockIn, { start: startOfToday, end: endOfToday })) {
         if (entry.clockOut) {
           totalSeconds += entry.duration || 0;
         } else {
-          // For active entry, calculate elapsed time
           totalSeconds += differenceInSeconds(now, entry.clockIn);
         }
       }
     });
     
-    // Add up task entries for today (this could double count time, so in real implementation you might want to adjust)
-    // For simplicity, we're not adding task time to the today total to avoid double counting
-    
     setTodayTotal(totalSeconds);
   };
   
-  // Calculate time summaries for different periods
   const calculateTimePeriodSummaries = (entries: TimeEntrySummary[]) => {
     const now = new Date();
     
-    // Define periods
     const periods = [
       { name: 'Today', start: startOfDay(now), end: endOfDay(now) },
       { name: 'This Week', start: startOfWeek(now, { weekStartsOn: 0 }), end: endOfWeek(now, { weekStartsOn: 0 }) },
@@ -167,26 +155,22 @@ const TimeTrackingTab: React.FC = () => {
       { name: 'This Year', start: startOfYear(now), end: endOfYear(now) }
     ];
     
-    // Calculate bi-weekly pay period (assuming it starts on the 1st and 15th of each month)
     const dayOfMonth = now.getDate();
     let payPeriodStart, payPeriodEnd;
     
     if (dayOfMonth < 15) {
-      // First half of month
       payPeriodStart = new Date(now.getFullYear(), now.getMonth(), 1);
       payPeriodEnd = new Date(now.getFullYear(), now.getMonth(), 14, 23, 59, 59);
     } else {
-      // Second half of month
       payPeriodStart = new Date(now.getFullYear(), now.getMonth(), 15);
       payPeriodEnd = endOfMonth(now);
     }
     
     periods.push({ name: 'Current Pay Period', start: payPeriodStart, end: payPeriodEnd });
     
-    // Calculate totals for each period
     const summaries: TimePeriodSummary[] = periods.map(period => {
       let totalSeconds = 0;
-      let weeklyTotals: Record<string, number> = {}; // To track weekly hours for overtime calculation
+      let weeklyTotals: Record<string, number> = {};
       
       entries.forEach(entry => {
         if (entry.clockIn >= period.start && entry.clockIn <= period.end) {
@@ -196,14 +180,12 @@ const TimeTrackingTab: React.FC = () => {
           
           totalSeconds += entryDuration;
           
-          // Track weekly totals for overtime calculation
           const weekStart = format(startOfWeek(entry.clockIn, { weekStartsOn: 0 }), 'yyyy-MM-dd');
           weeklyTotals[weekStart] = (weeklyTotals[weekStart] || 0) + entryDuration;
         }
       });
       
-      // Calculate overtime (anything over 40 hours in a week)
-      const secondsInWorkWeek = 40 * 60 * 60; // 40 hours in seconds
+      let secondsInWorkWeek = 40 * 60 * 60;
       let overtimeSeconds = 0;
       let regularSeconds = totalSeconds;
       
@@ -225,7 +207,6 @@ const TimeTrackingTab: React.FC = () => {
     setPeriodSummaries(summaries);
   };
   
-  // Format seconds as hours and minutes
   const formatTimeDisplay = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -242,7 +223,6 @@ const TimeTrackingTab: React.FC = () => {
   
   return (
     <div className="space-y-6">
-      {/* Current Status and Today's Total */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="overflow-hidden">
           <CardHeader className="bg-primary/5 pb-2">
@@ -297,7 +277,6 @@ const TimeTrackingTab: React.FC = () => {
         </Card>
       </div>
       
-      {/* Time Period Tabs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -341,7 +320,6 @@ const TimeTrackingTab: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Clock In/Out Activity Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -399,7 +377,6 @@ const TimeTrackingTab: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Task Time Entries */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">

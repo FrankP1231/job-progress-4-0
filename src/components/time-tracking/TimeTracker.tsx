@@ -26,7 +26,8 @@ const TimeTracker: React.FC = () => {
     currentTimeEntry, 
     clockInHandler, 
     clockOutHandler,
-    timeElapsed
+    timeElapsed,
+    refreshTimeTracking
   } = useTimeTracking();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -39,6 +40,10 @@ const TimeTracker: React.FC = () => {
   
   const handleClockIn = async () => {
     await clockInHandler();
+    // Add a refresh after a short delay to ensure we get the updated status
+    setTimeout(() => {
+      refreshTimeTracking();
+    }, 1000);
   };
   
   const handleOpenClockOutDialog = () => {
@@ -49,6 +54,10 @@ const TimeTracker: React.FC = () => {
     await clockOutHandler(notes);
     setNotes('');
     setIsDialogOpen(false);
+    // Add a refresh after a short delay
+    setTimeout(() => {
+      refreshTimeTracking();
+    }, 1000);
   };
   
   const handleCancelClockOut = () => {

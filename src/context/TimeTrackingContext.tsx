@@ -103,10 +103,12 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
         setCurrentTimeEntry(entry);
         toast.success('Clocked in successfully');
       }
+      
+      // Add this line to ensure the loading state is properly reset
+      setIsClockingIn(false);
     } catch (error: any) {
       console.error('Error in clock in handler:', error);
       toast.error(`Failed to clock in: ${error.message}`);
-    } finally {
       setIsClockingIn(false);
     }
   };
