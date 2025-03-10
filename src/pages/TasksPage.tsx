@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -61,6 +62,23 @@ const TasksPage: React.FC = () => {
     refetchInterval: 60000, // Refetch every minute
   });
 
+  // Parse task name if it's a JSON string
+  const parseTaskName = (task: Task): string => {
+    if (!task.name) return '';
+    
+    try {
+      // Check if the task name is a JSON string
+      if (task.name.startsWith('{') && task.name.includes('name')) {
+        const parsed = JSON.parse(task.name);
+        return parsed.name || task.name;
+      }
+      return task.name;
+    } catch (e) {
+      // If parsing fails, return the original name
+      return task.name;
+    }
+  };
+
   useEffect(() => {
     console.log('All tasks loaded:', allTasks?.length ?? 0);
     if (error) {
@@ -99,8 +117,11 @@ const TasksPage: React.FC = () => {
     if (!allTasks) return [];
     
     return allTasks.filter(task => {
+      // Parse task name for search
+      const taskName = parseTaskName(task);
+      
       const matchesSearch = searchQuery === '' || 
-        task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        taskName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (task.notes && task.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (task.phaseName && task.phaseName.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (task.projectName && task.projectName.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -320,7 +341,7 @@ const TasksPage: React.FC = () => {
                         {getTaskStatusIcon(task)}
                       </TableCell>
                       <TableCell className={task.isComplete ? 'line-through text-muted-foreground' : ''}>
-                        {task.name}
+                        {parseTaskName(task)}
                         {task.notes && (
                           <p className="text-xs italic text-muted-foreground mt-1">
                             {task.notes}

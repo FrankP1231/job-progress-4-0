@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
@@ -186,7 +185,21 @@ export async function addTasksToPhaseArea(
   }
 
   try {
-    const tasksToInsert = tasks.map(task => ({
+    // Ensure task names are strings, not JSON objects
+    const sanitizedTasks = tasks.map(task => {
+      // If task appears to be a JSON string or object, extract the name property
+      if (typeof task === 'string' && task.startsWith('{') && task.includes('name')) {
+        try {
+          const parsed = JSON.parse(task);
+          return parsed.name || task;
+        } catch (e) {
+          return task;
+        }
+      }
+      return task;
+    });
+
+    const tasksToInsert = sanitizedTasks.map(task => ({
       phase_id: phaseId,
       area,
       name: task,
@@ -248,10 +261,24 @@ export async function createTask(
   }
 
   try {
+    // Sanitize task name - ensure it's a simple string, not a JSON object
+    let sanitizedName = name;
+    
+    // If the name is already a JSON string that contains a name property, extract it
+    if (name.startsWith('{') && name.includes('name')) {
+      try {
+        const parsed = JSON.parse(name);
+        sanitizedName = parsed.name || name;
+      } catch (e) {
+        // If parsing fails, keep the original name
+        sanitizedName = name;
+      }
+    }
+
     const taskData = {
       phase_id: phaseId,
       area,
-      name,
+      name: sanitizedName,
       status: options?.status || 'not-started',
       hours: options?.hours,
       eta: options?.eta,

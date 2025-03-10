@@ -35,6 +35,23 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     }
   }, [jobTasks, tasksError]);
 
+  // Parse task name if it's a JSON string
+  const parseTaskName = (task: Task): string => {
+    if (!task.name) return '';
+    
+    try {
+      // Check if the task name is a JSON string
+      if (task.name.startsWith('{') && task.name.includes('name')) {
+        const parsed = JSON.parse(task.name);
+        return parsed.name || task.name;
+      }
+      return task.name;
+    } catch (e) {
+      // If parsing fails, return the original name
+      return task.name;
+    }
+  };
+
   const tasks = useMemo(() => {
     if (!jobTasks || !job || !job.phases) {
       return [];
@@ -168,7 +185,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
         <CardTitle className="text-lg">Pending Tasks ({tasks.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className={`max-h-${maxHeight}`}>
+        <ScrollArea className={`max-h-[${maxHeight}]`}>
           <div className="space-y-4">
             {tasks.map((task) => (
               <div key={task.id} className="border-b pb-3 mb-3 last:border-0 last:pb-0">
@@ -178,7 +195,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
-                      <p className="font-medium">{task.name}</p>
+                      <p className="font-medium">{parseTaskName(task)}</p>
                       <div className="flex items-center gap-2">
                         <ActiveUserDisplay taskId={task.id} />
                         <Badge variant={task.status === 'in-progress' ? 'secondary' : 'outline'}>

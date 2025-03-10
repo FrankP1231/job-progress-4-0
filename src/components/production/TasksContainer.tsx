@@ -61,6 +61,23 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   
   const workArea = getWorkAreaFromTaskArea(area);
 
+  // Parse task name if it's a JSON string
+  const parseTaskName = (task: Task): string => {
+    if (!task.name) return '';
+    
+    try {
+      // Check if the task name is a JSON string
+      if (task.name.startsWith('{') && task.name.includes('name')) {
+        const parsed = JSON.parse(task.name);
+        return parsed.name || task.name;
+      }
+      return task.name;
+    } catch (e) {
+      // If parsing fails, return the original name
+      return task.name;
+    }
+  };
+
   const handleAddNewTask = async (e: React.MouseEvent) => {
     // Critical: Prevent any event bubbling completely
     if (e) {
@@ -137,7 +154,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       {tasks.map((task) => (
         <div key={task.id} className="flex items-center justify-between bg-gray-50 p-2 rounded-md">
           <div className="flex items-center space-x-2">
-            <span className="text-sm">{task.name}</span>
+            <span className="text-sm">{parseTaskName(task)}</span>
             
             {task.hours && (
               <div className="flex items-center text-xs text-gray-500">
@@ -365,7 +382,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
           
           {taskToDelete && (
             <div className="py-2">
-              <p className="font-medium">{taskToDelete.name}</p>
+              <p className="font-medium">{parseTaskName(taskToDelete)}</p>
             </div>
           )}
           
