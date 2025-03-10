@@ -148,8 +148,8 @@ const PhaseForm: React.FC = () => {
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
       // Process task assignments if there are any
-      // Check if result is an object with the expected properties
-      if (result && typeof result === 'object' && 'createdTasks' in result) {
+      // FIX: Add proper null checking before accessing properties on the result
+      if (result && typeof result === 'object' && result !== null && 'createdTasks' in result) {
         const typedResult = result as AddPhaseResult;
         const assignmentPromises: Promise<boolean>[] = [];
         
