@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -180,9 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Immediately after successful login, refresh the profile
       if (data.user) {
-        setTimeout(() => {
-          refreshUserProfile();
-        }, 1000);
+        await fetchUserProfile(data.user.id);
       }
       
       return true;

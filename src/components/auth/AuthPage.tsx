@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -9,7 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Briefcase, User as UserIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserRole, WorkArea } from '@/lib/types';
 
 const AuthPage: React.FC = () => {
   const { user } = useAuth();
@@ -21,6 +24,8 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [workArea, setWorkArea] = useState<WorkArea | ''>('');
+  const [role, setRole] = useState<UserRole | ''>('');
   
   // Signup confirmation state
   const [signupSuccess, setSignupSuccess] = useState(false);
@@ -61,7 +66,7 @@ const AuthPage: React.FC = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName || !workArea || !role) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -75,6 +80,8 @@ const AuthPage: React.FC = () => {
           data: {
             first_name: firstName,
             last_name: lastName,
+            work_area: workArea,
+            role: role
           },
         },
       });
@@ -91,10 +98,40 @@ const AuthPage: React.FC = () => {
       setPassword('');
       setFirstName('');
       setLastName('');
+      setWorkArea('');
+      setRole('');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Get available roles based on selected work area
+  const getAvailableRoles = () => {
+    switch (workArea) {
+      case 'Welding':
+        return [
+          { value: 'Lead Welder', label: 'Lead Welder' },
+          { value: 'Welder', label: 'Welder' },
+          { value: 'Welder\'s Helper', label: 'Welder\'s Helper' }
+        ];
+      case 'Sewing':
+        return [
+          { value: 'Sewer', label: 'Sewer' }
+        ];
+      case 'Installation':
+        return [
+          { value: 'Lead Installer', label: 'Lead Installer' },
+          { value: 'Installer', label: 'Installer' },
+          { value: 'Installer\'s Helper', label: 'Installer\'s Helper' }
+        ];
+      case 'Front Office':
+        return [
+          { value: 'Front Office', label: 'Front Office' }
+        ];
+      default:
+        return [];
     }
   };
   
@@ -225,9 +262,61 @@ const AuthPage: React.FC = () => {
                       required
                     />
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="flex items-center" htmlFor="workArea">
+                      <Briefcase className="h-4 w-4 mr-2" /> Work Area
+                    </Label>
+                    <Select 
+                      value={workArea} 
+                      onValueChange={(value) => {
+                        setWorkArea(value as WorkArea);
+                        setRole(''); // Reset role when work area changes
+                      }}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your work area" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Welding">Welding</SelectItem>
+                        <SelectItem value="Sewing">Sewing</SelectItem>
+                        <SelectItem value="Installation">Installation</SelectItem>
+                        <SelectItem value="Front Office">Front Office</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="flex items-center" htmlFor="role">
+                      <UserIcon className="h-4 w-4 mr-2" /> Role
+                    </Label>
+                    <Select 
+                      value={role} 
+                      onValueChange={(value) => setRole(value as UserRole)}
+                      disabled={!workArea}
+                      required
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={workArea ? "Select your role" : "Select work area first"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableRoles().map(role => (
+                          <SelectItem key={role.value} value={role.value}>
+                            {role.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!workArea && (
+                      <p className="text-sm text-muted-foreground">
+                        Please select a work area first
+                      </p>
+                    )}
+                  </div>
                 </CardContent>
                 <CardFooter>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || !workArea || !role}>
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </CardFooter>
