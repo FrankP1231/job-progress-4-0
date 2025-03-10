@@ -42,6 +42,7 @@ const Index: React.FC = () => {
     .filter(({ phase }) => {
       // Check if this phase has a scheduled installation date
       if (phase.installation && 
+          phase.installation.hasOwnProperty('scheduledDate') && 
           phase.installation.scheduledDate && 
           phase.installation.status !== 'complete') {
         try {
@@ -57,6 +58,7 @@ const Index: React.FC = () => {
       }
       // Also include phases where welding is due soon
       if (phase.weldingLabor && 
+          phase.weldingLabor.hasOwnProperty('dueDate') &&
           phase.weldingLabor.dueDate && 
           phase.weldingLabor.status !== 'complete') {
         try {
@@ -75,10 +77,10 @@ const Index: React.FC = () => {
       // Sort by the closest due date first
       const getEarliestDate = (item: any) => {
         let dates = [];
-        if (item.phase.installation?.scheduledDate) {
+        if (item.phase.installation?.hasOwnProperty('scheduledDate') && item.phase.installation.scheduledDate) {
           dates.push(new Date(item.phase.installation.scheduledDate));
         }
-        if (item.phase.weldingLabor?.dueDate) {
+        if (item.phase.weldingLabor?.hasOwnProperty('dueDate') && item.phase.weldingLabor.dueDate) {
           dates.push(new Date(item.phase.weldingLabor.dueDate));
         }
         return dates.length ? Math.min(...dates.map(d => d.getTime())) : Infinity;
@@ -186,12 +188,12 @@ const Index: React.FC = () => {
                   let dueText = '';
                   let dueDays = 0;
                   
-                  if (phase.installation?.scheduledDate) {
+                  if (phase.installation?.hasOwnProperty('scheduledDate') && phase.installation.scheduledDate) {
                     const installDate = new Date(phase.installation.scheduledDate);
                     const now = new Date();
                     dueDays = Math.ceil((installDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                     dueText = `Installation due in ${dueDays} day${dueDays !== 1 ? 's' : ''}`;
-                  } else if (phase.weldingLabor?.dueDate) {
+                  } else if (phase.weldingLabor?.hasOwnProperty('dueDate') && phase.weldingLabor.dueDate) {
                     const dueDate = new Date(phase.weldingLabor.dueDate);
                     const now = new Date();
                     dueDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
