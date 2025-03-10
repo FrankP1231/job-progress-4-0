@@ -127,7 +127,11 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
             variant="ghost"
             size="icon"
             className="h-6 w-6 text-destructive hover:bg-destructive/10"
-            onClick={() => setTaskToDelete(task)}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              setTaskToDelete(task);
+            }}
           >
             <Trash className="h-4 w-4" />
           </Button>
@@ -135,7 +139,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       ))}
       
       {isEditing && (
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          // Prevent any event bubbling when opening/closing dialog
+          if (!open) {
+            // Make sure we don't trigger form submission on close
+            setTimeout(() => setIsAddDialogOpen(false), 0);
+          } else {
+            setIsAddDialogOpen(true);
+          }
+        }}>
           <DialogTrigger asChild>
             <Button
               variant="outline"
@@ -143,22 +155,28 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
               className="w-full mt-2 text-xs h-8"
               disabled={isDisabled || isAddingTask}
               onClick={(e) => {
+                // Completely prevent event bubbling and default behavior
                 e.stopPropagation();
                 e.preventDefault();
+                setIsAddDialogOpen(true);
               }}
             >
               <Plus className="h-3 w-3 mr-1" /> Add Task
             </Button>
           </DialogTrigger>
           
-          <DialogContent className="sm:max-w-[425px]" onClick={handleDialogClick}>
+          <DialogContent className="sm:max-w-[425px]" onClick={handleDialogClick} onPointerDownOutside={(e) => {
+            // Prevent closing dialog from triggering parent events
+            e.preventDefault();
+            e.stopPropagation();
+          }}>
             <DialogHeader>
               <DialogTitle>Add New Task</DialogTitle>
               <DialogDescription>
                 Add a new task to this section. Tasks help track progress and assign work.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleAddNewTask}>
+            <form onSubmit={handleAddNewTask} onClick={(e) => e.stopPropagation()}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Input
@@ -225,8 +243,10 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         </Dialog>
       )}
 
-      <Dialog open={taskToDelete !== null} onOpenChange={() => setTaskToDelete(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+      <Dialog open={taskToDelete !== null} onOpenChange={(open) => {
+        if (!open) setTaskToDelete(null);
+      }}>
+        <DialogContent className="sm:max-w-[425px]" onClick={handleDialogClick}>
           <DialogHeader>
             <DialogTitle>Delete Task</DialogTitle>
             <DialogDescription>
@@ -243,14 +263,22 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
           <DialogFooter>
             <Button 
               variant="outline" 
-              onClick={() => setTaskToDelete(null)}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setTaskToDelete(null);
+              }}
               disabled={isDeleting}
             >
               Cancel
             </Button>
             <Button 
               variant="destructive" 
-              onClick={handleDeleteTask}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleDeleteTask();
+              }}
               disabled={isDeleting}
             >
               {isDeleting ? (
