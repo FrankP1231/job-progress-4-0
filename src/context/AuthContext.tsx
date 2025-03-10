@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -58,6 +59,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }));
       } else {
         console.warn('No profile found for user:', userId);
+        // Add a retry mechanism after a short delay
+        setTimeout(() => {
+          console.log('Retrying profile fetch after delay...');
+          fetchUserProfile(userId);
+        }, 2000);
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
@@ -107,7 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Set up auth state change listener
       const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-        async (_event, session) => {
+        async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.id);
+          
           if (session?.user) {
             setUser({
               isAuthenticated: true,
@@ -142,12 +150,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Login error:', error.message);
+        toast.error(error.message || 'Failed to login');
         return false;
       }
       
+      // Immediately after successful login, refresh the profile
+      if (data.user) {
+        setTimeout(() => {
+          refreshUserProfile();
+        }, 1000);
+      }
+      
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      toast.error('Failed to login');
       return false;
     }
   };
