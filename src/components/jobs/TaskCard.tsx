@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Clock, AlertCircle, User } from 'lucide-react';
 import { Job, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -89,7 +89,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       userId: string;
       firstName: string;
       lastName: string;
-      profilePictureUrl: string | null;
     } | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -122,15 +121,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger>
-            <Avatar className="h-6 w-6">
-              {activeUser.profilePictureUrl ? (
-                <AvatarImage src={activeUser.profilePictureUrl} alt={`${activeUser.firstName} ${activeUser.lastName}`} />
-              ) : (
-                <AvatarFallback className="text-xs">
-                  {activeUser.firstName[0]}{activeUser.lastName[0]}
-                </AvatarFallback>
-              )}
-            </Avatar>
+            <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="h-3 w-3 text-primary" />
+            </div>
           </TooltipTrigger>
           <TooltipContent>
             <p>Currently worked on by: {activeUser.firstName} {activeUser.lastName}</p>

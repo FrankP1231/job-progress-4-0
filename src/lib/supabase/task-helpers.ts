@@ -156,8 +156,7 @@ export async function getActiveUserForTask(taskId: string) {
         profiles:user_id (
           id,
           first_name,
-          last_name,
-          profile_picture_url
+          last_name
         )
       `)
       .eq('task_id', taskId)
@@ -176,14 +175,8 @@ export async function getActiveUserForTask(taskId: string) {
       return null;
     }
 
-    // Make sure we're accessing the profile data correctly
-    // Cast to the expected type to avoid type errors
-    const profile = data.profiles as {
-      id: string;
-      first_name: string;
-      last_name: string;
-      profile_picture_url?: string;
-    } | null;
+    // Handle the profile data safely
+    const profile = data.profiles as any;
     
     // Make sure we have valid profile data with required fields
     if (!profile || !profile.id) {
@@ -193,8 +186,7 @@ export async function getActiveUserForTask(taskId: string) {
     return {
       userId: profile.id,
       firstName: profile.first_name,
-      lastName: profile.last_name,
-      profilePictureUrl: profile.profile_picture_url || null
+      lastName: profile.last_name
     };
   } catch (error) {
     console.error('Error getting active user for task:', error);
@@ -214,8 +206,7 @@ export async function getTaskAssignees(taskId: string) {
         profiles:user_id (
           id,
           first_name,
-          last_name,
-          profile_picture_url
+          last_name
         )
       `)
       .eq('task_id', taskId)
@@ -228,21 +219,14 @@ export async function getTaskAssignees(taskId: string) {
 
     // Transform data to a more usable format
     return (data || []).map(item => {
-      // Cast to the expected type to avoid type errors
-      const profile = item.profiles as {
-        id: string;
-        first_name: string;
-        last_name: string;
-        profile_picture_url?: string;
-      } | null;
+      const profile = item.profiles as any;
       
       return {
         id: item.id,
         userId: item.user_id,
         assignedAt: item.assigned_at,
         firstName: profile?.first_name || '',
-        lastName: profile?.last_name || '',
-        profilePictureUrl: profile?.profile_picture_url || null
+        lastName: profile?.last_name || ''
       };
     });
   } catch (error) {

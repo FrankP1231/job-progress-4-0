@@ -45,7 +45,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TasksPage: React.FC = () => {
@@ -53,7 +52,7 @@ const TasksPage: React.FC = () => {
   const [areaFilter, setAreaFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
-  const [activeUsers, setActiveUsers] = useState<Record<string, {firstName: string, lastName: string, profilePictureUrl?: string}>>({});
+  const [activeUsers, setActiveUsers] = useState<Record<string, {firstName: string, lastName: string}>>({});
   const queryClient = useQueryClient();
 
   const { data: allTasks, isLoading, error, refetch } = useQuery({
@@ -74,7 +73,7 @@ const TasksPage: React.FC = () => {
       if (!allTasks) return;
       
       const inProgressTasks = allTasks.filter(task => task.status === 'in-progress');
-      const userMap: Record<string, {firstName: string, lastName: string, profilePictureUrl?: string}> = {};
+      const userMap: Record<string, {firstName: string, lastName: string}> = {};
       
       for (const task of inProgressTasks) {
         try {
@@ -82,8 +81,7 @@ const TasksPage: React.FC = () => {
           if (activeUser) {
             userMap[task.id] = {
               firstName: activeUser.firstName,
-              lastName: activeUser.lastName,
-              profilePictureUrl: activeUser.profilePictureUrl
+              lastName: activeUser.lastName
             };
           }
         } catch (err) {
@@ -357,17 +355,9 @@ const TasksPage: React.FC = () => {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div className="flex items-center gap-2">
-                                  <Avatar className="h-6 w-6">
-                                    {activeUsers[task.id].profilePictureUrl && (
-                                      <AvatarImage 
-                                        src={activeUsers[task.id].profilePictureUrl} 
-                                        alt={`${activeUsers[task.id].firstName} ${activeUsers[task.id].lastName}`} 
-                                      />
-                                    )}
-                                    <AvatarFallback className="text-xs">
-                                      {activeUsers[task.id].firstName?.[0]}{activeUsers[task.id].lastName?.[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
+                                  <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <User className="h-3 w-3 text-primary" />
+                                  </div>
                                   <span className="text-xs">
                                     {activeUsers[task.id].firstName} {activeUsers[task.id].lastName?.[0]}.
                                   </span>

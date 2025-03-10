@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
@@ -22,6 +21,11 @@ interface TaskWithMetadata {
   hours?: number;
   eta?: string;
   assigneeIds?: string[];
+}
+
+// Define the result type to avoid TS errors
+interface AddPhaseResult {
+  createdTasks: Record<string, any[]>;
 }
 
 const PhaseForm: React.FC = () => {
@@ -143,14 +147,15 @@ const PhaseForm: React.FC = () => {
       // Add the phase and get created task IDs back
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Check if result is an object (not just a boolean) and has createdTasks
+      // Process task assignments if there are any
+      // Check if result is an object with the expected properties
       if (result && typeof result === 'object' && 'createdTasks' in result) {
-        // Process task assignments if there are any
+        const typedResult = result as AddPhaseResult;
         const assignmentPromises: Promise<boolean>[] = [];
         
         // For each area with tasks
-        Object.keys(result.createdTasks).forEach(area => {
-          const tasks = result.createdTasks[area];
+        Object.keys(typedResult.createdTasks).forEach(area => {
+          const tasks = typedResult.createdTasks[area];
           
           // For each task in the area
           tasks.forEach((task, index) => {
