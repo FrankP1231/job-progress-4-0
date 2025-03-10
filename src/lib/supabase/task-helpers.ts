@@ -1,4 +1,3 @@
-
 import { supabase } from '../supabase/client';
 import { Job, Task, TaskStatus } from '../types';
 
@@ -202,6 +201,7 @@ export async function getTaskAssignees(taskId: string) {
     const { data, error } = await supabase
       .from('task_assignments')
       .select(`
+        id,
         user_id,
         assigned_at,
         profiles:user_id (
@@ -221,6 +221,7 @@ export async function getTaskAssignees(taskId: string) {
 
     // Transform data to a more usable format
     return (data || []).map(item => ({
+      id: item.id,
       userId: item.user_id,
       assignedAt: item.assigned_at,
       firstName: item.profiles?.first_name,

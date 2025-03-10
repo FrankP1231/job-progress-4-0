@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -64,13 +63,12 @@ const TasksPage: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log('All tasks loaded:', allTasks?.length);
+    console.log('All tasks loaded:', allTasks?.length ?? 0);
     if (error) {
       console.error('Error loading tasks:', error);
     }
   }, [allTasks, error]);
 
-  // Fetch active users for in-progress tasks
   useEffect(() => {
     const fetchActiveUsers = async () => {
       if (!allTasks) return;
