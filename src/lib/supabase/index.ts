@@ -24,14 +24,19 @@ export {
 
 export const getAllUsers = async () => {
   const { data, error } = await supabase
-    .from('users')
-    .select('id, email, name')
-    .order('name');
+    .from('profiles')
+    .select('id, email, first_name, last_name')
+    .order('first_name');
   
   if (error) {
     console.error('Error fetching users:', error);
     throw error;
   }
   
-  return data || [];
+  // Map the profile data to match the expected structure in the UserSelector component
+  return data.map(profile => ({
+    id: profile.id,
+    email: profile.email || '',
+    name: `${profile.first_name} ${profile.last_name}`.trim()
+  })) || [];
 };

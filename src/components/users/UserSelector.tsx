@@ -9,6 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { useQuery } from '@tanstack/react-query';
 import { getAllUsers } from '@/lib/supabase';
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+}
+
 interface UserSelectorProps {
   selectedUserIds: string[];
   onSelectionChange: (selectedIds: string[]) => void;
