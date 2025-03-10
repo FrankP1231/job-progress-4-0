@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { format, formatDistance } from 'date-fns';
 import { toast } from 'sonner';
@@ -558,17 +559,17 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
         updated_at: entry.updated_at,
         
         // Safely handle nested objects that might be null or have a different structure
-        task: entry.task && entry.task[0] ? {
+        task: Array.isArray(entry.task) && entry.task.length > 0 ? {
           name: entry.task[0].name || '',
           phase_id: entry.task[0].phase_id || ''
         } : null,
         
-        phase: entry.phase && entry.phase[0] ? {
+        phase: Array.isArray(entry.phase) && entry.phase.length > 0 ? {
           phase_name: entry.phase[0].phase_name || '',
           job_id: entry.phase[0].job_id || ''
         } : null,
         
-        job: entry.job && entry.job[0] ? {
+        job: Array.isArray(entry.job) && entry.job.length > 0 ? {
           job_number: entry.job[0].job_number || '',
           project_name: entry.job[0].project_name || ''
         } : null
