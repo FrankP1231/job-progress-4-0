@@ -7,8 +7,8 @@ export * from './statusUtils';
 export * from './task-helpers';
 export * from './taskUtils';
 
-// Import supabaseClient from the correct location
-import { supabaseClient } from './client';
+// Import supabase from the correct location
+import { supabase } from "@/integrations/supabase/client";
 
 // Export task-crud without those functions that are overridden in taskUtils
 export {
@@ -23,7 +23,7 @@ export {
 } from './initUtils';
 
 export const getAllUsers = async () => {
-  const { data, error } = await supabaseClient
+  const { data, error } = await supabase
     .from('users')
     .select('id, email, name')
     .order('name');
