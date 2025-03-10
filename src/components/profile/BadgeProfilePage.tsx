@@ -234,8 +234,8 @@ const BadgeProfilePage: React.FC = () => {
     <div className="container max-w-4xl py-10">
       <div className="flex flex-col items-center">
         {/* Badge-like card */}
-        <Card className="w-full max-w-xl overflow-hidden bg-white shadow-lg border-2 border-purple-100">
-          <div className="bg-[#9b87f5] h-20 relative flex items-center justify-center">
+        <Card className="w-full max-w-xl overflow-hidden bg-white shadow-lg border-2 border-[#E5DEFF]">
+          <div className="bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] h-20 relative flex items-center justify-center">
             <div className="absolute -bottom-16 w-32 h-32 border-4 border-white rounded-full overflow-hidden bg-white shadow-lg">
               {profileData.profilePictureUrl ? (
                 <AvatarImage 
@@ -244,7 +244,7 @@ const BadgeProfilePage: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#F1F0FB] text-3xl font-bold text-[#9b87f5]">
+                <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
                   {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
                 </div>
               )}
@@ -285,22 +285,22 @@ const BadgeProfilePage: React.FC = () => {
                   `${profileData.firstName} ${profileData.lastName}`
                 )}
               </h2>
-              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#F1F0FB] text-[#9b87f5]">
+              <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#E5DEFF] text-[#8B5CF6]">
                 {profileData.role}
               </div>
             </div>
             
             <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <User className="h-5 w-5 text-[#8E9196]" />
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                <User className="h-5 w-5 text-[#8B5CF6]" />
                 <div className="flex-1">
                   <p className="text-xs text-gray-500">Work Area</p>
                   <p className="font-medium">{profileData.workArea}</p>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <Badge className="h-5 w-5 text-[#8E9196]" />
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                <Badge className="h-5 w-5 text-[#8B5CF6]" />
                 <div className="flex-1">
                   <p className="text-xs text-gray-500">Email</p>
                   {isEditMode ? (
@@ -316,8 +316,8 @@ const BadgeProfilePage: React.FC = () => {
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                <Badge className="h-5 w-5 text-[#8E9196]" />
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F6F6F7]">
+                <Badge className="h-5 w-5 text-[#8B5CF6]" />
                 <div className="flex-1">
                   <p className="text-xs text-gray-500">Phone Number</p>
                   {isEditMode ? (
@@ -338,10 +338,12 @@ const BadgeProfilePage: React.FC = () => {
           <CardFooter className="flex justify-between px-6 pb-6 pt-0">
             {isEditMode ? (
               <>
-                <Button variant="outline" onClick={() => setIsEditMode(false)}>
+                <Button variant="outline" onClick={() => setIsEditMode(false)}
+                  className="border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]">
                   Cancel
                 </Button>
-                <Button onClick={handleSaveProfile}>
+                <Button onClick={handleSaveProfile}
+                  className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED]">
                   Save Changes
                 </Button>
               </>
@@ -350,13 +352,13 @@ const BadgeProfilePage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   onClick={() => setIsResetPasswordOpen(true)}
-                  className="gap-2"
+                  className="gap-2 border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]"
                 >
                   <Key className="h-4 w-4" /> Reset Password
                 </Button>
                 <Button 
                   onClick={() => setIsEditMode(true)}
-                  className="gap-2"
+                  className="gap-2 bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
                 >
                   <Edit className="h-4 w-4" /> Edit Profile
                 </Button>
@@ -389,12 +391,14 @@ const BadgeProfilePage: React.FC = () => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsResetPasswordOpen(false)}>
+            <Button variant="outline" onClick={() => setIsResetPasswordOpen(false)}
+              className="border-[#8B5CF6] text-[#8B5CF6] hover:bg-[#E5DEFF] hover:text-[#8B5CF6]">
               Cancel
             </Button>
             <Button 
               onClick={handleResetPassword} 
               disabled={isSendingReset || !resetEmail}
+              className="bg-[#8B5CF6] text-white hover:bg-[#7C3AED]"
             >
               {isSendingReset ? 'Sending...' : 'Send Reset Link'}
             </Button>
