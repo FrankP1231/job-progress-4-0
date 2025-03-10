@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, X, Clock, ChevronDown, Trash, User } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { createTask } from '@/lib/supabase/taskUtils';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -88,6 +88,11 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
     }
   };
 
+  // This safely stops event propagation to prevent form submission in parent components
+  const handleDialogClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   return (
     <div className={`space-y-2 ${className || ''}`}>
       {title && <h3 className="font-medium text-sm mb-2">{title}</h3>}
@@ -117,65 +122,76 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       ))}
       
       {isEditing && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full mt-2 text-xs h-8"
-          onClick={() => setIsAddDialogOpen(true)}
-          disabled={isDisabled || isAddingTask}
-        >
-          <Plus className="h-3 w-3 mr-1" /> Add Task
-        </Button>
-      )}
-
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
-            <DialogDescription>
-              Add a new task to this section. Tasks help track progress and assign work.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddNewTask}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Input
-                  id="taskName"
-                  value={newTaskName}
-                  onChange={(e) => setNewTaskName(e.target.value)}
-                  placeholder="Enter task name"
-                  autoFocus
-                />
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full mt-2 text-xs h-8"
+              disabled={isDisabled || isAddingTask}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <Plus className="h-3 w-3 mr-1" /> Add Task
+            </Button>
+          </DialogTrigger>
+          
+          <DialogContent className="sm:max-w-[425px]" onClick={handleDialogClick}>
+            <DialogHeader>
+              <DialogTitle>Add New Task</DialogTitle>
+              <DialogDescription>
+                Add a new task to this section. Tasks help track progress and assign work.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleAddNewTask}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Input
+                    id="taskName"
+                    value={newTaskName}
+                    onChange={(e) => setNewTaskName(e.target.value)}
+                    placeholder="Enter task name"
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
               </div>
-            </div>
-            <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setNewTaskName('');
-                  setIsAddDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={isAddingTask || !newTaskName.trim()}
-              >
-                {isAddingTask ? (
-                  <span className="flex items-center">
-                    <span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                    Adding...
-                  </span>
-                ) : (
-                  'Add Task'
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setNewTaskName('');
+                    setIsAddDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isAddingTask || !newTaskName.trim()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  {isAddingTask ? (
+                    <span className="flex items-center">
+                      <span className="h-4 w-4 mr-2 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      Adding...
+                    </span>
+                  ) : (
+                    'Add Task'
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <Dialog open={taskToDelete !== null} onOpenChange={() => setTaskToDelete(null)}>
         <DialogContent className="sm:max-w-[425px]">
