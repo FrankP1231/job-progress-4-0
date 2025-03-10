@@ -177,12 +177,13 @@ export async function getActiveUserForTask(taskId: string) {
     }
 
     // Make sure we're accessing the profile data correctly
+    // Cast to the expected type to avoid type errors
     const profile = data.profiles as {
       id: string;
       first_name: string;
       last_name: string;
       profile_picture_url?: string;
-    };
+    } | null;
     
     // Make sure we have valid profile data with required fields
     if (!profile || !profile.id) {
@@ -227,6 +228,7 @@ export async function getTaskAssignees(taskId: string) {
 
     // Transform data to a more usable format
     return (data || []).map(item => {
+      // Cast to the expected type to avoid type errors
       const profile = item.profiles as {
         id: string;
         first_name: string;

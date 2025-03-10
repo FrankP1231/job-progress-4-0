@@ -143,8 +143,9 @@ const PhaseForm: React.FC = () => {
       // Add the phase and get created task IDs back
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Process task assignments if there are any
-      if (result && result.createdTasks) {
+      // Check if result is an object (not just a boolean) and has createdTasks
+      if (result && typeof result === 'object' && 'createdTasks' in result) {
+        // Process task assignments if there are any
         const assignmentPromises: Promise<boolean>[] = [];
         
         // For each area with tasks
@@ -154,10 +155,10 @@ const PhaseForm: React.FC = () => {
           // For each task in the area
           tasks.forEach((task, index) => {
             // Get the original task data with assigneeIds
-            const originalTaskData = pendingTasks[area][index];
+            const originalTaskData = pendingTasks[area]?.[index];
             
             // If there are assignees, create assignments
-            if (originalTaskData._assigneeIds && originalTaskData._assigneeIds.length > 0) {
+            if (originalTaskData?._assigneeIds && originalTaskData._assigneeIds.length > 0) {
               for (const userId of originalTaskData._assigneeIds) {
                 assignmentPromises.push(assignUserToTask(task.id, userId));
               }
