@@ -1,46 +1,19 @@
 
-// This file is maintained for backwards compatibility
-// Please use the modules in time-tracking/ for new code
+// This file now re-exports from the new modular files for backward compatibility
 
-import {
-  // Types
-  TimeEntry,
-  TaskTimeEntry,
-  
-  // Clock functions
-  clockIn,
-  clockOut,
-  getCurrentTimeEntry,
-  getTimeEntries,
-  
-  // Task timer functions
-  startTaskTimer,
-  pauseTaskTimer,
-  resumeTaskTimer,
-  stopTaskTimer,
-  getTaskTimeEntry,
-  pauseActiveTaskEntries,
-  resumePausedTaskEntries,
-  getTaskTimeEntriesForUser,
-  
-  // Formatting utilities
-  formatTimeSpent,
-  formatDuration
-} from './time-tracking';
+// Re-export types
+export type { TimeEntry, TaskTimeEntry } from './time-tracking/types';
 
-// Re-export everything for backward compatibility
+// Re-export clock in/out functionality
 export {
-  // Types
-  TimeEntry,
-  TaskTimeEntry,
-  
-  // Clock functions
   clockIn,
   clockOut,
   getCurrentTimeEntry,
-  getTimeEntries,
-  
-  // Task timer functions
+  getTimeEntries
+} from './time-tracking/clock-entries';
+
+// Re-export task timer functionality
+export {
   startTaskTimer,
   pauseTaskTimer,
   resumeTaskTimer,
@@ -48,9 +21,11 @@ export {
   getTaskTimeEntry,
   pauseActiveTaskEntries,
   resumePausedTaskEntries,
-  getTaskTimeEntriesForUser,
-  
-  // Formatting utilities
+  getTaskTimeEntriesForUser
+} from './time-tracking/task-entries';
+
+// Re-export formatting utilities
+export {
   formatTimeSpent,
   formatDuration
-};
+} from './time-tracking/formatters';
