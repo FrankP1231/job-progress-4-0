@@ -38,8 +38,9 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
+    console.log('Logging out...');
     await logout();
-    navigate('/login');
+    // Navigation is now handled in the logout function itself
   };
 
   // Check if user is a team lead, admin, or master admin
@@ -159,7 +160,11 @@ const Navbar: React.FC = () => {
                 </SheetClose>
                 
                 <SheetClose asChild>
-                  <Button variant="ghost" className="justify-start px-2" onClick={handleLogout}>
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start px-2" 
+                    onClick={handleLogout}
+                  >
                     <LogOut className="mr-2 h-5 w-5" />
                     Sign Out
                   </Button>
@@ -230,7 +235,9 @@ const Navbar: React.FC = () => {
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    {getInitials()}
+                    {user.firstName && user.lastName ? 
+                      `${user.firstName[0]}${user.lastName[0]}`.toUpperCase() : 
+                      user.email?.substring(0, 2).toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
               </Button>

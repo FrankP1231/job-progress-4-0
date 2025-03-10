@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: {
@@ -18,7 +19,7 @@ interface AuthContextType {
   };
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   resetPassword: (email: string, redirectTo?: string) => Promise<boolean>;
 }
@@ -194,9 +195,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('Logging out user...');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Logout error:', error);
+        toast.error('Failed to log out: ' + error.message);
+        return;
+      }
+      
+      // Clear the user state explicitly
+      setUser({ isAuthenticated: false });
+      
+      // After successful logout, show success message
       toast.success('Logged out successfully');
-    } catch (error) {
+      
+      // Force reload the page to clear any cached state
+      window.location.href = '/login';
+    } catch (error: any) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
     }
