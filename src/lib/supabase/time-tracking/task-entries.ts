@@ -83,6 +83,40 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
+    // Auto-assign the user to the task (this is the new part)
+    try {
+      // Check if user is already assigned to this task
+      const { data: existingAssignment, error: checkAssignmentError } = await supabase
+        .from('task_assignments')
+        .select('*')
+        .eq('task_id', taskId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (checkAssignmentError) {
+        console.error('Error checking task assignment:', checkAssignmentError);
+      }
+      
+      // Only create assignment if not already assigned
+      if (!existingAssignment) {
+        const { error: assignmentError } = await supabase
+          .from('task_assignments')
+          .insert({
+            task_id: taskId,
+            user_id: user.id,
+            assigned_by: user.id  // Self-assignment
+          });
+          
+        if (assignmentError) {
+          console.error('Error assigning user to task:', assignmentError);
+          // Don't throw here, as we still want the timer to start
+        }
+      }
+    } catch (assignmentErr) {
+      console.error('Error in task assignment process:', assignmentErr);
+      // Don't throw here, as we still want the timer to start
+    }
+    
     toast({
       title: "Success",
       description: "Task timer started"
