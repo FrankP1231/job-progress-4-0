@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTimeTracking } from '@/context/TimeTrackingContext';
 import { useAuth } from '@/context/AuthContext';
@@ -67,6 +66,7 @@ const TimeTrackingTab: React.FC = () => {
   const { currentTimeEntry, timeElapsed } = useTimeTracking();
   
   const [isLoading, setIsLoading] = useState(true);
+  const [taskEntriesLoading, setTaskEntriesLoading] = useState(true);
   const [timeEntries, setTimeEntries] = useState<TimeEntrySummary[]>([]);
   const [taskEntries, setTaskEntries] = useState<TaskTimeSummary[]>([]);
   const [todayTotal, setTodayTotal] = useState(0);
@@ -156,6 +156,36 @@ const TimeTrackingTab: React.FC = () => {
     setPeriodSummaries(summaries);
   }, []);
   
+  const fetchTaskTimeEntries = useCallback(async () => {
+    if (!user.isAuthenticated) return;
+    
+    try {
+      setTaskEntriesLoading(true);
+      
+      const taskTimeEntries = await getTaskTimeEntriesForUser(30);
+      console.log('Task time entries fetched:', taskTimeEntries);
+      
+      const formattedTaskEntries = taskTimeEntries.map(entry => ({
+        id: entry.id,
+        taskId: entry.task_id,
+        taskName: entry.task?.name || 'Unknown Task',
+        phaseName: entry.phase?.phase_name || 'Unknown Phase',
+        jobNumber: entry.job?.job_number || 'Unknown Job',
+        projectName: entry.job?.project_name || 'Unknown Project',
+        startTime: new Date(entry.start_time),
+        endTime: entry.end_time ? new Date(entry.end_time) : null,
+        duration: entry.duration_seconds
+      }));
+      
+      console.log('Formatted task entries:', formattedTaskEntries);
+      setTaskEntries(formattedTaskEntries);
+    } catch (taskError) {
+      console.error('Error fetching task entries:', taskError);
+    } finally {
+      setTaskEntriesLoading(false);
+    }
+  }, [user.isAuthenticated]);
+  
   const fetchTimeTrackingData = useCallback(async (forceRefresh = false) => {
     if (!user.isAuthenticated) return;
     
@@ -181,30 +211,6 @@ const TimeTrackingTab: React.FC = () => {
       }));
       
       setTimeEntries(formattedEntries);
-      
-      try {
-        console.log('About to fetch task time entries...');
-        const taskTimeEntries = await getTaskTimeEntriesForUser(30);
-        console.log('Task time entries fetched:', taskTimeEntries);
-        
-        const formattedTaskEntries = taskTimeEntries.map(entry => ({
-          id: entry.id,
-          taskId: entry.task_id,
-          taskName: entry.task?.name || 'Unknown Task',
-          phaseName: entry.phase?.phase_name || 'Unknown Phase',
-          jobNumber: entry.job?.job_number || 'Unknown Job',
-          projectName: entry.job?.project_name || 'Unknown Project',
-          startTime: new Date(entry.start_time),
-          endTime: entry.end_time ? new Date(entry.end_time) : null,
-          duration: entry.duration_seconds
-        }));
-        
-        console.log('Formatted task entries:', formattedTaskEntries);
-        setTaskEntries(formattedTaskEntries);
-      } catch (taskError) {
-        console.error('Error fetching task entries:', taskError);
-      }
-      
       calculateTodayTotal(formattedEntries);
       calculateTimePeriodSummaries(formattedEntries);
       
@@ -217,8 +223,13 @@ const TimeTrackingTab: React.FC = () => {
   }, [user.isAuthenticated, isLoading, lastUpdate, calculateTodayTotal, calculateTimePeriodSummaries]);
   
   useEffect(() => {
-    fetchTimeTrackingData(true);
-  }, [fetchTimeTrackingData]);
+    const loadData = async () => {
+      await fetchTimeTrackingData(true);
+      await fetchTaskTimeEntries();
+    };
+    
+    loadData();
+  }, [fetchTimeTrackingData, fetchTaskTimeEntries]);
   
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -413,7 +424,7 @@ const TimeTrackingTab: React.FC = () => {
           <CardDescription>Recent time tracked on specific tasks</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {taskEntriesLoading && taskEntries.length === 0 ? (
             <div className="flex items-center justify-center p-4">
               <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full mr-2" />
               <span className="text-sm text-muted-foreground">Loading task entries...</span>

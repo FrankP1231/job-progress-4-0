@@ -1,12 +1,10 @@
-
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { supabase } from '../../supabase/client';
 import { TaskTimeEntry } from './types';
 
 /**
- * Starts a timer for a specific task
+ * Start a task timer for the current user
  */
-export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | null> => {
+export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
   try {
     // Get the current user's ID
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -83,12 +81,12 @@ export const startTaskTimer = async (taskId: string): Promise<TaskTimeEntry | nu
     console.error('Error starting task timer:', error);
     throw error;
   }
-};
+}
 
 /**
- * Pauses a task timer
+ * Pause a task timer
  */
-export const pauseTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEntry | null> => {
+export async function pauseTaskTimer(entryId: string): Promise<TaskTimeEntry> {
   try {
     const { data, error } = await supabase
       .from('task_time_entries')
@@ -96,7 +94,7 @@ export const pauseTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeE
         is_paused: true,
         pause_time: new Date().toISOString()
       })
-      .eq('id', taskTimeEntryId)
+      .eq('id', entryId)
       .select()
       .single();
       
@@ -110,18 +108,18 @@ export const pauseTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeE
     console.error('Error pausing task timer:', error);
     throw error;
   }
-};
+}
 
 /**
- * Resumes a paused task timer
+ * Resume a paused task timer
  */
-export const resumeTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEntry | null> => {
+export async function resumeTaskTimer(entryId: string): Promise<TaskTimeEntry> {
   try {
     // Get the current entry to calculate duration
     const { data: currentEntry, error: fetchError } = await supabase
       .from('task_time_entries')
       .select('*')
-      .eq('id', taskTimeEntryId)
+      .eq('id', entryId)
       .single();
       
     if (fetchError || !currentEntry) {
@@ -140,7 +138,7 @@ export const resumeTaskTimer = async (taskTimeEntryId: string): Promise<TaskTime
         is_paused: false,
         pause_time: null
       })
-      .eq('id', taskTimeEntryId)
+      .eq('id', entryId)
       .select()
       .single();
       
@@ -154,18 +152,18 @@ export const resumeTaskTimer = async (taskTimeEntryId: string): Promise<TaskTime
     console.error('Error resuming task timer:', error);
     throw error;
   }
-};
+}
 
 /**
- * Stops a task timer
+ * Stop a task timer
  */
-export const stopTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEntry | null> => {
+export async function stopTaskTimer(entryId: string): Promise<TaskTimeEntry> {
   try {
     // Get the current entry to calculate duration
     const { data: currentEntry, error: fetchError } = await supabase
       .from('task_time_entries')
       .select('*')
-      .eq('id', taskTimeEntryId)
+      .eq('id', entryId)
       .single();
       
     if (fetchError || !currentEntry) {
@@ -192,7 +190,7 @@ export const stopTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEn
         is_paused: false,
         pause_time: null
       })
-      .eq('id', taskTimeEntryId)
+      .eq('id', entryId)
       .select()
       .single();
       
@@ -208,12 +206,12 @@ export const stopTaskTimer = async (taskTimeEntryId: string): Promise<TaskTimeEn
     console.error('Error stopping task timer:', error);
     throw error;
   }
-};
+}
 
 /**
- * Gets the active task time entry for a task (if any)
+ * Get the active task time entry for a task
  */
-export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | null> => {
+export async function getTaskTimeEntry(taskId: string): Promise<TaskTimeEntry | null> {
   try {
     // Get the current user's ID
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -243,12 +241,12 @@ export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | 
     console.error('Error getting task time entry:', error);
     return null;
   }
-};
+}
 
 /**
- * Pauses all active task entries for the current user
+ * Pause all active task entries for the current user
  */
-export const pauseActiveTaskEntries = async (): Promise<void> => {
+export async function pauseActiveTaskEntries(): Promise<void> {
   try {
     // Get the current user's ID
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -278,12 +276,12 @@ export const pauseActiveTaskEntries = async (): Promise<void> => {
   } catch (error: any) {
     console.error('Error pausing active task entries:', error);
   }
-};
+}
 
 /**
- * Resumes all paused task entries for the current user
+ * Resume all paused task entries for the current user
  */
-export const resumePausedTaskEntries = async (): Promise<void> => {
+export async function resumePausedTaskEntries(): Promise<void> {
   try {
     // Get the current user's ID
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -313,96 +311,51 @@ export const resumePausedTaskEntries = async (): Promise<void> => {
   } catch (error: any) {
     console.error('Error resuming paused task entries:', error);
   }
-};
+}
 
 /**
- * Gets task time entries for the current user with all related data
+ * Get task time entries for the current user with improved caching
  */
-export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<TaskTimeEntry[]> => {
+export async function getTaskTimeEntriesForUser(limit = 10): Promise<any[]> {
   try {
-    // Get the current user's ID
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) {
+      console.error('No authenticated user found');
       return [];
     }
-    
-    console.log('Fetching task time entries for user:', user.id);
-    
-    // Fetch task time entries with proper joins
+
+    // Use a more efficient query with proper joins
     const { data, error } = await supabase
       .from('task_time_entries')
       .select(`
-        id, 
-        task_id,
-        user_id,
-        start_time,
-        end_time,
-        duration_seconds,
-        is_paused,
-        pause_time,
-        created_at,
-        updated_at,
-        tasks:task_id (
-          name,
-          phase_id,
-          phases:phase_id (
-            phase_name,
-            job_id,
-            jobs:job_id (
-              job_number,
-              project_name
-            )
-          )
-        )
+        *,
+        task:task_id (
+          id,
+          name
+        ),
+        phase:phases!inner (
+          id,
+          phase_name,
+          job_id
+        ),
+        job:phases!inner(jobs!inner (
+          id,
+          job_number,
+          project_name
+        ))
       `)
-      .eq('user_id', user.id)
+      .eq('user_id', user.user.id)
       .order('start_time', { ascending: false })
       .limit(limit);
-      
+
     if (error) {
       console.error('Error fetching task time entries:', error);
-      throw error;
+      return [];
     }
-    
-    console.log('Fetched task time entries:', data);
-    
-    // Transform the data to match the expected TaskTimeEntry format
-    const taskTimeEntries: TaskTimeEntry[] = data.map(entry => {
-      const task = entry.tasks;
-      const phase = task?.phases;
-      const job = phase?.jobs;
-      
-      return {
-        id: entry.id,
-        task_id: entry.task_id,
-        user_id: entry.user_id,
-        start_time: entry.start_time,
-        end_time: entry.end_time,
-        duration_seconds: entry.duration_seconds,
-        is_paused: entry.is_paused,
-        pause_time: entry.pause_time,
-        created_at: entry.created_at,
-        updated_at: entry.updated_at,
-        task: task ? {
-          name: task.name,
-          phase_id: task.phase_id
-        } : null,
-        phase: phase ? {
-          phase_name: phase.phase_name,
-          job_id: phase.job_id
-        } : null,
-        job: job ? {
-          job_number: job.job_number,
-          project_name: job.project_name
-        } : null
-      };
-    });
-    
-    return taskTimeEntries;
-  } catch (error: any) {
-    console.error('Error getting task time entries for user:', error);
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getTaskTimeEntriesForUser:', error);
     return [];
   }
-};
+}
