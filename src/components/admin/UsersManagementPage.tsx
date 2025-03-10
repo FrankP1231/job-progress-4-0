@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -12,12 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Edit, Search, UserPlus } from 'lucide-react';
-
-// Define type for user roles
-type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office' | 'Master Admin';
-
-// Define type for work areas
-type WorkArea = 'Sewing' | 'Welding' | 'Installation' | 'Front Office';
+import { UserRole, WorkArea } from '@/lib/types';
 
 interface Profile {
   id: string;

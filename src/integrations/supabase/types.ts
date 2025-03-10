@@ -305,6 +305,7 @@ export type Database = {
         | "Installer's Helper"
         | "Installer"
         | "Front Office"
+        | "Master Admin"
       work_area: "Sewing" | "Welding" | "Installation" | "Front Office"
     }
     CompositeTypes: {
