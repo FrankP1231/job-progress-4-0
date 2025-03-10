@@ -67,6 +67,15 @@ const AuthPage: React.FC = () => {
     
     try {
       setIsLoading(true);
+      console.log("Signing up with data:", {
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        work_area: workArea,
+        role: role
+      });
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -95,6 +104,7 @@ const AuthPage: React.FC = () => {
       setWorkArea('');
       setRole('');
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
