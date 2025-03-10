@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { Clock } from 'lucide-react';
 import TasksContainer from '@/components/production/TasksContainer';
-import { addTasksToPhaseArea, getTasksForPhaseArea } from '@/lib/supabaseUtils';
+import { addTasksToPhaseArea, getTasksForPhaseArea } from '@/lib/supabase/task-helpers';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
@@ -58,7 +58,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
     console.log(`${title} Material Tasks loaded:`, materialTasks.length);
   }, [title, laborTasks, materialTasks]);
   
-  const handleAddTask = async (area: string, taskName: string, assigneeIds?: string[], hours?: number) => {
+  const handleAddTask = async (area: string, taskName: string, assigneeIds?: string[]) => {
     if (!phaseId || !taskName.trim()) return;
     
     try {
@@ -169,7 +169,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
             phaseId={phaseId}
             area={title.toLowerCase() + 'Labor'}
             isEditing={!!phaseId}
-            onAddTask={(taskName, assigneeIds, hours) => handleAddTask(title.toLowerCase() + 'Labor', taskName, assigneeIds, hours)}
+            onAddTask={(taskName, assigneeIds) => handleAddTask(title.toLowerCase() + 'Labor', taskName, assigneeIds)}
             isDisabled={isAddingTask}
           />
         </div>
