@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -116,9 +115,6 @@ const AuthPage: React.FC = () => {
         <div className="flex flex-col gap-4">
           <Button onClick={() => setSignupSuccess(false)} variant="outline">
             Back to Sign Up
-          </Button>
-          <Button onClick={() => document.querySelector('[data-state="inactive"][value="login"]')?.dispatchEvent(new Event('click', { bubbles: true }))}>
-            Go to Login
           </Button>
         </div>
       </div>
