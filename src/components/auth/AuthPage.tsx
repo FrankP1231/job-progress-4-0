@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle2 } from 'lucide-react';
 
 const AuthPage: React.FC = () => {
   const { user } = useAuth();
@@ -20,6 +22,9 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  
+  // Signup confirmation state
+  const [signupSuccess, setSignupSuccess] = useState(false);
   
   // If user is already authenticated, redirect to home
   if (user.isAuthenticated) {
@@ -79,12 +84,45 @@ const AuthPage: React.FC = () => {
         throw error;
       }
       
-      toast.success('Registration successful! You can now log in.');
+      // Set signup success state instead of just showing a toast
+      setSignupSuccess(true);
+      
+      // Reset form
+      setEmail('');
+      setPassword('');
+      setFirstName('');
+      setLastName('');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Render signup success message
+  const renderSignupSuccess = () => {
+    return (
+      <div className="text-center py-8">
+        <div className="flex justify-center mb-4">
+          <CheckCircle2 className="h-16 w-16 text-green-500" />
+        </div>
+        <h2 className="text-2xl font-bold mb-4">Account Created Successfully!</h2>
+        <Alert className="mb-6 bg-green-50 border-green-100">
+          <AlertDescription>
+            Please check your email inbox to confirm your account. 
+            You'll need to click the confirmation link before you can log in.
+          </AlertDescription>
+        </Alert>
+        <div className="flex flex-col gap-4">
+          <Button onClick={() => setSignupSuccess(false)} variant="outline">
+            Back to Sign Up
+          </Button>
+          <Button onClick={() => document.querySelector('[data-state="inactive"][value="login"]')?.dispatchEvent(new Event('click', { bubbles: true }))}>
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
   };
   
   return (
@@ -145,56 +183,60 @@ const AuthPage: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="signup">
-            <form onSubmit={handleSignup}>
-              <CardContent className="space-y-4 pt-4">
-                <div className="grid grid-cols-2 gap-4">
+            {signupSuccess ? (
+              renderSignupSuccess()
+            ) : (
+              <form onSubmit={handleSignup}>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="signupEmail">Email</Label>
                     <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      id="signupEmail"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="signupPassword">Password</Label>
                     <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      id="signupPassword"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signupEmail">Email</Label>
-                  <Input
-                    id="signupEmail"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signupPassword">Password</Label>
-                  <Input
-                    id="signupPassword"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </Button>
-              </CardFooter>
-            </form>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                  </Button>
+                </CardFooter>
+              </form>
+            )}
           </TabsContent>
         </Tabs>
       </Card>
