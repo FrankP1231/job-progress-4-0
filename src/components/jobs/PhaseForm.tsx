@@ -135,15 +135,19 @@ const PhaseForm: React.FC = () => {
       
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Fixed null check for result and result.createdTasks
-      if (result && 
-          typeof result === 'object' && 
-          'createdTasks' in result &&
-          result.createdTasks) {
+      // Return early if result is null
+      if (!result) {
+        throw new Error('Failed to add phase');
+      }
+      
+      // Check if createdTasks exists and is an object before proceeding
+      const createdTasks = result.createdTasks;
+      if (createdTasks && typeof createdTasks === 'object') {
         const assignmentPromises: Promise<boolean>[] = [];
         
-        Object.keys(result.createdTasks).forEach(area => {
-          const tasks = result.createdTasks[area];
+        Object.keys(createdTasks).forEach(area => {
+          const tasks = createdTasks[area];
+          if (!Array.isArray(tasks)) return;
           
           tasks.forEach((task, index) => {
             const originalTaskData = pendingTasks[area]?.[index];
