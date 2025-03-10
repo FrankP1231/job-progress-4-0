@@ -20,6 +20,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   refreshUserProfile: () => Promise<void>;
+  resetPassword: (email: string, redirectTo?: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,6 +82,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('No active session found when trying to refresh profile');
     } catch (err) {
       console.error('Error in refreshUserProfile:', err);
+    }
+  };
+
+  // Reset password function
+  const resetPassword = async (email: string, redirectTo?: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectTo || `${window.location.origin}/profile`,
+      });
+      
+      if (error) {
+        console.error('Reset password error:', error.message);
+        toast.error(error.message || 'Failed to send reset password email');
+        return false;
+      }
+      
+      toast.success('Password reset instructions sent to your email');
+      return true;
+    } catch (error: any) {
+      console.error('Reset password error:', error);
+      toast.error('Failed to send reset password email');
+      return false;
     }
   };
 
@@ -180,7 +203,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUserProfile }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      logout, 
+      refreshUserProfile, 
+      resetPassword 
+    }}>
       {children}
     </AuthContext.Provider>
   );
