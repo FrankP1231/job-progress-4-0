@@ -1,5 +1,6 @@
-import { supabase } from './client';
-import { Task, TaskStatus } from '../types';
+
+import { supabase } from '@/lib/supabase/client';
+import { Task, TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
 
 export const updateTaskStatus = async (taskId: string, isComplete: boolean): Promise<void> => {
@@ -162,7 +163,7 @@ export const addTasksToPhaseArea = async (phaseId: string, area: string, tasks: 
   }
 };
 
-// Disable the sample task generation
+// Disable the sample task generation - ensures no automatic task creation
 export const addSampleTasksToPhases = async (): Promise<void> => {
   console.log("Sample task creation has been disabled");
   return Promise.resolve();
