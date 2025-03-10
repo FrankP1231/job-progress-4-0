@@ -26,19 +26,19 @@ export interface TaskTimeEntry {
   created_at: string;
   updated_at: string;
   
-  // Join fields
+  // Join fields - made optional to handle partial data
   task?: {
     name: string;
     phase_id: string;
-  };
+  } | null;
   phase?: {
     phase_name: string;
     job_id: string;
-  };
+  } | null;
   job?: {
     job_number: string;
     project_name: string;
-  };
+  } | null;
 }
 
 // User Clock In/Out Functions
@@ -542,7 +542,42 @@ export const getTaskTimeEntriesForUser = async (limit: number = 30): Promise<Tas
       throw error;
     }
     
-    return data || [];
+    // Map the data to ensure it matches our TypeScript interface
+    const mappedData: TaskTimeEntry[] = (data || []).map(entry => {
+      // Create a properly typed TaskTimeEntry object
+      const taskTimeEntry: TaskTimeEntry = {
+        id: entry.id,
+        task_id: entry.task_id,
+        user_id: entry.user_id,
+        start_time: entry.start_time,
+        end_time: entry.end_time,
+        duration_seconds: entry.duration_seconds,
+        is_paused: entry.is_paused,
+        pause_time: entry.pause_time,
+        created_at: entry.created_at,
+        updated_at: entry.updated_at,
+        
+        // Safely handle nested objects that might be null or have a different structure
+        task: entry.task && entry.task[0] ? {
+          name: entry.task[0].name || '',
+          phase_id: entry.task[0].phase_id || ''
+        } : null,
+        
+        phase: entry.phase && entry.phase[0] ? {
+          phase_name: entry.phase[0].phase_name || '',
+          job_id: entry.phase[0].job_id || ''
+        } : null,
+        
+        job: entry.job && entry.job[0] ? {
+          job_number: entry.job[0].job_number || '',
+          project_name: entry.job[0].project_name || ''
+        } : null
+      };
+      
+      return taskTimeEntry;
+    });
+    
+    return mappedData;
   } catch (error: any) {
     console.error('Error getting task time entries for user:', error);
     return [];
