@@ -71,22 +71,15 @@ const ProductionOverview: React.FC = () => {
     return <div className="text-red-500">Error loading jobs</div>;
   }
 
-  // Convert PhaseWithJob objects to Phase objects
+  // Extract phases from PhaseWithJob objects
   const extractPhases = (phaseWithJobArray: PhaseWithJob[]): Phase[] => {
     return phaseWithJobArray.map(item => item.phase);
   };
 
-  // Use tasksMap variable name consistently
-  const tasksMap = phaseTasks;
-  
-  const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
-  const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
-  const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
-
   // Enhance phases with tasks
   const enhancePhaseWithTasks = (phases: Phase[]): Phase[] => {
     return phases.map(phase => {
-      const phaseTasks = tasksMap[phase.id] || [];
+      const phaseTasks = phaseTasks[phase.id] || [];
       
       return {
         ...phase,
@@ -125,12 +118,15 @@ const ProductionOverview: React.FC = () => {
       };
     });
   };
+  
+  const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
+  const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
+  const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Production Overview</h1>
-        {/* Sample data button removed */}
       </div>
 
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'welding' | 'sewing' | 'readyForInstall')} className="w-full">
