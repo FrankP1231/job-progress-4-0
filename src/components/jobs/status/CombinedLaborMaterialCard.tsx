@@ -58,17 +58,19 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
     console.log(`${title} Material Tasks loaded:`, materialTasks.length);
   }, [title, laborTasks, materialTasks]);
   
-  const handleAddTask = async (area: string, taskName: string) => {
+  const handleAddTask = async (area: string, taskName: string, assigneeIds?: string[], hours?: number) => {
     if (!phaseId || !taskName.trim()) return;
     
     try {
       setIsAddingTask(true);
       console.log(`Adding task "${taskName}" to ${area} in phase ${phaseId}`);
+      console.log('With assignees:', assigneeIds);
       
       // Prevent form submission
       await new Promise(resolve => setTimeout(resolve, 0));
       
-      const result = await addTasksToPhaseArea(phaseId, area, [taskName]);
+      // Add the task with assignees if provided
+      const result = await addTasksToPhaseArea(phaseId, area, [taskName], assigneeIds);
       toast.success('Task added successfully');
       
       console.log(`Task "${taskName}" added to ${area} in phase ${phaseId}`, result);
@@ -128,7 +130,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
             phaseId={phaseId}
             area={title.toLowerCase() + 'Materials'}
             isEditing={!!phaseId}
-            onAddTask={(taskName) => handleAddTask(title.toLowerCase() + 'Materials', taskName)}
+            onAddTask={(taskName, assigneeIds) => handleAddTask(title.toLowerCase() + 'Materials', taskName, assigneeIds)}
             isDisabled={isAddingTask}
           />
         </div>
@@ -167,7 +169,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
             phaseId={phaseId}
             area={title.toLowerCase() + 'Labor'}
             isEditing={!!phaseId}
-            onAddTask={(taskName) => handleAddTask(title.toLowerCase() + 'Labor', taskName)}
+            onAddTask={(taskName, assigneeIds, hours) => handleAddTask(title.toLowerCase() + 'Labor', taskName, assigneeIds, hours)}
             isDisabled={isAddingTask}
           />
         </div>

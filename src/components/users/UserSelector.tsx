@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -58,13 +57,28 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   });
 
   // Safe handling of user selection to prevent UI crash
-  const handleSelect = (userId: string) => {
+  const handleSelect = (userId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     try {
+      console.log('Selecting user:', userId);
+      console.log('Current selected users:', selectedUserIds);
+      
       if (selectedUserIds.includes(userId)) {
-        onSelectionChange(selectedUserIds.filter(id => id !== userId));
+        const newSelected = selectedUserIds.filter(id => id !== userId);
+        console.log('Removing user, new selection:', newSelected);
+        onSelectionChange(newSelected);
       } else {
-        onSelectionChange([...selectedUserIds, userId]);
+        const newSelected = [...selectedUserIds, userId];
+        console.log('Adding user, new selection:', newSelected);
+        onSelectionChange(newSelected);
       }
+      
+      // Keep the popover open after selection
+      e && e.preventDefault();
     } catch (err) {
       console.error('Error handling user selection:', err);
     }
@@ -99,7 +113,9 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
               e.stopPropagation(); // Prevent event bubbling
             }}
           >
-            Select users
+            {selectedUsers.length > 0 
+              ? `${selectedUsers.length} user${selectedUsers.length !== 1 ? 's' : ''} selected`
+              : 'Select users'}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -107,6 +123,18 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
           className="w-full p-0" 
           onOpenAutoFocus={(e) => e.preventDefault()}
           onClick={(e) => e.stopPropagation()}
+          onPointerDownOutside={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onEscapeKeyDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onInteractOutside={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
         >
           <Command>
             <CommandInput placeholder="Search users..." className="h-9" />
@@ -120,8 +148,9 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                 users.map((user) => (
                   <CommandItem
                     key={user.id}
-                    onSelect={() => {
+                    onSelect={(value) => {
                       try {
+                        console.log('User selected via CommandItem:', user.id);
                         handleSelect(user.id);
                       } catch (err) {
                         console.error('Error in onSelect handler:', err);
@@ -160,7 +189,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                   e.preventDefault();
                   e.stopPropagation(); // Prevent event bubbling
                   try {
-                    handleSelect(user.id);
+                    handleSelect(user.id, e);
                   } catch (err) {
                     console.error('Error removing user:', err);
                   }

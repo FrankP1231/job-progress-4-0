@@ -18,7 +18,7 @@ interface TasksContainerProps {
   isDisabled?: boolean;
   title?: string;
   className?: string;
-  onAddTask?: (taskName: string) => Promise<void>;
+  onAddTask?: (taskName: string, assigneeIds?: string[], hours?: number) => Promise<void>;
 }
 
 const TasksContainer: React.FC<TasksContainerProps> = ({
@@ -41,15 +41,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const queryClient = useQueryClient();
 
   // Determine if this is a labor area
-  const isLaborArea = area === 'weldingLabor' || area === 'sewingLabor';
+  const isLaborArea = area.endsWith('Labor');
   
   // Map area to work area for user filtering
   const getWorkAreaFromTaskArea = (area: string): WorkArea | undefined => {
-    if (area === 'weldingLabor' || area === 'weldingMaterials') {
+    if (area.startsWith('welding')) {
       return 'Welding';
-    } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
+    } else if (area.startsWith('sewing')) {
       return 'Sewing';
-    } else if (area === 'installation' || area === 'installationMaterials') {
+    } else if (area.startsWith('installation')) {
       return 'Installation';
     } else if (area === 'rentalEquipment') {
       return 'Installation'; // Rental equipment is typically for installation
@@ -60,6 +60,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   };
   
   const workArea = getWorkAreaFromTaskArea(area);
+
+  useEffect(() => {
+    // Reset form state when dialog closes
+    if (!isAddDialogOpen) {
+      setNewTaskName('');
+      setLaborHours('');
+      setSelectedUsers([]);
+    }
+  }, [isAddDialogOpen]);
 
   // Parse task name if it's a JSON string
   const parseTaskName = (task: Task): string => {
@@ -89,9 +98,15 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
 
     try {
       setIsAddingTask(true);
+      console.log('Selected users for task:', selectedUsers);
       
       if (onAddTask) {
-        await onAddTask(newTaskName.trim());
+        const hours = isLaborArea && laborHours ? Number(laborHours) : undefined;
+        await onAddTask(
+          newTaskName.trim(), 
+          selectedUsers.length > 0 ? selectedUsers : undefined,
+          hours
+        );
       } 
       else if (phaseId) {
         const taskData = {
@@ -308,7 +323,10 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 </label>
                 <UserSelector 
                   selectedUserIds={selectedUsers}
-                  onSelectionChange={setSelectedUsers}
+                  onSelectionChange={(ids) => {
+                    console.log('Selection changed to:', ids);
+                    setSelectedUsers(ids);
+                  }}
                   workArea={workArea}
                 />
               </div>

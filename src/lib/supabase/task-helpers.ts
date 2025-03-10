@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
@@ -133,6 +134,25 @@ export const assignUserToTask = async (taskId: string, userId: string): Promise<
   try {
     const currentUser = (await supabase.auth.getUser()).data.user;
     
+    // Check if assignment already exists
+    const { data: existingAssignment, error: checkError } = await supabase
+      .from('task_assignments')
+      .select('*')
+      .eq('task_id', taskId)
+      .eq('user_id', userId)
+      .maybeSingle();
+      
+    if (checkError) {
+      console.error('Error checking existing assignment:', checkError);
+    }
+    
+    // If assignment already exists, don't duplicate it
+    if (existingAssignment) {
+      console.log('User already assigned to this task');
+      return true;
+    }
+    
+    // Insert new assignment
     const { error } = await supabase
       .from('task_assignments')
       .insert({
@@ -185,6 +205,8 @@ export async function addTasksToPhaseArea(
   }
 
   try {
+    console.log(`Adding tasks to area ${area} with assignees:`, assigneeIds);
+    
     // Ensure task names are strings, not JSON objects
     const sanitizedTasks = tasks.map(task => {
       // If task appears to be a JSON string or object, extract the name property
@@ -218,14 +240,20 @@ export async function addTasksToPhaseArea(
 
     // If assigneeIds are provided, create task assignments
     if (assigneeIds && assigneeIds.length > 0 && data) {
+      console.log(`Creating assignments for ${data.length} tasks to ${assigneeIds.length} users`);
+      
+      const currentUser = (await supabase.auth.getUser()).data.user;
+      
       for (const task of data) {
         for (const userId of assigneeIds) {
+          console.log(`Assigning task ${task.id} to user ${userId}`);
+          
           const { error: assignmentError } = await supabase
             .from('task_assignments')
             .insert({
               task_id: task.id,
               user_id: userId,
-              assigned_by: (await supabase.auth.getUser()).data.user?.id
+              assigned_by: currentUser?.id
             });
 
           if (assignmentError) {
@@ -261,6 +289,8 @@ export async function createTask(
   }
 
   try {
+    console.log(`Creating task "${name}" in area ${area} with options:`, options);
+    
     // Sanitize task name - ensure it's a simple string, not a JSON object
     let sanitizedName = name;
     
@@ -298,9 +328,13 @@ export async function createTask(
 
     // If assigneeIds are provided, create task assignments
     if (options?.assigneeIds && options.assigneeIds.length > 0) {
+      console.log(`Assigning ${options.assigneeIds.length} users to task ${data.id}`);
+      
       const currentUser = (await supabase.auth.getUser()).data.user;
       
       for (const userId of options.assigneeIds) {
+        console.log(`Creating assignment for user ${userId}`);
+        
         const { error: assignmentError } = await supabase
           .from('task_assignments')
           .insert({
