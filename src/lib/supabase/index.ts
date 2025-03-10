@@ -60,8 +60,15 @@ export {
 import { supabase } from "@/integrations/supabase/client";
 import { WorkArea } from "@/lib/types";
 
+/**
+ * Gets all users from the database, optionally filtered by work area
+ * @param workArea Optional WorkArea to filter users by 
+ * @returns Array of user objects with id, email, name, and workArea
+ */
 export const getAllUsers = async (workArea?: WorkArea) => {
   try {
+    console.log(`Getting users with workArea filter: ${workArea || 'none'}`);
+    
     let query = supabase
       .from('profiles')
       .select('id, email, first_name, last_name, work_area')
@@ -79,12 +86,18 @@ export const getAllUsers = async (workArea?: WorkArea) => {
       return [];
     }
     
+    if (!data || data.length === 0) {
+      console.log(`No users found${workArea ? ` for work area: ${workArea}` : ''}`);
+    } else {
+      console.log(`Found ${data.length} users${workArea ? ` for work area: ${workArea}` : ''}`);
+    }
+    
     // Map the profile data to match the expected structure in the UserSelector component
     return data.map(profile => ({
       id: profile.id,
       email: profile.email || '',
       name: `${profile.first_name} ${profile.last_name}`.trim(),
-      workArea: profile.work_area
+      workArea: profile.work_area as WorkArea
     })) || [];
   } catch (error) {
     console.error('Error in getAllUsers:', error);

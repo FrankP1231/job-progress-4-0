@@ -40,6 +40,7 @@ const TaskList: React.FC<TaskListProps> = ({
   
   // Map area to work area for user filtering
   const getWorkAreaFromTaskArea = (area: string): WorkArea | undefined => {
+    console.log(`Mapping task area: ${area} to work area`);
     if (area === 'weldingLabor' || area === 'weldingMaterials') {
       return 'Welding';
     } else if (area === 'sewingLabor' || area === 'sewingMaterials') {
@@ -55,6 +56,7 @@ const TaskList: React.FC<TaskListProps> = ({
   };
   
   const workArea = getWorkAreaFromTaskArea(area);
+  console.log(`Determined work area: ${workArea || 'none'} for task area: ${area}`);
   
   const handleAddTask = () => {
     if (!newTaskName.trim()) return;
@@ -84,6 +86,7 @@ const TaskList: React.FC<TaskListProps> = ({
               size="sm" 
               className="flex items-center gap-1"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation(); // Prevent event bubbling
               }}
             >
@@ -150,6 +153,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   type="button" 
                   variant="outline" 
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setIsDialogOpen(false);
                   }}
@@ -159,6 +163,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 <Button 
                   type="button"
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     handleAddTask();
                   }}
@@ -197,6 +202,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 variant="ghost" 
                 size="icon"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   onRemove(area, index);
                 }}

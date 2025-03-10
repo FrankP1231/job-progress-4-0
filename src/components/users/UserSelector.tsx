@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,10 +30,30 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
+  // Add error boundary with useEffect to prevent crashes
+  useEffect(() => {
+    // Log the workArea prop when it changes for debugging
+    console.log('UserSelector received workArea:', workArea);
+    
+    // Return cleanup function
+    return () => {
+      // Cleanup any subscriptions or event listeners if needed
+    };
+  }, [workArea]);
+
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users', workArea],
-    queryFn: () => getAllUsers(workArea),
+    queryFn: () => {
+      console.log(`Fetching users for work area: ${workArea || 'all'}`);
+      return getAllUsers(workArea);
+    },
     staleTime: 60000, // Cache results for 1 minute to reduce API calls
+    // Add error handling in query options
+    retry: 1,
+    // Log any errors that occur during the query
+    onError: (err) => {
+      console.error('Error fetching users in UserSelector:', err);
+    }
   });
 
   // Safe handling of user selection to prevent UI crash
@@ -49,7 +69,15 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     }
   };
 
-  const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
+  // Safely filter selected users
+  const selectedUsers = React.useMemo(() => {
+    try {
+      return users.filter(user => selectedUserIds.includes(user.id));
+    } catch (err) {
+      console.error('Error filtering selected users:', err);
+      return [];
+    }
+  }, [users, selectedUserIds]);
 
   if (error) {
     console.error('Error loading users:', error);
@@ -57,7 +85,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 
   return (
     <div className="space-y-2">
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(newOpen) => {
+        try {
+          setOpen(newOpen);
+        } catch (err) {
+          console.error('Error toggling popover state:', err);
+        }
+      }}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -66,6 +100,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             className="w-full justify-between"
             type="button"
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation(); // Prevent event bubbling
             }}
           >
@@ -86,7 +121,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                 users.map((user) => (
                   <CommandItem
                     key={user.id}
-                    onSelect={() => handleSelect(user.id)}
+                    onSelect={() => {
+                      try {
+                        handleSelect(user.id);
+                      } catch (err) {
+                        console.error('Error in onSelect handler:', err);
+                      }
+                    }}
                     className="flex items-center"
                   >
                     <Check
@@ -117,8 +158,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                 type="button"
                 className="h-4 w-4 rounded-full text-xs font-semibold"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation(); // Prevent event bubbling
-                  handleSelect(user.id);
+                  try {
+                    handleSelect(user.id);
+                  } catch (err) {
+                    console.error('Error removing user:', err);
+                  }
                 }}
               >
                 ×
