@@ -1,13 +1,20 @@
-import { supabase } from '../../supabase/client';
+
+// Implementation may vary based on your actual file structure
+
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { TaskTimeEntry } from './types';
-import { toast } from "@/hooks/use-toast";
 
 /**
- * Start a task timer for the current user
+ * Starts a timer for a specific task
  */
-export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
+export const startTaskTimer = async (taskId: string, taskName: string): Promise<TaskTimeEntry | null> => {
   try {
-    // Get the current user's ID
+    if (!taskId) {
+      throw new Error('Task ID is required to start timer');
+    }
+    
+    // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -15,31 +22,8 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
       throw new Error('User not authenticated');
     }
     
-    // Check if user is clocked in
-    const { data: activeSession, error: checkTimeEntry } = await supabase
-      .from('time_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .is('clock_out_time', null)
-      .order('clock_in_time', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-      
-    if (checkTimeEntry) {
-      console.error('Error checking active time entry:', checkTimeEntry);
-    }
-    
-    if (!activeSession) {
-      toast({
-        title: "Error",
-        description: "You must be clocked in to track task time",
-        variant: "destructive"
-      });
-      return null;
-    }
-    
-    // Check if task is already being timed
-    const { data: existingEntry, error: checkError } = await supabase
+    // Check if there's already an active timer for this task
+    const { data: activeEntry, error: checkError } = await supabase
       .from('task_time_entries')
       .select('*')
       .eq('task_id', taskId)
@@ -48,31 +32,65 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
       .maybeSingle();
       
     if (checkError) {
-      console.error('Error checking existing task time entry:', checkError);
+      console.error('Error checking active task entry:', checkError);
       throw checkError;
     }
     
-    if (existingEntry) {
-      if (existingEntry.is_paused) {
-        // Resume the paused entry
-        return await resumeTaskTimer(existingEntry.id);
-      }
-      
-      toast({
-        title: "Information",
-        description: "Task timer is already running"
-      });
-      return existingEntry;
+    if (activeEntry) {
+      toast.warning('You already have an active timer for this task');
+      return activeEntry;
     }
     
-    // Create new task time entry
+    // Get task details for assignment requirements
+    const { data: taskData, error: taskError } = await supabase
+      .from('tasks')
+      .select('phase_id, name')
+      .eq('id', taskId)
+      .single();
+      
+    if (taskError) {
+      console.error('Error getting task details:', taskError);
+      throw taskError;
+    }
+    
+    // Before starting the timer, check if the user is assigned to this task
+    // If not, try to add them as an assignee (self-assignment)
+    const { data: assignmentCheck, error: assignmentCheckError } = await supabase
+      .from('task_assignees')
+      .select('*')
+      .eq('task_id', taskId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+      
+    if (assignmentCheckError) {
+      console.log('Error checking assignment, but continuing:', assignmentCheckError);
+      // Continue despite the error, don't block the user from starting the timer
+    }
+    
+    // If user is not assigned, assign them (allow self-assignment)
+    if (!assignmentCheck) {
+      try {
+        await supabase
+          .from('task_assignees')
+          .insert({
+            task_id: taskId,
+            user_id: user.id,
+            role: 'Worker'
+          });
+      } catch (assignError) {
+        console.error('Failed to auto-assign user to task, continuing with timer:', assignError);
+        // Don't block timer start if assignment fails
+      }
+    }
+    
+    // No active session found, create new task timer
     const { data, error } = await supabase
       .from('task_time_entries')
       .insert({
         task_id: taskId,
         user_id: user.id,
-        is_paused: false,
-        start_time: new Date().toISOString()  // Explicitly set start_time to ensure it's recorded
+        phase_id: taskData.phase_id,
+        task_name: taskData.name || taskName
       })
       .select()
       .single();
@@ -82,64 +100,61 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
-    // Auto-assign the user to the task (this is the new part)
-    try {
-      // Check if user is already assigned to this task
-      const { data: existingAssignment, error: checkAssignmentError } = await supabase
-        .from('task_assignments')
-        .select('*')
-        .eq('task_id', taskId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (checkAssignmentError) {
-        console.error('Error checking task assignment:', checkAssignmentError);
-      }
-      
-      // Only create assignment if not already assigned
-      if (!existingAssignment) {
-        const { error: assignmentError } = await supabase
-          .from('task_assignments')
-          .insert({
-            task_id: taskId,
-            user_id: user.id,
-            assigned_by: user.id  // Self-assignment
-          });
-          
-        if (assignmentError) {
-          console.error('Error assigning user to task:', assignmentError);
-          // Don't throw here, as we still want the timer to start
-        }
-      }
-    } catch (assignmentErr) {
-      console.error('Error in task assignment process:', assignmentErr);
-      // Don't throw here, as we still want the timer to start
-    }
-    
-    toast({
-      title: "Success",
-      description: "Task timer started"
-    });
-    console.log('Created task time entry:', data);
+    toast.success('Timer started for task');
     return data;
   } catch (error: any) {
     console.error('Error starting task timer:', error);
+    toast.error(`Failed to start timer: ${error.message}`);
     throw error;
   }
-}
+};
 
 /**
- * Pause a task timer
+ * Pauses an active timer for a specific task
  */
-export async function pauseTaskTimer(entryId: string): Promise<TaskTimeEntry> {
+export const pauseTaskTimer = async (taskId: string): Promise<TaskTimeEntry | null> => {
   try {
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
+    // Get the active task entry
+    const { data: activeEntry, error: checkError } = await supabase
+      .from('task_time_entries')
+      .select('*')
+      .eq('task_id', taskId)
+      .eq('user_id', user.id)
+      .is('end_time', null)
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking active task entry:', checkError);
+      throw checkError;
+    }
+    
+    if (!activeEntry) {
+      toast.error('No active timer found for this task');
+      return null;
+    }
+    
+    // Calculate duration in seconds
+    const startTime = new Date(activeEntry.start_time);
+    const endTime = new Date();
+    const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+    
+    // Update task entry with pause time
     const { data, error } = await supabase
       .from('task_time_entries')
       .update({
-        is_paused: true,
-        pause_time: new Date().toISOString()
+        end_time: endTime.toISOString(),
+        duration_seconds: durationSeconds,
+        is_paused: true
       })
-      .eq('id', entryId)
+      .eq('id', activeEntry.id)
       .select()
       .single();
       
@@ -148,42 +163,68 @@ export async function pauseTaskTimer(entryId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
+    toast.success('Timer paused');
     return data;
   } catch (error: any) {
     console.error('Error pausing task timer:', error);
+    toast.error(`Failed to pause timer: ${error.message}`);
     throw error;
   }
-}
+};
 
 /**
- * Resume a paused task timer
+ * Resumes a paused timer for a specific task
  */
-export async function resumeTaskTimer(entryId: string): Promise<TaskTimeEntry> {
+export const resumeTaskTimer = async (taskId: string): Promise<TaskTimeEntry | null> => {
   try {
-    // Get the current entry to calculate duration
-    const { data: currentEntry, error: fetchError } = await supabase
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
+    // Check if there's already an active timer for this task
+    const { data: activeEntry, error: checkActiveError } = await supabase
       .from('task_time_entries')
       .select('*')
-      .eq('id', entryId)
+      .eq('task_id', taskId)
+      .eq('user_id', user.id)
+      .is('end_time', null)
+      .maybeSingle();
+      
+    if (checkActiveError) {
+      console.error('Error checking active task entry:', checkActiveError);
+      throw checkActiveError;
+    }
+    
+    if (activeEntry) {
+      toast.warning('There is already an active timer for this task');
+      return activeEntry;
+    }
+    
+    // Get task details for reference
+    const { data: taskData, error: taskError } = await supabase
+      .from('tasks')
+      .select('phase_id, name')
+      .eq('id', taskId)
       .single();
       
-    if (fetchError || !currentEntry) {
-      console.error('Error fetching task entry to resume:', fetchError);
-      throw fetchError || new Error('Task entry not found');
+    if (taskError) {
+      console.error('Error getting task details:', taskError);
+      throw taskError;
     }
     
-    // Skip if entry is not paused
-    if (!currentEntry.is_paused || !currentEntry.pause_time) {
-      return currentEntry;
-    }
-    
+    // Create a new entry for this task (resume)
     const { data, error } = await supabase
       .from('task_time_entries')
-      .update({
-        is_paused: false,
-        pause_time: null
+      .insert({
+        task_id: taskId,
+        user_id: user.id,
+        phase_id: taskData.phase_id,
+        task_name: taskData.name,
       })
-      .eq('id', entryId)
       .select()
       .single();
       
@@ -192,50 +233,62 @@ export async function resumeTaskTimer(entryId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
+    toast.success('Timer resumed');
     return data;
   } catch (error: any) {
     console.error('Error resuming task timer:', error);
+    toast.error(`Failed to resume timer: ${error.message}`);
     throw error;
   }
-}
+};
 
 /**
- * Stop a task timer
+ * Stops a timer for a specific task (complete)
  */
-export async function stopTaskTimer(entryId: string): Promise<TaskTimeEntry> {
+export const stopTaskTimer = async (taskId: string, notes?: string): Promise<TaskTimeEntry | null> => {
   try {
-    // Get the current entry to calculate duration
-    const { data: currentEntry, error: fetchError } = await supabase
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Authentication error:', authError);
+      throw new Error('User not authenticated');
+    }
+    
+    // Get the active task entry
+    const { data: activeEntry, error: checkError } = await supabase
       .from('task_time_entries')
       .select('*')
-      .eq('id', entryId)
-      .single();
+      .eq('task_id', taskId)
+      .eq('user_id', user.id)
+      .is('end_time', null)
+      .maybeSingle();
       
-    if (fetchError || !currentEntry) {
-      console.error('Error fetching task entry to stop:', fetchError);
-      throw fetchError || new Error('Task entry not found');
+    if (checkError) {
+      console.error('Error checking active task entry:', checkError);
+      throw checkError;
     }
     
-    // Calculate total duration
-    const startTime = new Date(currentEntry.start_time);
+    if (!activeEntry) {
+      toast.error('No active timer found for this task');
+      return null;
+    }
+    
+    // Calculate duration in seconds
+    const startTime = new Date(activeEntry.start_time);
     const endTime = new Date();
-    let durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+    const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
     
-    // If the entry was paused at some point, we need to adjust the duration
-    if (currentEntry.is_paused && currentEntry.pause_time) {
-      const pauseTime = new Date(currentEntry.pause_time);
-      durationSeconds = Math.floor((pauseTime.getTime() - startTime.getTime()) / 1000);
-    }
-    
+    // Update task entry with stop time
     const { data, error } = await supabase
       .from('task_time_entries')
       .update({
         end_time: endTime.toISOString(),
         duration_seconds: durationSeconds,
         is_paused: false,
-        pause_time: null
+        notes: notes
       })
-      .eq('id', entryId)
+      .eq('id', activeEntry.id)
       .select()
       .single();
       
@@ -244,24 +297,21 @@ export async function stopTaskTimer(entryId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
-    console.log('Stopped task time entry:', data);
-    toast({
-      title: "Success",
-      description: "Task timer stopped"
-    });
+    toast.success('Timer stopped');
     return data;
   } catch (error: any) {
     console.error('Error stopping task timer:', error);
+    toast.error(`Failed to stop timer: ${error.message}`);
     throw error;
   }
-}
+};
 
 /**
- * Get the active task time entry for a task
+ * Get active task time entry (if any) for a specific task and user
  */
-export async function getTaskTimeEntry(taskId: string): Promise<TaskTimeEntry | null> {
+export const getTaskTimeEntry = async (taskId: string): Promise<TaskTimeEntry | null> => {
   try {
-    // Get the current user's ID
+    // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -269,34 +319,40 @@ export async function getTaskTimeEntry(taskId: string): Promise<TaskTimeEntry | 
       return null;
     }
     
+    // Get active task time entry
     const { data, error } = await supabase
       .from('task_time_entries')
-      .select('*')
+      .select(`
+        *,
+        phases:phase_id(*),
+        jobs:phases->jobs(*),
+        task:task_id(*)
+      `)
       .eq('task_id', taskId)
       .eq('user_id', user.id)
       .is('end_time', null)
       .order('start_time', { ascending: false })
-      .limit(1)
       .maybeSingle();
       
     if (error) {
-      console.error('Error fetching task time entry:', error);
-      throw error;
+      console.error('Error getting task time entry:', error);
+      return null;
     }
     
     return data;
-  } catch (error: any) {
-    console.error('Error getting task time entry:', error);
+  } catch (error) {
+    console.error('Error in getTaskTimeEntry:', error);
     return null;
   }
-}
+};
 
 /**
- * Pause all active task entries for the current user
+ * Pause all active task time entries for the current user
+ * Called when clocking out
  */
-export async function pauseActiveTaskEntries(): Promise<void> {
+export const pauseActiveTaskEntries = async (): Promise<void> => {
   try {
-    // Get the current user's ID
+    // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -304,115 +360,105 @@ export async function pauseActiveTaskEntries(): Promise<void> {
       return;
     }
     
-    // Find all active task entries for the current user
-    const { data, error } = await supabase
+    // Find all active task time entries
+    const { data: activeEntries, error: entriesError } = await supabase
       .from('task_time_entries')
-      .select('*')
+      .select('id, start_time')
       .eq('user_id', user.id)
-      .is('end_time', null)
-      .eq('is_paused', false);
+      .is('end_time', null);
       
-    if (error) {
-      console.error('Error fetching active task entries:', error);
-      throw error;
+    if (entriesError) {
+      console.error('Error finding active task entries:', entriesError);
+      return;
     }
     
-    // Pause each active entry
-    for (const entry of (data || [])) {
-      await pauseTaskTimer(entry.id);
+    if (!activeEntries || activeEntries.length === 0) {
+      console.log('No active task entries to pause');
+      return;
     }
-  } catch (error: any) {
+    
+    // Update each entry with current time
+    for (const entry of activeEntries) {
+      const startTime = new Date(entry.start_time);
+      const endTime = new Date();
+      const durationSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      
+      await supabase
+        .from('task_time_entries')
+        .update({
+          end_time: endTime.toISOString(),
+          duration_seconds: durationSeconds,
+          is_paused: true
+        })
+        .eq('id', entry.id);
+    }
+    
+    console.log(`Paused ${activeEntries.length} active task entries`);
+  } catch (error) {
     console.error('Error pausing active task entries:', error);
   }
-}
+};
 
 /**
- * Resume all paused task entries for the current user
+ * Resume all paused task time entries for the current user
+ * Called when clocking in
  */
-export async function resumePausedTaskEntries(): Promise<void> {
+export const resumePausedTaskEntries = async (): Promise<void> => {
   try {
-    // Get the current user's ID
+    // Currently this feature is disabled - we don't auto resume tasks
+    // When clocking in, the user will need to manually start their tasks again
+    
+    // This functionality could be re-enabled in the future if needed
+    
+    return;
+  } catch (error) {
+    console.error('Error resuming paused task entries:', error);
+  }
+};
+
+/**
+ * Get the most recent task time entries for a user
+ */
+export const getTaskTimeEntriesForUser = async (limit: number = 10): Promise<any[]> => {
+  try {
+    // Check if user is authenticated
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       console.error('Authentication error:', authError);
-      return;
-    }
-    
-    // Find all paused task entries for the current user
-    const { data, error } = await supabase
-      .from('task_time_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .is('end_time', null)
-      .eq('is_paused', true);
-      
-    if (error) {
-      console.error('Error fetching paused task entries:', error);
-      throw error;
-    }
-    
-    // Resume each paused entry
-    for (const entry of (data || [])) {
-      await resumeTaskTimer(entry.id);
-    }
-  } catch (error: any) {
-    console.error('Error resuming paused task entries:', error);
-  }
-}
-
-/**
- * Get task time entries for the current user with improved caching and performance
- */
-export async function getTaskTimeEntriesForUser(limit = 10): Promise<any[]> {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      console.error('No authenticated user found');
       return [];
     }
-
-    // Add caching header and optimize query with specific column selection
+    
+    // Get task time entries with task and job details
     const { data, error } = await supabase
       .from('task_time_entries')
       .select(`
         id,
-        task_id,
-        user_id,
         start_time,
         end_time,
-        is_paused,
-        pause_time,
         duration_seconds,
-        task:task_id (
-          id,
-          name
-        ),
-        phase:phases!inner (
-          id,
-          phase_name,
-          job_id
-        ),
-        job:phases!inner(jobs!inner (
-          id,
-          job_number,
-          project_name
-        ))
+        is_paused,
+        notes,
+        task_id,
+        user_id,
+        phase_id,
+        task_name,
+        task:task_id(name),
+        phase:phase_id(phase_name),
+        job:phase_id->phases!phases_job_id_fkey(job_number, project_name)
       `)
-      .eq('user_id', user.user.id)
+      .eq('user_id', user.id)
       .order('start_time', { ascending: false })
-      .limit(limit)
-      .options({ count: 'exact' });
-
+      .limit(limit);
+      
     if (error) {
       console.error('Error fetching task time entries:', error);
       return [];
     }
-
-    // Cache the response in memory
+    
     return data || [];
   } catch (error) {
     console.error('Error in getTaskTimeEntriesForUser:', error);
     return [];
   }
-}
+};

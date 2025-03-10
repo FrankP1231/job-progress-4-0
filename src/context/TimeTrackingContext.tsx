@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
@@ -52,6 +53,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setLastRefresh(Date.now());
     } catch (error) {
       console.error('Error refreshing time tracking:', error);
+      toast.error('Failed to refresh time tracking status');
     } finally {
       setIsClockingLoading(false);
     }
@@ -102,7 +104,7 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     } catch (error: any) {
       console.error('Error in clock in handler:', error);
-      toast.error(`Failed to clock in: ${error.message}`);
+      toast.error(`Failed to clock in: ${error.message || 'Unknown error'}`);
     } finally {
       setIsClockingIn(false);
     }
@@ -116,16 +118,31 @@ export const TimeTrackingProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     try {
       setIsClockingOut(true);
+      console.log('Starting clock out process...');
+      
+      // Set a timeout for error handling
+      let clockOutComplete = false;
+      const timeoutId = setTimeout(() => {
+        if (!clockOutComplete) {
+          console.error('Clock out operation timed out');
+          throw new Error('Clock out operation timed out. Please try again.');
+        }
+      }, 8000);
+      
       const result = await clockOut(notes);
+      clockOutComplete = true;
+      clearTimeout(timeoutId);
       
       if (result) {
+        console.log('Clock out successful:', result);
         toast.success('Clocked out successfully');
       }
       
       await refreshTimeTracking();
     } catch (error: any) {
       console.error('Error in clock out handler:', error);
-      toast.error(`Failed to clock out: ${error.message}`);
+      toast.error(`Failed to clock out: ${error.message || 'Unknown error'}`);
+      throw error; // Rethrow to handle in the component
     } finally {
       setIsClockingOut(false);
     }

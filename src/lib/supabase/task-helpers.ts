@@ -1,3 +1,4 @@
+
 import { supabase } from '../supabase/client';
 import { Job, Task, TaskStatus } from '../types';
 
@@ -174,11 +175,17 @@ export async function getActiveUserForTask(taskId: string) {
       return null;
     }
 
+    // Fix the type issue by properly checking if profiles exists and has the right properties
+    const profile = data.profiles;
+    if (!profile) {
+      return null;
+    }
+
     return {
-      userId: data.profiles.id,
-      firstName: data.profiles.first_name,
-      lastName: data.profiles.last_name,
-      profilePictureUrl: data.profiles.profile_picture_url
+      userId: profile.id,
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      profilePictureUrl: profile.profile_picture_url
     };
   } catch (error) {
     console.error('Error getting active user for task:', error);

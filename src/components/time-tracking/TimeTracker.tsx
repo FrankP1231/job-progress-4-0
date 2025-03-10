@@ -40,11 +40,16 @@ const TimeTracker: React.FC = () => {
   }
   
   const handleClockIn = async () => {
-    await clockInHandler();
-    // Add a refresh after a short delay to ensure we get the updated status
-    setTimeout(() => {
-      refreshTimeTracking();
-    }, 1000);
+    try {
+      await clockInHandler();
+      // Add a refresh after a short delay to ensure we get the updated status
+      setTimeout(() => {
+        refreshTimeTracking();
+      }, 1000);
+    } catch (error) {
+      console.error('Error during clock in:', error);
+      toast.error('There was an error clocking in. Please try again.');
+    }
   };
   
   const handleOpenClockOutDialog = () => {
@@ -54,10 +59,22 @@ const TimeTracker: React.FC = () => {
   const handleClockOut = async () => {
     try {
       setIsSubmitting(true);
+      
+      // Set a timeout to ensure the button doesn't get stuck in "Processing..." state
+      const timeoutId = setTimeout(() => {
+        setIsSubmitting(false);
+        toast.error('Clock out is taking longer than expected. Please try again.');
+      }, 10000);
+      
       await clockOutHandler(notes);
+      
+      // Clear the timeout since operation completed successfully
+      clearTimeout(timeoutId);
+      
       setNotes('');
       setIsDialogOpen(false);
       toast.success('Clocked out successfully');
+      
       // Add a refresh after a short delay
       setTimeout(() => {
         refreshTimeTracking();
@@ -144,9 +161,9 @@ const TimeTracker: React.FC = () => {
               <Button 
                 onClick={handleClockOut} 
                 variant="default"
-                disabled={isSubmitting || isClockingOut}
+                disabled={isSubmitting}
               >
-                {isSubmitting || isClockingOut ? (
+                {isSubmitting ? (
                   <>
                     <div className="h-4 w-4 mr-2 rounded-full border-2 border-primary-foreground/30 border-t-transparent animate-spin" />
                     <span>Processing...</span>

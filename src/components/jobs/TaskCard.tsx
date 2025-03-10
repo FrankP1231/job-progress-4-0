@@ -25,7 +25,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     queryFn: () => getTasksForJob(job.id),
     enabled: !!job.id,
     staleTime: 60000,
-    cacheTime: 300000
+    gcTime: 300000
   });
   
   useEffect(() => {

@@ -66,6 +66,8 @@ export const clockIn = async (): Promise<TimeEntry | null> => {
  */
 export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
   try {
+    console.log('Clock out process initiated with notes:', notes);
+    
     // Get the current user's ID
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
@@ -73,6 +75,8 @@ export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
       console.error('Authentication error:', authError);
       throw new Error('User not authenticated');
     }
+    
+    console.log('User authenticated:', user.id);
     
     // Get the active time entry
     const { data: activeSession, error: checkError } = await supabase
@@ -94,10 +98,23 @@ export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
       return null;
     }
     
+    console.log('Found active session:', activeSession.id);
+    
     // Calculate duration in seconds
     const clockInTime = new Date(activeSession.clock_in_time);
     const clockOutTime = new Date();
     const durationSeconds = Math.floor((clockOutTime.getTime() - clockInTime.getTime()) / 1000);
+    
+    console.log('Calculated duration:', durationSeconds, 'seconds');
+    
+    try {
+      // First, pause any active task time entries
+      await pauseActiveTaskEntries();
+      console.log('Paused active task entries');
+    } catch (taskError) {
+      console.error('Error pausing task entries, continuing with clock out:', taskError);
+      // Continue with clock out even if pausing task entries fails
+    }
     
     // Update time entry with clock out time
     const { data, error } = await supabase
@@ -116,8 +133,7 @@ export const clockOut = async (notes?: string): Promise<TimeEntry | null> => {
       throw error;
     }
     
-    // Pause any active task time entries
-    await pauseActiveTaskEntries();
+    console.log('Successfully clocked out:', data);
     
     return data;
   } catch (error: any) {
