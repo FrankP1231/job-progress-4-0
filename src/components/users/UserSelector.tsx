@@ -1,10 +1,11 @@
+
 import React, { useEffect } from 'react';
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { getAllUsers } from '@/lib/supabase';
 import { WorkArea } from '@/lib/types';
@@ -13,50 +14,40 @@ interface User {
   id: string;
   email: string;
   name: string;
-  workArea?: string;
+  work_area?: string;
 }
 
 interface UserSelectorProps {
   selectedUserIds: string[];
   onSelectionChange: (selectedIds: string[]) => void;
-  workArea?: WorkArea; // Updated to use WorkArea type
+  workArea?: WorkArea;
 }
 
-export const UserSelector: React.FC<UserSelectorProps> = ({ 
-  selectedUserIds, 
+export const UserSelector: React.FC<UserSelectorProps> = ({
+  selectedUserIds,
   onSelectionChange,
-  workArea
+  workArea,
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  // Add error boundary with useEffect to prevent crashes
+  // Debug logging
   useEffect(() => {
-    // Log the workArea prop when it changes for debugging
     console.log('UserSelector received workArea:', workArea);
-    
-    // Return cleanup function
-    return () => {
-      // Cleanup any subscriptions or event listeners if needed
-    };
   }, [workArea]);
 
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users', workArea],
     queryFn: () => {
       console.log(`Fetching users for work area: ${workArea || 'all'}`);
-      return getAllUsers(workArea);
+      return getAllUsers(workArea).catch(err => {
+        console.error('Query failed:', err);
+        return []; // Return empty array on error to prevent crash
+      });
     },
-    staleTime: 60000, // Cache results for 1 minute to reduce API calls
-    retry: 1, // Retry failed queries once
-    meta: {
-      // Add error handling in meta.onError instead of direct onError
-      onError: (err: any) => {
-        console.error('Error fetching users in UserSelector:', err);
-      }
-    }
+    staleTime: 60000,
+    retry: 1,
   });
 
-  // Safe handling of user selection to prevent UI crash
   const handleSelect = (userId: string, e?: React.MouseEvent) => {
     if (e) {
       e.preventDefault();
@@ -76,15 +67,11 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
         console.log('Adding user, new selection:', newSelected);
         onSelectionChange(newSelected);
       }
-      
-      // Keep the popover open after selection
-      e && e.preventDefault();
     } catch (err) {
       console.error('Error handling user selection:', err);
     }
   };
 
-  // Safely filter selected users
   const selectedUsers = React.useMemo(() => {
     try {
       return users.filter(user => selectedUserIds.includes(user.id));
@@ -113,14 +100,14 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
               e.stopPropagation(); // Prevent event bubbling
             }}
           >
-            {selectedUsers.length > 0 
+            {selectedUsers.length > 0
               ? `${selectedUsers.length} user${selectedUsers.length !== 1 ? 's' : ''} selected`
               : 'Select users'}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-full p-0" 
+        <PopoverContent
+          className="w-full p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
           onClick={(e) => e.stopPropagation()}
           onPointerDownOutside={(e) => {
@@ -148,7 +135,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                 users.map((user) => (
                   <CommandItem
                     key={user.id}
-                    onSelect={(value) => {
+                    onSelect={() => {
                       try {
                         console.log('User selected via CommandItem:', user.id);
                         handleSelect(user.id);
@@ -165,6 +152,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                       )}
                     />
                     {user.name || user.email}
+                    {user.work_area && <span className="ml-1 text-muted-foreground">({user.work_area})</span>}
                   </CommandItem>
                 ))
               )}
