@@ -1,14 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash } from 'lucide-react';
+import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash, User } from 'lucide-react';
 import { updateTaskStatus, deleteTask } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
 import TaskTimer from '@/components/time-tracking/TaskTimer';
+import { getActiveUserForTask } from '@/lib/supabase/task-helpers';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +53,36 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeUsers, setActiveUsers] = useState<Record<string, {
+    userId: string;
+    firstName: string;
+    lastName: string;
+    profilePictureUrl: string | null;
+  } | null>>({});
   const queryClient = useQueryClient();
+
+  // Fetch active users for all tasks
+  useEffect(() => {
+    const fetchActiveUsers = async () => {
+      const userPromises = tasks.map(async (task) => {
+        const user = await getActiveUserForTask(task.id);
+        return { taskId: task.id, user };
+      });
+
+      const results = await Promise.all(userPromises);
+      const usersMap: Record<string, any> = {};
+      
+      results.forEach(({ taskId, user }) => {
+        usersMap[taskId] = user;
+      });
+
+      setActiveUsers(usersMap);
+    };
+
+    if (tasks.length > 0) {
+      fetchActiveUsers();
+    }
+  }, [tasks]);
 
   const handleUpdateTaskStatus = async (taskId: string, newStatus: TaskStatus) => {
     if (!phaseId) return;
@@ -70,6 +102,13 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       if (jobId) {
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
+      
+      // Refresh active users
+      const updatedUser = await getActiveUserForTask(taskId);
+      setActiveUsers(prev => ({
+        ...prev,
+        [taskId]: updatedUser
+      }));
       
       const statusMessage = newStatus === 'complete' 
         ? 'completed' 
@@ -160,9 +199,45 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       if (jobId) {
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
+      
+      // Refresh active users
+      const updatedUsers: Record<string, any> = {};
+      for (const task of tasks) {
+        const updatedUser = await getActiveUserForTask(task.id);
+        updatedUsers[task.id] = updatedUser;
+      }
+      setActiveUsers(updatedUsers);
     } catch (error) {
       console.error('Error refreshing tasks:', error);
     }
+  };
+
+  // Active user display component
+  const ActiveUserDisplay = ({ taskId }: { taskId: string }) => {
+    const activeUser = activeUsers[taskId];
+    
+    if (!activeUser) return null;
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Avatar className="h-6 w-6">
+              {activeUser.profilePictureUrl ? (
+                <AvatarImage src={activeUser.profilePictureUrl} alt={`${activeUser.firstName} ${activeUser.lastName}`} />
+              ) : (
+                <AvatarFallback className="text-xs">
+                  {activeUser.firstName[0]}{activeUser.lastName[0]}
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Currently worked on by: {activeUser.firstName} {activeUser.lastName}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
 
   return (
@@ -210,10 +285,14 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
                 <span className={task.isComplete ? 'line-through text-gray-400' : ''}>
                   {task.name}
                 </span>
+                {activeUsers[task.id] && (
+                  <div className="ml-2">
+                    <ActiveUserDisplay taskId={task.id} />
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center">
-                {/* Add TaskTimer component */}
                 <TaskTimer 
                   task={task} 
                   refreshTasks={refreshTasks}

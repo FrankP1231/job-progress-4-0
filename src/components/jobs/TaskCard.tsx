@@ -1,12 +1,15 @@
-import React, { useMemo, useEffect } from 'react';
+
+import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Clock, AlertCircle } from 'lucide-react';
+import { CheckCircle, Circle, Clock, AlertCircle, User } from 'lucide-react';
 import { Job, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
-import { getTasksForJob } from '@/lib/supabase/task-helpers';
+import { getTasksForJob, getActiveUserForTask } from '@/lib/supabase/task-helpers';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TaskCardProps {
   job: Job;
@@ -80,6 +83,56 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     }
   };
 
+  // Component to display the active user for a task
+  const ActiveUserDisplay = ({ taskId }: { taskId: string }) => {
+    const [activeUser, setActiveUser] = useState<{
+      userId: string;
+      firstName: string;
+      lastName: string;
+      profilePictureUrl: string | null;
+    } | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchActiveUser = async () => {
+        try {
+          const user = await getActiveUserForTask(taskId);
+          setActiveUser(user);
+        } catch (error) {
+          console.error('Error fetching active user:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchActiveUser();
+    }, [taskId]);
+
+    if (loading) return null;
+    if (!activeUser) return null;
+
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>
+            <Avatar className="h-6 w-6">
+              {activeUser.profilePictureUrl ? (
+                <AvatarImage src={activeUser.profilePictureUrl} alt={`${activeUser.firstName} ${activeUser.lastName}`} />
+              ) : (
+                <AvatarFallback className="text-xs">
+                  {activeUser.firstName[0]}{activeUser.lastName[0]}
+                </AvatarFallback>
+              )}
+            </Avatar>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Currently worked on by: {activeUser.firstName} {activeUser.lastName}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   if (tasksLoading) {
     return (
       <Card>
@@ -124,11 +177,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
                     {getTaskIcon(task.status)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between items-center">
                       <p className="font-medium">{task.name}</p>
-                      <Badge variant={task.status === 'in-progress' ? 'secondary' : 'outline'}>
-                        {task.status === 'in-progress' ? 'In Progress' : 'Not Started'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <ActiveUserDisplay taskId={task.id} />
+                        <Badge variant={task.status === 'in-progress' ? 'secondary' : 'outline'}>
+                          {task.status === 'in-progress' ? 'In Progress' : 'Not Started'}
+                        </Badge>
+                      </div>
                     </div>
                     <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">
                       <span>Phase {task.phaseNumber}: {task.phaseName}</span>
