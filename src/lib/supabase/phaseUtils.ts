@@ -105,8 +105,8 @@ export const createNewPhase = (jobId: string, phaseName: string, phaseNumber: nu
 export const addPhaseToJob = async (
   jobId: string, 
   phase: Phase, 
-  pendingTasks?: Record<string, string[]>
-): Promise<boolean> => {
+  pendingTasks?: Record<string, any[]>
+): Promise<{ createdTasks: Record<string, any[]> } | null> => {
   // Check if phase number already exists for this job
   const existingPhases = await getPhasesForJob(jobId);
   if (existingPhases.some(p => p.phaseNumber === phase.phaseNumber)) {
@@ -140,13 +140,19 @@ export const addPhaseToJob = async (
     throw error;
   }
   
+  // Initialize the result object with empty createdTasks
+  const result = { createdTasks: {} as Record<string, any[]> };
+  
   // Now add any pending tasks if provided
   if (pendingTasks && Object.keys(pendingTasks).length > 0) {
     try {
       for (const area of Object.keys(pendingTasks)) {
         const tasks = pendingTasks[area];
         if (tasks && tasks.length > 0) {
-          await addTasksToPhaseArea(data.id, area, tasks);
+          const tasksResult = await addTasksToPhaseArea(data.id, area, tasks);
+          if (tasksResult && tasksResult.createdTasks) {
+            result.createdTasks = { ...result.createdTasks, ...tasksResult.createdTasks };
+          }
         }
       }
     } catch (taskError) {
@@ -169,7 +175,7 @@ export const addPhaseToJob = async (
     .update({ updated_at: new Date().toISOString() })
     .eq('id', jobId);
   
-  return true;
+  return result;
 };
 
 // Update a phase
@@ -287,6 +293,7 @@ export const deletePhase = async (jobId: string, phaseId: string): Promise<boole
     // Log the phase deletion activity
     await logActivity({
       jobId,
+      phaseId,
       activityType: 'phase_deleted',
       description: `Phase ${phaseToDelete.phaseNumber}: ${phaseToDelete.phaseName} was deleted${
         tasksCount ? ` along with ${tasksCount} related task${tasksCount !== 1 ? 's' : ''}` : ''

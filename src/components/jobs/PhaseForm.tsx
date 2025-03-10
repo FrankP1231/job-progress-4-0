@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
@@ -135,14 +134,15 @@ const PhaseForm: React.FC = () => {
       
       const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
       
-      // Return early if result is null
-      if (!result) {
+      // Fix the TypeScript error with proper type handling
+      // Check if result exists and has the expected structure
+      if (!result || typeof result !== 'object' || !('createdTasks' in result)) {
         throw new Error('Failed to add phase');
       }
       
-      // Check if createdTasks exists and is an object before proceeding
+      // Now we know result has a createdTasks property
       const createdTasks = result.createdTasks;
-      if (createdTasks && typeof createdTasks === 'object') {
+      if (typeof createdTasks === 'object') {
         const assignmentPromises: Promise<boolean>[] = [];
         
         Object.keys(createdTasks).forEach(area => {
@@ -182,6 +182,7 @@ const PhaseForm: React.FC = () => {
     }
   });
 
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     addPhaseMutation.mutate();
@@ -247,6 +248,7 @@ const PhaseForm: React.FC = () => {
     }
   };
 
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
