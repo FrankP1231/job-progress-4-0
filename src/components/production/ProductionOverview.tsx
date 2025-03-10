@@ -76,49 +76,50 @@ const ProductionOverview: React.FC = () => {
     return phaseWithJobArray.map(item => item.phase);
   };
 
-  // Enhance phases with tasks
+  // Define the enhancePhaseWithTasks function before using it
   const enhancePhaseWithTasks = (phases: Phase[]): Phase[] => {
     return phases.map(phase => {
-      const phaseTasks = phaseTasks[phase.id] || [];
+      const tasks = phaseTasks[phase.id] || [];
       
       return {
         ...phase,
         weldingLabor: {
           ...phase.weldingLabor,
-          tasks: phaseTasks.filter(task => task.area === 'weldingLabor')
+          tasks: tasks.filter(task => task.area === 'weldingLabor')
         },
         sewingLabor: {
           ...phase.sewingLabor,
-          tasks: phaseTasks.filter(task => task.area === 'sewingLabor')
+          tasks: tasks.filter(task => task.area === 'sewingLabor')
         },
         weldingMaterials: {
           ...phase.weldingMaterials,
-          tasks: phaseTasks.filter(task => task.area === 'weldingMaterials')
+          tasks: tasks.filter(task => task.area === 'weldingMaterials')
         },
         sewingMaterials: {
           ...phase.sewingMaterials,
-          tasks: phaseTasks.filter(task => task.area === 'sewingMaterials')
+          tasks: tasks.filter(task => task.area === 'sewingMaterials')
         },
         installationMaterials: {
           ...phase.installationMaterials,
-          tasks: phaseTasks.filter(task => task.area === 'installationMaterials')
+          tasks: tasks.filter(task => task.area === 'installationMaterials')
         },
         powderCoat: {
           ...phase.powderCoat,
-          tasks: phaseTasks.filter(task => task.area === 'powderCoat')
+          tasks: tasks.filter(task => task.area === 'powderCoat')
         },
         installation: {
           ...phase.installation,
-          tasks: phaseTasks.filter(task => task.area === 'installation'),
+          tasks: tasks.filter(task => task.area === 'installation'),
           rentalEquipment: {
             ...phase.installation.rentalEquipment,
-            tasks: phaseTasks.filter(task => task.area === 'rentalEquipment')
+            tasks: tasks.filter(task => task.area === 'rentalEquipment')
           }
         }
       };
     });
   };
   
+  // Now use the function after it's been defined
   const enhancedWeldingPhases = enhancePhaseWithTasks(extractPhases(weldingPhases));
   const enhancedSewingPhases = enhancePhaseWithTasks(extractPhases(sewingPhases));
   const enhancedInstallPhases = enhancePhaseWithTasks(extractPhases(readyForInstallPhases));
