@@ -4,16 +4,50 @@ export * from './jobUtils';
 export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './statusUtils';
-export * from './task-helpers';
-export * from './taskUtils';
+export * from './task-status';
 
-// Import supabase from the correct location
-import { supabase } from "@/integrations/supabase/client";
+// Import and re-export from task-helpers explicitly to avoid conflicts
+import {
+  getTasksForPhase,
+  getTasksForPhaseArea,
+  getTasksForAllJobs,
+  getTasksForJob,
+  getActiveUserForTask,
+  assignUserToTask,
+  getJobIdForPhase,
+  transformTaskData
+} from './task-helpers';
 
-// Export task-crud without those functions that are overridden in taskUtils
+export {
+  getTasksForPhase,
+  getTasksForPhaseArea,
+  getTasksForAllJobs,
+  getTasksForJob,
+  getActiveUserForTask,
+  assignUserToTask,
+  getJobIdForPhase,
+  transformTaskData
+};
+
+// Import task-crud functions that don't conflict with task-helpers
 export {
   addSampleTasksToPhases
 } from './task-crud';
+
+// Import taskUtils functions that don't conflict with task-helpers
+import {
+  updateTask,
+  deleteTask,
+  addTasksToPhaseArea,
+  createTask
+} from './task-helpers';
+
+export {
+  updateTask,
+  deleteTask,
+  addTasksToPhaseArea,
+  createTask
+};
 
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 
@@ -21,6 +55,9 @@ export {
   addPhaseToJob as initAddPhaseToJob,
   initSampleData
 } from './initUtils';
+
+// Import supabase from the correct location
+import { supabase } from "@/integrations/supabase/client";
 
 export const getAllUsers = async () => {
   const { data, error } = await supabase

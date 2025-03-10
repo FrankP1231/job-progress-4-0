@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
@@ -16,6 +17,113 @@ export {
 // Re-export renamed functions
 export const updateTask = updateTaskFunction;
 export const deleteTask = deleteTaskFunction;
+
+// Transform raw task data from Supabase to our Task interface
+export const transformTaskData = (data: any): Task => {
+  if (!data) return null;
+  
+  return {
+    id: data.id,
+    phaseId: data.phase_id,
+    area: data.area,
+    name: data.name,
+    isComplete: data.is_complete,
+    status: data.status as TaskStatus,
+    hours: data.hours,
+    eta: data.eta,
+    notes: data.notes,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at
+  };
+};
+
+// Function to get all tasks for a specific job
+export const getTasksForJob = async (jobId: string): Promise<Task[]> => {
+  if (!jobId) {
+    console.error('Job ID is required to fetch tasks');
+    return [];
+  }
+
+  try {
+    // First get all phases for this job
+    const { data: phases, error: phasesError } = await supabase
+      .from('phases')
+      .select('id')
+      .eq('job_id', jobId);
+    
+    if (phasesError || !phases || phases.length === 0) {
+      console.error('Error fetching phases for job:', phasesError);
+      return [];
+    }
+    
+    // Extract phase IDs
+    const phaseIds = phases.map(phase => phase.id);
+    
+    // Then fetch all tasks for these phases
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .in('phase_id', phaseIds);
+    
+    if (error) {
+      console.error('Error fetching tasks for job:', error);
+      return [];
+    }
+    
+    // Transform to our Task interface
+    return data.map(transformTaskData);
+  } catch (error) {
+    console.error('Error in getTasksForJob:', error);
+    return [];
+  }
+};
+
+// Function to get active user for a task
+export const getActiveUserForTask = async (taskId: string): Promise<{
+  userId: string;
+  firstName: string;
+  lastName: string;
+} | null> => {
+  if (!taskId) {
+    console.error('Task ID is required to get active user');
+    return null;
+  }
+
+  try {
+    // Query task_assignments to get assigned user
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .select('user_id')
+      .eq('task_id', taskId)
+      .single();
+    
+    if (error || !data) {
+      // No assignment found, not an error
+      return null;
+    }
+    
+    // Get user details from profiles table
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .eq('id', data.user_id)
+      .single();
+    
+    if (profileError || !profile) {
+      console.error('Error fetching user profile:', profileError);
+      return null;
+    }
+    
+    return {
+      userId: profile.id,
+      firstName: profile.first_name,
+      lastName: profile.last_name
+    };
+  } catch (error) {
+    console.error('Error in getActiveUserForTask:', error);
+    return null;
+  }
+};
 
 export const assignUserToTask = async (taskId: string, userId: string): Promise<boolean> => {
   if (!taskId || !userId) {
@@ -181,19 +289,7 @@ export async function createTask(
     }
 
     // Map the response to our Task interface
-    return {
-      id: data.id,
-      phaseId: data.phase_id,
-      area: data.area,
-      name: data.name,
-      isComplete: data.is_complete,
-      status: data.status as TaskStatus,
-      hours: data.hours,
-      eta: data.eta,
-      notes: data.notes,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
-    };
+    return transformTaskData(data);
   } catch (error) {
     console.error('Error in createTask:', error);
     return null;
