@@ -1,15 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { Task, TaskStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash } from 'lucide-react';
+import { CheckCircle, Circle, Plus, X, Clock, ChevronDown, Trash, User } from 'lucide-react';
 import { updateTaskStatus, deleteTask } from '@/lib/supabase/task-status';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { refreshTasksData } from '@/lib/supabase/task-status';
 import TaskTimer from '@/components/time-tracking/TaskTimer';
 import { getActiveUserForTask } from '@/lib/supabase/task-helpers';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
@@ -25,6 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+// Define a type for the active user
+interface ActiveUser {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  profilePictureUrl: string | null;
+}
 
 interface TasksContainerProps {
   title?: string;
@@ -52,12 +60,7 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [activeUsers, setActiveUsers] = useState<Record<string, {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    profilePictureUrl: string | null;
-  } | null>>({});
+  const [activeUsers, setActiveUsers] = useState<Record<string, ActiveUser | null>>({});
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const queryClient = useQueryClient();
 
@@ -81,9 +84,18 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         
         if (!isMounted) return;
         
-        const usersMap: Record<string, any> = {};
+        const usersMap: Record<string, ActiveUser | null> = {};
         results.forEach(({ taskId, user }) => {
-          usersMap[taskId] = user;
+          if (user) {
+            usersMap[taskId] = {
+              userId: user.userId,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              profilePictureUrl: null // We don't use profile pictures yet
+            };
+          } else {
+            usersMap[taskId] = null;
+          }
         });
 
         setActiveUsers(usersMap);
@@ -117,11 +129,22 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
         queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
       }
       
+      // Update the active user after status change
       const updatedUser = await getActiveUserForTask(taskId);
-      setActiveUsers(prev => ({
-        ...prev,
-        [taskId]: updatedUser
-      }));
+      setActiveUsers(prev => {
+        const newState = {...prev};
+        if (updatedUser) {
+          newState[taskId] = {
+            userId: updatedUser.userId,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            profilePictureUrl: null // We don't use profile pictures yet
+          };
+        } else {
+          newState[taskId] = null;
+        }
+        return newState;
+      });
       
       const statusMessage = newStatus === 'complete' 
         ? 'completed' 
@@ -220,15 +243,9 @@ const TasksContainer: React.FC<TasksContainerProps> = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger>
-            <Avatar className="h-6 w-6">
-              {activeUser.profilePictureUrl ? (
-                <AvatarImage src={activeUser.profilePictureUrl} alt={`${activeUser.firstName} ${activeUser.lastName}`} />
-              ) : (
-                <AvatarFallback className="text-xs">
-                  {activeUser.firstName[0]}{activeUser.lastName[0]}
-                </AvatarFallback>
-              )}
-            </Avatar>
+            <div className="h-6 w-6 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="h-3 w-3 text-primary" />
+            </div>
           </TooltipTrigger>
           <TooltipContent>
             <p>Currently worked on by: {activeUser.firstName} {activeUser.lastName}</p>

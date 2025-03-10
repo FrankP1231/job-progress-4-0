@@ -1,3 +1,4 @@
+
 import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
 import { getTasksForJob, getActiveUserForTask } from '@/lib/supabase/task-helpers';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface TaskCardProps {
