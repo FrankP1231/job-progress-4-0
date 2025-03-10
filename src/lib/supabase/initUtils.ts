@@ -1,4 +1,3 @@
-
 import { supabase } from "./client";
 import { v4 as uuidv4 } from 'uuid';
 import { Phase, MaterialStatus, LaborStatus, PowderCoatStatus, InstallationStatus, RentalEquipmentStatus } from '../types';
@@ -50,8 +49,6 @@ export const createNewPhase = (
 };
 
 export const addPhaseToJob = async (jobId: string, phase: Partial<Phase>): Promise<Phase> => {
-  // Prepare the phase data for insertion into the database
-  // Convert our typed objects to Json for Supabase
   const phaseData = {
     id: phase.id,
     job_id: jobId,
@@ -80,7 +77,6 @@ export const addPhaseToJob = async (jobId: string, phase: Partial<Phase>): Promi
     throw error;
   }
   
-  // Transform the data from Supabase to match our Phase type with proper type assertions
   return {
     id: data.id,
     jobId: data.job_id,
@@ -97,4 +93,9 @@ export const addPhaseToJob = async (jobId: string, phase: Partial<Phase>): Promi
     createdAt: data.created_at,
     updatedAt: data.updated_at
   };
+};
+
+export const initSampleData = async (): Promise<void> => {
+  console.log("Sample data initialization has been disabled");
+  return Promise.resolve();
 };

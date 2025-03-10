@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase/client';
+
+import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -200,5 +201,85 @@ export const addTasksToPhaseArea = async (phaseId: string, area: string, tasks: 
 
 export const addSampleTasksToPhases = async (): Promise<void> => {
   console.log("Sample task creation has been disabled");
+  return Promise.resolve();
+};
+
+// Add missing functions that are imported elsewhere
+export const getJobById = async (jobId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('jobs')
+      .select('*, phases(*)')
+      .eq('id', jobId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching job by ID:', error);
+      throw error;
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    // Transform the data to match our Job type
+    const job = {
+      id: data.id,
+      jobNumber: data.job_number,
+      projectName: data.project_name,
+      buyer: data.buyer,
+      title: data.title,
+      salesman: data.salesman,
+      drawingsUrl: data.drawings_url,
+      worksheetUrl: data.worksheet_url,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      phases: (data.phases || []).map((phase: any) => ({
+        id: phase.id,
+        jobId: phase.job_id,
+        phaseName: phase.phase_name,
+        phaseNumber: phase.phase_number,
+        weldingMaterials: phase.welding_materials,
+        sewingMaterials: phase.sewing_materials,
+        weldingLabor: phase.welding_labor,
+        sewingLabor: phase.sewing_labor,
+        installationMaterials: phase.installation_materials,
+        powderCoat: phase.powder_coat,
+        installation: phase.installation,
+        isComplete: phase.is_complete,
+        createdAt: phase.created_at,
+        updatedAt: phase.updated_at
+      }))
+    };
+
+    return job;
+  } catch (error) {
+    console.error('Error in getJobById:', error);
+    throw error;
+  }
+};
+
+export const markPhaseComplete = async (jobId: string, phaseId: string, isComplete: boolean) => {
+  try {
+    const { error } = await supabase
+      .from('phases')
+      .update({ is_complete: isComplete })
+      .eq('id', phaseId)
+      .eq('job_id', jobId);
+
+    if (error) {
+      console.error('Error updating phase completion status:', error);
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error in markPhaseComplete:', error);
+    throw error;
+  }
+};
+
+export const initSampleData = async (): Promise<void> => {
+  console.log("Sample data initialization has been disabled in supabaseUtils");
   return Promise.resolve();
 };
