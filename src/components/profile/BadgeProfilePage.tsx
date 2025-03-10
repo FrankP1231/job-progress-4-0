@@ -154,7 +154,9 @@ const BadgeProfilePage: React.FC = () => {
         
       if (error) {
         console.error('Upload error:', error);
-        throw error;
+        toast.error('Failed to upload profile picture: ' + error.message);
+        setIsUploading(false);
+        return;
       }
       
       console.log('File uploaded successfully:', data);
@@ -177,17 +179,24 @@ const BadgeProfilePage: React.FC = () => {
         
       if (updateError) {
         console.error('Profile update error:', updateError);
-        throw updateError;
+        toast.error('Failed to update profile with picture: ' + updateError.message);
+        setIsUploading(false);
+        return;
       }
       
-      // Update local state
-      setProfileData({
-        ...profileData,
+      // Update local state (safely, to prevent rendering issues)
+      setProfileData(prevData => ({
+        ...prevData,
         profilePictureUrl: publicUrl
-      });
+      }));
       
       // Refresh the profile in auth context
-      await refreshUserProfile();
+      try {
+        await refreshUserProfile();
+      } catch (refreshError) {
+        console.error('Error refreshing profile:', refreshError);
+        // Continue execution even if refresh fails
+      }
       
       toast.success('Profile picture updated successfully');
     } catch (error: any) {
@@ -238,11 +247,21 @@ const BadgeProfilePage: React.FC = () => {
           <div className="bg-gradient-to-r from-[#8B5CF6] to-[#D946EF] h-20 relative flex items-center justify-center">
             <div className="absolute -bottom-16 w-32 h-32 border-4 border-white rounded-full overflow-hidden bg-white shadow-lg">
               {profileData.profilePictureUrl ? (
-                <AvatarImage 
-                  src={profileData.profilePictureUrl} 
-                  alt="Profile picture" 
-                  className="w-full h-full object-cover"
-                />
+                <Avatar className="w-full h-full">
+                  <AvatarImage 
+                    src={profileData.profilePictureUrl} 
+                    alt="Profile picture" 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Error loading image:', e);
+                      // If image fails to load, show fallback
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <AvatarFallback className="w-full h-full text-3xl font-bold text-[#8B5CF6] bg-[#E5DEFF]">
+                    {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
+                  </AvatarFallback>
+                </Avatar>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-[#E5DEFF] text-3xl font-bold text-[#8B5CF6]">
                   {profileData.firstName?.[0] || ''}{profileData.lastName?.[0] || ''}
@@ -250,7 +269,11 @@ const BadgeProfilePage: React.FC = () => {
               )}
               {isEditMode && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black/40 cursor-pointer">
-                  <span className="text-white text-sm font-medium">Change</span>
+                  {isUploading ? (
+                    <div className="text-white">Uploading...</div>
+                  ) : (
+                    <span className="text-white text-sm font-medium">Change</span>
+                  )}
                   <Input 
                     type="file" 
                     accept="image/*"
