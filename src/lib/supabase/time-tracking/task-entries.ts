@@ -31,7 +31,11 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
     }
     
     if (!activeSession) {
-      toast.error('You must be clocked in to track task time');
+      toast({
+        title: "Error",
+        description: "You must be clocked in to track task time",
+        variant: "destructive"
+      });
       return null;
     }
     
@@ -55,7 +59,10 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
         return await resumeTaskTimer(existingEntry.id);
       }
       
-      toast.info('Task timer is already running');
+      toast({
+        title: "Information",
+        description: "Task timer is already running"
+      });
       return existingEntry;
     }
     
@@ -76,7 +83,10 @@ export async function startTaskTimer(taskId: string): Promise<TaskTimeEntry> {
       throw error;
     }
     
-    toast.success('Task timer started');
+    toast({
+      title: "Success",
+      description: "Task timer started"
+    });
     console.log('Created task time entry:', data);
     return data;
   } catch (error: any) {
@@ -202,7 +212,10 @@ export async function stopTaskTimer(entryId: string): Promise<TaskTimeEntry> {
     }
     
     console.log('Stopped task time entry:', data);
-    toast.success('Task timer stopped');
+    toast({
+      title: "Success",
+      description: "Task timer stopped"
+    });
     return data;
   } catch (error: any) {
     console.error('Error stopping task timer:', error);
