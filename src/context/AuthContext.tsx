@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: {
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('Error fetching user profile:', error);
+        toast.error('Error loading user profile information');
         return;
       }
       
@@ -46,6 +48,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           role: data.role,
           workArea: data.work_area
         }));
+      } else {
+        console.warn('No profile found for user:', userId);
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
@@ -123,7 +127,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out');
+    }
   };
 
   return (

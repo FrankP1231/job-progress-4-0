@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 const AuthPage: React.FC = () => {
   const { user } = useAuth();

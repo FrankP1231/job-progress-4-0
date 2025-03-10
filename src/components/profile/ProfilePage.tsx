@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { User } from '@/lib/types';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Profile {
   id: string;
@@ -26,6 +26,7 @@ const ProfilePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     if (!user.isAuthenticated) {
@@ -36,6 +37,8 @@ const ProfilePage: React.FC = () => {
     const fetchProfile = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -43,8 +46,15 @@ const ProfilePage: React.FC = () => {
           .maybeSingle();
           
         if (error) throw error;
-        setProfile(data);
+        
+        if (data) {
+          setProfile(data);
+        } else {
+          setError('No profile found. Please contact an administrator.');
+        }
       } catch (error: any) {
+        console.error('Failed to load profile:', error.message);
+        setError(`Failed to load profile: ${error.message}`);
         toast.error('Failed to load profile: ' + error.message);
       } finally {
         setIsLoading(false);
@@ -103,6 +113,13 @@ const ProfilePage: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error ? (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          
           {profile ? (
             <form onSubmit={handleProfileUpdate} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -163,11 +180,11 @@ const ProfilePage: React.FC = () => {
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </form>
-          ) : (
+          ) : !error ? (
             <div className="text-center py-4">
-              <p>No profile found. Please contact an administrator.</p>
+              <p>Loading profile information...</p>
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
     </div>
