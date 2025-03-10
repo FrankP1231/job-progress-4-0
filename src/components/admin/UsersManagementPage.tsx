@@ -56,8 +56,8 @@ const UsersManagementPage: React.FC = () => {
     email: '',
     first_name: '',
     last_name: '',
-    role: 'Installer' as UserRole,
-    work_area: 'Installation' as WorkArea,
+    role: '' as UserRole, // Changed to empty string to force selection
+    work_area: '' as WorkArea, // Changed to empty string to force selection
     password: ''
   });
 
@@ -148,7 +148,7 @@ const UsersManagementPage: React.FC = () => {
   };
 
   const handleAddUser = async () => {
-    if (!newUser.email || !newUser.first_name || !newUser.last_name || !newUser.password) {
+    if (!newUser.email || !newUser.first_name || !newUser.last_name || !newUser.password || !newUser.role || !newUser.work_area) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -198,8 +198,8 @@ const UsersManagementPage: React.FC = () => {
         email: '',
         first_name: '',
         last_name: '',
-        role: 'Installer',
-        work_area: 'Installation',
+        role: '' as UserRole,
+        work_area: '' as WorkArea,
         password: ''
       });
       
@@ -291,8 +291,8 @@ const UsersManagementPage: React.FC = () => {
                           {profile.first_name} {profile.last_name}
                         </TableCell>
                         <TableCell>{profile.email}</TableCell>
-                        <TableCell>{profile.role}</TableCell>
-                        <TableCell>{profile.work_area}</TableCell>
+                        <TableCell>{profile.role || 'Not assigned'}</TableCell>
+                        <TableCell>{profile.work_area || 'Not assigned'}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
@@ -474,7 +474,7 @@ const UsersManagementPage: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="addRole">Role</Label>
+              <Label htmlFor="addRole">Role *</Label>
               <Select 
                 value={newUser.role}
                 onValueChange={(value: UserRole) => setNewUser({
@@ -496,7 +496,7 @@ const UsersManagementPage: React.FC = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="addWorkArea">Work Area</Label>
+              <Label htmlFor="addWorkArea">Work Area *</Label>
               <Select 
                 value={newUser.work_area}
                 onValueChange={(value: WorkArea) => setNewUser({
@@ -521,7 +521,11 @@ const UsersManagementPage: React.FC = () => {
             <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleAddUser}>
+            <Button 
+              type="button" 
+              onClick={handleAddUser}
+              disabled={!newUser.email || !newUser.password || !newUser.first_name || !newUser.last_name || !newUser.role || !newUser.work_area}
+            >
               Add User
             </Button>
           </DialogFooter>
