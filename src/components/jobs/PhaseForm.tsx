@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getJobById, createNewPhase, addPhaseToJob } from '@/lib/supabase';
@@ -13,12 +14,14 @@ import WeldingCard from './phases/WeldingCard';
 import SewingCard from './phases/SewingCard';
 import PowderCoatCard from './phases/PowderCoatCard';
 import InstallationCard from './phases/InstallationCard';
+import { assignUserToTask } from '@/lib/supabase/task-helpers';
 
 // Define a task interface
 interface TaskWithMetadata {
   name: string;
   hours?: number;
   eta?: string;
+  assigneeIds?: string[];
 }
 
 const PhaseForm: React.FC = () => {
@@ -121,7 +124,9 @@ const PhaseForm: React.FC = () => {
           pendingTasks[area] = tasks.map(task => ({
             name: task.name,
             hours: task.hours,
-            eta: task.eta
+            eta: task.eta,
+            // Store assigneeIds temporarily so we can use them after task creation
+            _assigneeIds: task.assigneeIds
           }));
         }
       };
@@ -135,7 +140,38 @@ const PhaseForm: React.FC = () => {
       mapTasks(installationTasks, 'installation');
       mapTasks(rentalEquipmentTasks, 'rentalEquipment');
       
-      return addPhaseToJob(jobId, newPhase, pendingTasks);
+      // Add the phase and get created task IDs back
+      const result = await addPhaseToJob(jobId, newPhase, pendingTasks);
+      
+      // Process task assignments if there are any
+      if (result && result.createdTasks) {
+        const assignmentPromises: Promise<boolean>[] = [];
+        
+        // For each area with tasks
+        Object.keys(result.createdTasks).forEach(area => {
+          const tasks = result.createdTasks[area];
+          
+          // For each task in the area
+          tasks.forEach((task, index) => {
+            // Get the original task data with assigneeIds
+            const originalTaskData = pendingTasks[area][index];
+            
+            // If there are assignees, create assignments
+            if (originalTaskData._assigneeIds && originalTaskData._assigneeIds.length > 0) {
+              for (const userId of originalTaskData._assigneeIds) {
+                assignmentPromises.push(assignUserToTask(task.id, userId));
+              }
+            }
+          });
+        });
+        
+        // Wait for all assignment operations to complete
+        if (assignmentPromises.length > 0) {
+          await Promise.all(assignmentPromises);
+        }
+      }
+      
+      return result;
     },
     onSuccess: () => {
       toast.success('Phase added successfully');

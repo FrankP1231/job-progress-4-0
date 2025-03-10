@@ -1,16 +1,25 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, X, Clock, Calendar, Trash } from 'lucide-react';
+import { Plus, X, Clock, Calendar, Trash, User, Users } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/lib/supabase/client';
 
 interface TaskWithMetadata {
   name: string;
   hours?: number;
   eta?: string;
+  assigneeIds?: string[];
+}
+
+interface TaskAssignee {
+  id: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface TaskListProps {
@@ -35,6 +44,40 @@ const TaskList: React.FC<TaskListProps> = ({
   const [newTaskName, setNewTaskName] = useState('');
   const [laborHours, setLaborHours] = useState('');
   const [materialEta, setMaterialEta] = useState('');
+  const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<TaskAssignee[]>([]);
+
+  // Fetch available users for assignment
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (isLaborArea && isDialogOpen) {
+        try {
+          // Fetch users that could be assigned to tasks
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .order('first_name', { ascending: true });
+
+          if (error) {
+            console.error('Error fetching users:', error);
+            return;
+          }
+
+          setAvailableUsers(
+            data.map((user) => ({
+              id: user.id,
+              firstName: user.first_name,
+              lastName: user.last_name
+            }))
+          );
+        } catch (error) {
+          console.error('Error in fetchUsers:', error);
+        }
+      }
+    };
+
+    fetchUsers();
+  }, [isLaborArea, isDialogOpen]);
 
   const handleAddTask = () => {
     if (!newTaskName.trim()) return;
@@ -43,8 +86,14 @@ const TaskList: React.FC<TaskListProps> = ({
       name: newTaskName.trim()
     };
 
-    if (isLaborArea && laborHours) {
-      task.hours = Number(laborHours);
+    if (isLaborArea) {
+      if (laborHours) {
+        task.hours = Number(laborHours);
+      }
+      
+      if (selectedAssignees.length > 0) {
+        task.assigneeIds = selectedAssignees;
+      }
     }
 
     if (isMaterialArea && materialEta) {
@@ -65,6 +114,7 @@ const TaskList: React.FC<TaskListProps> = ({
     setNewTaskName('');
     setLaborHours('');
     setMaterialEta('');
+    setSelectedAssignees([]);
   };
   
   const formatDate = (dateString: string) => {
@@ -73,6 +123,16 @@ const TaskList: React.FC<TaskListProps> = ({
     } catch (error) {
       return dateString;
     }
+  };
+
+  const handleAssigneeChange = (userId: string) => {
+    setSelectedAssignees((prev) => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId);
+      } else {
+        return [...prev, userId];
+      }
+    });
   };
 
   return (
@@ -93,6 +153,13 @@ const TaskList: React.FC<TaskListProps> = ({
               <div className="flex items-center text-xs text-gray-500">
                 <Calendar className="h-3 w-3 mr-1" />
                 <span>ETA: {formatDate(task.eta)}</span>
+              </div>
+            )}
+
+            {task.assigneeIds && task.assigneeIds.length > 0 && (
+              <div className="flex items-center text-xs text-gray-500">
+                <Users className="h-3 w-3 mr-1" />
+                <span>{task.assigneeIds.length} assigned</span>
               </div>
             )}
           </div>
@@ -140,18 +207,44 @@ const TaskList: React.FC<TaskListProps> = ({
             </div>
             
             {isLaborArea && (
-              <div className="grid gap-2">
-                <Label htmlFor="laborHours">Labor Hours</Label>
-                <Input
-                  id="laborHours"
-                  type="number"
-                  min="0.5"
-                  step="0.5"
-                  value={laborHours}
-                  onChange={(e) => setLaborHours(e.target.value)}
-                  placeholder="Enter estimated hours"
-                />
-              </div>
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="laborHours">Labor Hours</Label>
+                  <Input
+                    id="laborHours"
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    value={laborHours}
+                    onChange={(e) => setLaborHours(e.target.value)}
+                    placeholder="Enter estimated hours"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="assignees">Assign To</Label>
+                  <div className="border rounded-md p-4 max-h-[200px] overflow-y-auto">
+                    {availableUsers.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No users available</p>
+                    ) : (
+                      availableUsers.map((user) => (
+                        <div key={user.id} className="flex items-center space-x-2 mb-2">
+                          <input
+                            type="checkbox"
+                            id={`user-${user.id}`}
+                            className="rounded"
+                            checked={selectedAssignees.includes(user.id)}
+                            onChange={() => handleAssigneeChange(user.id)}
+                          />
+                          <label htmlFor={`user-${user.id}`} className="text-sm">
+                            {user.firstName} {user.lastName}
+                          </label>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
             )}
             
             {isMaterialArea && (

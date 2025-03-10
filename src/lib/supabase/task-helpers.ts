@@ -195,3 +195,103 @@ export async function getActiveUserForTask(taskId: string) {
     return null;
   }
 }
+
+// Get task assignees by task ID
+export async function getTaskAssignees(taskId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('task_assignments')
+      .select(`
+        user_id,
+        assigned_at,
+        profiles:user_id (
+          id,
+          first_name,
+          last_name,
+          profile_picture_url
+        )
+      `)
+      .eq('task_id', taskId)
+      .order('assigned_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching task assignees:', error);
+      return [];
+    }
+
+    // Transform data to a more usable format
+    return (data || []).map(item => ({
+      userId: item.user_id,
+      assignedAt: item.assigned_at,
+      firstName: item.profiles?.first_name,
+      lastName: item.profiles?.last_name,
+      profilePictureUrl: item.profiles?.profile_picture_url
+    }));
+  } catch (error) {
+    console.error('Error getting task assignees:', error);
+    return [];
+  }
+}
+
+// Assign user to a task
+export async function assignUserToTask(taskId: string, userId: string) {
+  try {
+    // Check if assignment already exists to avoid duplicates
+    const { data: existingAssignment, error: checkError } = await supabase
+      .from('task_assignments')
+      .select('id')
+      .eq('task_id', taskId)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking existing assignment:', checkError);
+      return false;
+    }
+
+    // If already assigned, just return true
+    if (existingAssignment) {
+      return true;
+    }
+
+    // Create new assignment
+    const { error } = await supabase
+      .from('task_assignments')
+      .insert({
+        task_id: taskId,
+        user_id: userId,
+        assigned_by: (await supabase.auth.getUser()).data.user?.id
+      });
+
+    if (error) {
+      console.error('Error assigning user to task:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in assignUserToTask:', error);
+    return false;
+  }
+}
+
+// Remove user assignment from task
+export async function removeTaskAssignment(taskId: string, userId: string) {
+  try {
+    const { error } = await supabase
+      .from('task_assignments')
+      .delete()
+      .eq('task_id', taskId)
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error removing task assignment:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in removeTaskAssignment:', error);
+    return false;
+  }
+}
