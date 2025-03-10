@@ -48,11 +48,12 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       return getAllUsers(workArea);
     },
     staleTime: 60000, // Cache results for 1 minute to reduce API calls
-    // Add error handling in query options
-    retry: 1,
-    // Log any errors that occur during the query
-    onError: (err) => {
-      console.error('Error fetching users in UserSelector:', err);
+    retry: 1, // Retry failed queries once
+    meta: {
+      // Add error handling in meta.onError instead of direct onError
+      onError: (err: any) => {
+        console.error('Error fetching users in UserSelector:', err);
+      }
     }
   });
 
