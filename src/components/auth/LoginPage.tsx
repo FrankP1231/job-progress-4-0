@@ -1,12 +1,12 @@
 
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { LockIcon, User } from 'lucide-react';
+import { LockIcon, User, AlertCircle } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const { user, login } = useAuth();
@@ -15,6 +15,7 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showRoleMessage, setShowRoleMessage] = useState(false);
 
   // If user is already authenticated, redirect to dashboard
   if (user.isAuthenticated) {
@@ -25,19 +26,30 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
+    setShowRoleMessage(false);
 
     try {
       const success = await login(email, password);
       
       if (success) {
-        navigate('/dashboard');
+        // Successful login, but check if they have a role before navigating
+        // We'll handle the navigation logic directly in the component
+        setTimeout(() => {
+          // This checks if the user has a role after logging in
+          if (user.isAuthenticated && !user.role) {
+            setShowRoleMessage(true);
+            setIsLoading(false);
+          } else {
+            navigate('/dashboard');
+          }
+        }, 1500);
       } else {
         setError('Invalid credentials. Please try again.');
+        setIsLoading(false);
       }
     } catch (error) {
       setError('An error occurred during login. Please try again.');
       console.error(error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -62,6 +74,15 @@ const LoginPage: React.FC = () => {
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              {showRoleMessage && (
+                <Alert className="bg-amber-50 border-amber-200">
+                  <AlertCircle className="h-4 w-4 text-amber-500 mr-2" />
+                  <AlertDescription>
+                    Your account is awaiting role assignment. Please contact an administrator.
+                  </AlertDescription>
                 </Alert>
               )}
               
@@ -100,8 +121,8 @@ const LoginPage: React.FC = () => {
               </div>
             </CardContent>
             
-            <CardFooter>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={isLoading || showRoleMessage}>
                 {isLoading ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-t-transparent" />
@@ -111,6 +132,10 @@ const LoginPage: React.FC = () => {
                   'Sign In'
                 )}
               </Button>
+              
+              <div className="text-center text-sm text-muted-foreground">
+                Don't have an account? Contact an administrator to set up your account.
+              </div>
             </CardFooter>
           </form>
         </Card>
