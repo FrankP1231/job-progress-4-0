@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
@@ -14,7 +13,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  work_area?: string;
+  workArea?: WorkArea;
 }
 
 interface UserSelectorProps {
@@ -30,7 +29,6 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  // Simplified query to get all users without filtering
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users'],
     queryFn: () => getAllUsers(),
@@ -115,8 +113,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         selectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {user.name || user.email}
-                    {user.work_area && <span className="ml-1 text-muted-foreground">({user.work_area})</span>}
+                    {user.name || user.email} {user.workArea && `(${user.workArea})`}
                   </CommandItem>
                 ))
               )}
