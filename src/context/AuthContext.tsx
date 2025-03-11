@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -29,13 +28,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthContextType['user']>({ isAuthenticated: false });
   const [loading, setLoading] = useState(true);
+  const [profileFetchRetries, setProfileFetchRetries] = useState(0);
+  const MAX_PROFILE_RETRIES = 3;
 
-  // Function to fetch user profile after authentication
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, forceRefresh = false) => {
     try {
       console.log('Fetching profile for user:', userId);
       
-      // Use a simpler query to avoid triggering RLS recursion issues
+      if (forceRefresh) {
+        setProfileFetchRetries(0);
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('first_name, last_name, role, work_area, email, cell_phone_number, profile_picture_url')
@@ -45,44 +48,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error fetching user profile:', error);
         toast.error('Error loading user profile information');
+        
+        setUser(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          id: userId
+        }));
+        
         return;
       }
       
       if (data) {
         console.log('Profile data received:', data);
-        // Ensure we don't lose the authenticated state or user ID when updating profile data
         setUser(prev => ({
           ...prev,
           firstName: data.first_name,
           lastName: data.last_name,
           role: data.role,
           workArea: data.work_area,
+          email: data.email || prev.email,
           cellPhoneNumber: data.cell_phone_number,
           profilePictureUrl: data.profile_picture_url,
-          // Explicitly maintain authentication state
-          isAuthenticated: true
+          isAuthenticated: true,
+          id: userId
         }));
+        
+        setProfileFetchRetries(0);
       } else {
         console.warn('No profile found for user:', userId);
-        // Important: Don't reset authentication state here
-        // Just retry the profile fetch after a delay
-        setTimeout(() => {
-          console.log('Retrying profile fetch after delay...');
-          fetchUserProfile(userId);
-        }, 2000);
+        
+        const newRetryCount = profileFetchRetries + 1;
+        setProfileFetchRetries(newRetryCount);
+        
+        setUser(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          id: userId
+        }));
+        
+        if (newRetryCount < MAX_PROFILE_RETRIES) {
+          const delay = Math.min(1000 * Math.pow(2, newRetryCount), 10000);
+          console.log(`Retrying profile fetch after ${delay}ms (attempt ${newRetryCount+1}/${MAX_PROFILE_RETRIES})...`);
+          setTimeout(() => {
+            fetchUserProfile(userId);
+          }, delay);
+        } else {
+          console.warn(`Maximum profile fetch retries (${MAX_PROFILE_RETRIES}) reached. User may have limited profile data.`);
+          toast.warning('Could not load all profile data. Some features may be limited.');
+        }
       }
     } catch (err) {
       console.error('Error in fetchUserProfile:', err);
-      // Don't change authentication state on error
+      setUser(prev => ({
+        ...prev,
+        isAuthenticated: true,
+        id: userId
+      }));
     }
   };
 
-  // Function to manually refresh the user profile
   const refreshUserProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id, true);
         return;
       }
       console.warn('No active session found when trying to refresh profile');
@@ -91,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Reset password function
   const resetPassword = async (email: string, redirectTo?: string): Promise<boolean> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -113,48 +141,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Set up the auth state listener
   useEffect(() => {
     const initializeAuth = async () => {
       setLoading(true);
       
       try {
-        // Check current session
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          // Always set as authenticated if we have a valid session
           setUser({
             isAuthenticated: true,
             id: session.user.id,
             email: session.user.email
           });
           
-          // Fetch additional user profile data
           await fetchUserProfile(session.user.id);
         } else {
           setUser({ isAuthenticated: false });
         }
       } catch (err) {
         console.error('Error initializing auth:', err);
+        setUser({ isAuthenticated: false });
       } finally {
         setLoading(false);
       }
       
-      // Set up auth state change listener
       const { data: { subscription } } = await supabase.auth.onAuthStateChange(
         async (event, session) => {
           console.log('Auth state changed:', event, session?.user?.id);
           
           if (session?.user) {
-            // Always set authenticated to true when we have a valid session
             setUser({
               isAuthenticated: true,
               id: session.user.id,
               email: session.user.email
             });
             
-            // Fetch additional user profile data
             await fetchUserProfile(session.user.id);
           } else {
             setUser({ isAuthenticated: false });
@@ -163,7 +185,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       );
       
-      // Clean up subscription
       return () => {
         subscription?.unsubscribe();
       };
@@ -175,6 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log('Attempting login for:', email);
+      setLoading(true);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -183,20 +206,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Login error:', error.message);
         toast.error(error.message || 'Failed to login');
+        setLoading(false);
         return false;
       }
       
       toast.success('Logged in successfully');
       
-      // Immediately after successful login, refresh the profile
       if (data.user) {
+        setUser({
+          isAuthenticated: true,
+          id: data.user.id,
+          email: data.user.email
+        });
+        
         await fetchUserProfile(data.user.id);
       }
       
+      setLoading(false);
       return true;
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error('Failed to login');
+      setLoading(false);
       return false;
     }
   };
@@ -204,25 +235,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     try {
       console.log('Logging out user...');
+      setLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Logout error:', error);
         toast.error('Failed to log out: ' + error.message);
+        setLoading(false);
         return;
       }
       
-      // Clear the user state explicitly
       setUser({ isAuthenticated: false });
+      setLoading(false);
       
-      // After successful logout, show success message
       toast.success('Logged out successfully');
       
-      // Force reload the page to clear any cached state
       window.location.href = '/login';
     } catch (error: any) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');
+      setLoading(false);
     }
   };
 
