@@ -31,14 +31,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ className }) => {
           placeholder="Search jobs..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pr-10"
+          className="pr-12 h-10 sm:h-9 text-base sm:text-sm"
           aria-label="Search"
         />
         <Button 
           type="submit" 
           variant="ghost" 
           size="icon"
-          className="absolute right-0 h-full"
+          className="absolute right-0 h-full w-10"
           aria-label="Submit search"
         >
           <Search className="h-4 w-4" />

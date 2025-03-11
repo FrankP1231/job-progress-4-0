@@ -49,6 +49,11 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     }
   };
 
+  // Filter users by workArea if specified
+  const filteredUsers = workArea 
+    ? users.filter(user => !user.workArea || user.workArea === workArea)
+    : users;
+
   const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
 
   return (
@@ -59,7 +64,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className="w-full justify-between"
+            className="w-full justify-between min-h-10 py-2"
             type="button"
             onClick={(e) => {
               e.preventDefault();
@@ -73,7 +78,8 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
           </Button>
         </PopoverTrigger>
         <PopoverContent 
-          className="w-full p-0"
+          className="w-full p-0 max-w-[calc(100vw-2rem)] sm:max-w-none"
+          align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
           onClick={(e) => e.stopPropagation()}
           onPointerDownOutside={(e) => {
@@ -88,15 +94,19 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             e.preventDefault();
             e.stopPropagation();
           }}
+          sideOffset={4}
         >
           <Command>
-            <CommandInput placeholder="Search users..." className="h-9" />
+            <CommandInput 
+              placeholder="Search users..." 
+              className="h-10 text-base sm:text-sm" 
+            />
             <CommandEmpty>No users found.</CommandEmpty>
-            <CommandGroup className="max-h-64 overflow-auto">
+            <CommandGroup className="max-h-[40vh] overflow-auto">
               {isLoading ? (
                 <CommandItem disabled>Loading users...</CommandItem>
               ) : (
-                users.map((user) => (
+                filteredUsers.map((user) => (
                   <CommandItem
                     key={user.id}
                     onSelect={() => {
@@ -106,15 +116,17 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         console.error('Error in onSelect handler:', err);
                       }
                     }}
-                    className="flex items-center"
+                    className="flex items-center py-3 px-2 cursor-pointer"
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        "mr-2 h-5 w-5",
                         selectedUserIds.includes(user.id) ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {user.name || user.email} {user.workArea && `(${user.workArea})`}
+                    <span className="truncate">
+                      {user.name || user.email} {user.workArea && `(${user.workArea})`}
+                    </span>
                   </CommandItem>
                 ))
               )}
@@ -129,17 +141,18 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             <Badge 
               key={user.id} 
               variant="secondary"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 py-1.5 px-3 my-0.5"
             >
-              {user.name || user.email}
+              <span className="truncate max-w-[150px]">{user.name || user.email}</span>
               <button
                 type="button"
-                className="h-4 w-4 rounded-full text-xs font-semibold"
+                className="h-5 w-5 rounded-full text-xs font-semibold flex items-center justify-center ml-1 touch-manipulation"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleSelect(user.id, e);
                 }}
+                aria-label={`Remove ${user.name || user.email}`}
               >
                 ×
               </button>
