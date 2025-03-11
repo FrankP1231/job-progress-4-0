@@ -1,9 +1,16 @@
+
 // Re-export all utilities for easy importing
 export * from './jobUtils';
 export * from './phaseUtils';
 export * from './dashboardUtils';
 export * from './statusUtils';
-export * from './task-status';
+
+// Re-export task-status functionality with explicit naming to avoid conflicts
+export { 
+  calculateAreaStatus,
+  updateTaskStatus,
+  refreshTasksData
+} from './task-status';
 
 // Re-export all task helpers
 export * from './task-helpers';

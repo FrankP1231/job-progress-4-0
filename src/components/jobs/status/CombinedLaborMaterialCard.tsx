@@ -106,6 +106,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
           </div>
           
           <div className="flex flex-wrap gap-2 items-center">
+            {/* Only show one status badge that uses task status calculation */}
             <StatusBadge 
               status={material.status} 
               tasks={materialTasks} 
@@ -144,6 +145,7 @@ const CombinedLaborMaterialCard: React.FC<CombinedLaborMaterialCardProps> = ({
           </div>
           
           <div className="flex flex-wrap gap-2 items-center">
+            {/* Only show one status badge that uses task status calculation */}
             <StatusBadge 
               status={labor.status} 
               tasks={laborTasks} 

@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { Badge } from './badge';
 import { cn } from '@/lib/utils';
 import { MaterialStatus, LaborStatus, PowderCoatStatus, RentalEquipmentStatus, InstallationStatus, TaskStatus } from '@/lib/types';
+import { calculateAreaStatus } from '@/lib/supabase/task-status';
 
 type StatusType = MaterialStatus | LaborStatus | PowderCoatStatus | RentalEquipmentStatus | InstallationStatus | TaskStatus;
 
@@ -32,30 +34,19 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({
   // Determine status based on tasks
   let statusKey = status;
   
-  // If tasks are provided, we need to determine if this should show as 'not-needed'
-  if (tasks) {
-    if (tasks.length === 0 && !forceTaskStatus) {
-      // For material statuses, show "not-needed" when there are no tasks (only for non-forced task status)
-      if (
-        status === 'not-ordered' || 
-        status === 'ordered' || 
-        status === 'received'
-      ) {
-        statusKey = 'not-needed';
-      }
-    } else if (forceTaskStatus) {
-      // Only apply task-based status logic if forceTaskStatus is true
-      const completedTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
-      const inProgressTasks = tasks.filter(task => task.status === 'in-progress');
-      
-      if (completedTasks.length === tasks.length && tasks.length > 0) {
-        statusKey = 'complete';
-      } else if (completedTasks.length > 0 || inProgressTasks.length > 0) {
-        statusKey = 'in-progress';
-      } else if (tasks.length > 0) {
-        statusKey = 'not-started';
-      }
-      // If tasks.length is 0 and forceTaskStatus is true, keep the original status
+  // If tasks are provided and forceTaskStatus is true, use task-based status calculation
+  if (forceTaskStatus && tasks && tasks.length > 0) {
+    statusKey = calculateAreaStatus(tasks);
+  } 
+  // If no tasks and not forcing task status, use the provided status
+  else if (tasks.length === 0 && !forceTaskStatus) {
+    // For material statuses, show "not-needed" when there are no tasks (only for non-forced task status)
+    if (
+      status === 'not-ordered' || 
+      status === 'ordered' || 
+      status === 'received'
+    ) {
+      statusKey = 'not-needed';
     }
   }
   
