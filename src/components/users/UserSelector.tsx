@@ -35,15 +35,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     console.log('UserSelector received workArea:', workArea);
   }, [workArea]);
 
+  // Simplified query to get all users without filtering
   const { data: users = [], isLoading, error } = useQuery({
-    queryKey: ['users', workArea],
-    queryFn: () => {
-      console.log(`Fetching users for work area: ${workArea || 'all'}`);
-      return getAllUsers(workArea).catch(err => {
-        console.error('Query failed:', err);
-        return []; // Return empty array on error to prevent crash
-      });
-    },
+    queryKey: ['users'],
+    queryFn: () => getAllUsers().catch(err => {
+      console.error('Query failed:', err);
+      return []; // Return empty array on error to prevent crash
+    }),
     staleTime: 60000,
     retry: 1,
   });
@@ -126,7 +124,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
           <Command>
             <CommandInput placeholder="Search users..." className="h-9" />
             <CommandEmpty>
-              {isLoading ? 'Loading...' : workArea ? `No ${workArea} users found.` : 'No users found.'}
+              {isLoading ? 'Loading...' : 'No users found.'}
             </CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {isLoading ? (
