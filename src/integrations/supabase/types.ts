@@ -386,7 +386,13 @@ export type Database = {
         | "Installer"
         | "Front Office"
         | "Master Admin"
-      work_area: "Sewing" | "Welding" | "Installation" | "Front Office"
+        | "Back Office"
+      work_area:
+        | "Sewing"
+        | "Welding"
+        | "Installation"
+        | "Front Office"
+        | "Back Office"
     }
     CompositeTypes: {
       [_ in never]: never
