@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +29,6 @@ const TaskAddDialog: React.FC<TaskAddDialogProps> = ({
   const [laborHours, setLaborHours] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-  // Reset form state when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setNewTaskName('');
@@ -40,7 +38,6 @@ const TaskAddDialog: React.FC<TaskAddDialogProps> = ({
   }, [isOpen]);
 
   const handleAddNewTask = async (e: React.MouseEvent) => {
-    // Critical: Prevent any event bubbling completely
     if (e) {
       e.preventDefault();
       e.stopPropagation();

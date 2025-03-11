@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Settings } from 'lucide-react';
 import { toast } from 'sonner';
@@ -20,7 +20,8 @@ const AdministrationPage: React.FC = () => {
     const isAdmin = user.role === 'Front Office' || 
                     user.role === 'Lead Welder' || 
                     user.role === 'Lead Installer' || 
-                    user.role === 'Master Admin';
+                    user.role === 'Master Admin' ||
+                    user.role === 'Back Office';
     
     if (!isAdmin) {
       toast.error('You do not have permission to access this page');

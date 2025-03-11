@@ -1,4 +1,3 @@
-
 export type MaterialStatus = 'not-needed' | 'not-ordered' | 'ordered' | 'received';
 export type LaborStatus = 'not-needed' | 'estimated' | 'complete';
 export type PowderCoatStatus = 'not-needed' | 'not-started' | 'in-progress' | 'complete';
@@ -6,8 +5,8 @@ export type RentalEquipmentStatus = 'not-needed' | 'not-ordered' | 'ordered';
 export type InstallationStatus = 'not-started' | 'in-progress' | 'complete';
 export type ProductionStatus = 'not-started' | 'in-progress' | 'complete'; // Added for Production Labor view
 export type TaskStatus = 'not-started' | 'in-progress' | 'complete';
-export type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office' | 'Master Admin';
-export type WorkArea = 'Sewing' | 'Welding' | 'Installation' | 'Front Office';
+export type UserRole = 'Sewer' | 'Lead Welder' | 'Welder' | 'Welder\'s Helper' | 'Lead Installer' | 'Installer\'s Helper' | 'Installer' | 'Front Office' | 'Master Admin' | 'Back Office';
+export type WorkArea = 'Sewing' | 'Welding' | 'Installation' | 'Front Office' | 'Back Office';
 
 export interface Task {
   id: string;

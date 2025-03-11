@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -19,7 +18,6 @@ const AuthPage: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -27,10 +25,8 @@ const AuthPage: React.FC = () => {
   const [workArea, setWorkArea] = useState<WorkArea | ''>('');
   const [role, setRole] = useState<UserRole | ''>('');
   
-  // Signup confirmation state
   const [signupSuccess, setSignupSuccess] = useState(false);
   
-  // If user is already authenticated, redirect to home
   if (user.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
@@ -93,10 +89,8 @@ const AuthPage: React.FC = () => {
         throw error;
       }
       
-      // Set signup success state instead of just showing a toast
       setSignupSuccess(true);
       
-      // Reset form
       setEmail('');
       setPassword('');
       setFirstName('');
@@ -111,7 +105,6 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  // Get available roles based on selected work area
   const getAvailableRoles = () => {
     switch (workArea) {
       case 'Welding':
@@ -134,12 +127,15 @@ const AuthPage: React.FC = () => {
         return [
           { value: 'Front Office', label: 'Front Office' }
         ];
+      case 'Back Office':
+        return [
+          { value: 'Back Office', label: 'Back Office' }
+        ];
       default:
         return [];
     }
   };
   
-  // Render signup success message
   const renderSignupSuccess = () => {
     return (
       <div className="text-center py-8">
@@ -287,6 +283,7 @@ const AuthPage: React.FC = () => {
                         <SelectItem value="Sewing">Sewing</SelectItem>
                         <SelectItem value="Installation">Installation</SelectItem>
                         <SelectItem value="Front Office">Front Office</SelectItem>
+                        <SelectItem value="Back Office">Back Office</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
