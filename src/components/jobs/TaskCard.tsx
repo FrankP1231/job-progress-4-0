@@ -14,8 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { updateTaskStatus } from '@/lib/supabase/task-status';
+import { updateTaskStatus, refreshTasksData } from '@/lib/supabase/task-status';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 
 interface TaskCardProps {
   job: Job;
@@ -45,19 +46,16 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     }
   }, [jobTasks, tasksError]);
 
-  // Parse task name if it's a JSON string
   const parseTaskName = (task: Task): string => {
     if (!task.name) return '';
     
     try {
-      // Check if the task name is a JSON string
       if (typeof task.name === 'string' && task.name.startsWith('{') && task.name.includes('name')) {
         const parsed = JSON.parse(task.name);
         return parsed.name || task.name;
       }
       return task.name;
     } catch (e) {
-      // If parsing fails, return the original name
       return task.name;
     }
   };
@@ -165,7 +163,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
       setUpdatingTaskId(taskId);
       await updateTaskStatus(taskId, newStatus);
       
-      // Get job ID to invalidate job query
       if (job.id) {
         const phase = job.phases.find(p => 
           p.weldingLabor.tasks?.some(t => t.id === taskId) ||

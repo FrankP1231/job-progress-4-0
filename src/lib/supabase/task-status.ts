@@ -1,3 +1,4 @@
+
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { transformTaskData } from './task-helpers';
@@ -7,7 +8,7 @@ import { logActivity } from './activityLogUtils';
 // Function to calculate status based on tasks
 export const calculateAreaStatus = (tasks: Task[] = []): TaskStatus => {
   if (!tasks || tasks.length === 0) {
-    return 'not-needed';
+    return 'not-started';  // Changed from 'not-needed' to 'not-started'
   }
   
   const completeTasks = tasks.filter(task => task.isComplete || task.status === 'complete');

@@ -1,4 +1,3 @@
-
 // Re-export all utilities for easy importing
 export * from './jobUtils';
 export * from './phaseUtils';
@@ -6,48 +5,8 @@ export * from './dashboardUtils';
 export * from './statusUtils';
 export * from './task-status';
 
-// Import and re-export from task-helpers explicitly to avoid conflicts
-import {
-  getTasksForPhase,
-  getTasksForPhaseArea,
-  getTasksForAllJobs,
-  getTasksForJob,
-  getActiveUserForTask,
-  assignUserToTask,
-  getJobIdForPhase,
-  transformTaskData
-} from './task-helpers';
-
-export {
-  getTasksForPhase,
-  getTasksForPhaseArea,
-  getTasksForAllJobs,
-  getTasksForJob,
-  getActiveUserForTask,
-  assignUserToTask,
-  getJobIdForPhase,
-  transformTaskData
-};
-
-// Import task-crud functions that don't conflict with task-helpers
-export {
-  addSampleTasksToPhases
-} from './task-crud';
-
-// Import taskUtils functions that don't conflict with task-helpers
-import {
-  updateTask,
-  deleteTask,
-  addTasksToPhaseArea,
-  createTask
-} from './task-helpers';
-
-export {
-  updateTask,
-  deleteTask,
-  addTasksToPhaseArea,
-  createTask
-};
+// Re-export all task helpers
+export * from './task-helpers';
 
 // Export initUtils specific functions with explicit naming to avoid conflicts
 export { 

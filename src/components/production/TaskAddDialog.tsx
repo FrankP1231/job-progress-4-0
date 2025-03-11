@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +48,7 @@ const TaskAddDialog: React.FC<TaskAddDialogProps> = ({
       const hours = laborHours ? parseFloat(laborHours) : undefined;
       await onAddTask(
         newTaskName.trim(),
-        selectedUsers,
+        selectedUsers.length > 0 ? selectedUsers : undefined,
         hours
       );
       
