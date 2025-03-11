@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -30,20 +30,11 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('UserSelector received workArea:', workArea);
-  }, [workArea]);
-
   // Simplified query to get all users without filtering
   const { data: users = [], isLoading, error } = useQuery({
     queryKey: ['users'],
-    queryFn: () => getAllUsers().catch(err => {
-      console.error('Query failed:', err);
-      return []; // Return empty array on error to prevent crash
-    }),
+    queryFn: () => getAllUsers(),
     staleTime: 60000,
-    retry: 1,
   });
 
   const handleSelect = (userId: string, e?: React.MouseEvent) => {
@@ -52,36 +43,14 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       e.stopPropagation();
     }
     
-    try {
-      console.log('Selecting user:', userId);
-      console.log('Current selected users:', selectedUserIds);
-      
-      if (selectedUserIds.includes(userId)) {
-        const newSelected = selectedUserIds.filter(id => id !== userId);
-        console.log('Removing user, new selection:', newSelected);
-        onSelectionChange(newSelected);
-      } else {
-        const newSelected = [...selectedUserIds, userId];
-        console.log('Adding user, new selection:', newSelected);
-        onSelectionChange(newSelected);
-      }
-    } catch (err) {
-      console.error('Error handling user selection:', err);
+    if (selectedUserIds.includes(userId)) {
+      onSelectionChange(selectedUserIds.filter(id => id !== userId));
+    } else {
+      onSelectionChange([...selectedUserIds, userId]);
     }
   };
 
-  const selectedUsers = React.useMemo(() => {
-    try {
-      return users.filter(user => selectedUserIds.includes(user.id));
-    } catch (err) {
-      console.error('Error filtering selected users:', err);
-      return [];
-    }
-  }, [users, selectedUserIds]);
-
-  if (error) {
-    console.error('Error loading users:', error);
-  }
+  const selectedUsers = users.filter(user => selectedUserIds.includes(user.id));
 
   return (
     <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
@@ -95,7 +64,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             type="button"
             onClick={(e) => {
               e.preventDefault();
-              e.stopPropagation(); // Prevent event bubbling
+              e.stopPropagation();
             }}
           >
             {selectedUsers.length > 0
@@ -104,7 +73,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
+        <PopoverContent 
           className="w-full p-0"
           onOpenAutoFocus={(e) => e.preventDefault()}
           onClick={(e) => e.stopPropagation()}
@@ -123,9 +92,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
         >
           <Command>
             <CommandInput placeholder="Search users..." className="h-9" />
-            <CommandEmpty>
-              {isLoading ? 'Loading...' : 'No users found.'}
-            </CommandEmpty>
+            <CommandEmpty>No users found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {isLoading ? (
                 <CommandItem disabled>Loading users...</CommandItem>
@@ -135,7 +102,6 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                     key={user.id}
                     onSelect={() => {
                       try {
-                        console.log('User selected via CommandItem:', user.id);
                         handleSelect(user.id);
                       } catch (err) {
                         console.error('Error in onSelect handler:', err);
@@ -173,12 +139,8 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                 className="h-4 w-4 rounded-full text-xs font-semibold"
                 onClick={(e) => {
                   e.preventDefault();
-                  e.stopPropagation(); // Prevent event bubbling
-                  try {
-                    handleSelect(user.id, e);
-                  } catch (err) {
-                    console.error('Error removing user:', err);
-                  }
+                  e.stopPropagation();
+                  handleSelect(user.id, e);
                 }}
               >
                 ×
