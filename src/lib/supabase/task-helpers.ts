@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { 
@@ -22,18 +21,35 @@ export const deleteTask = deleteTaskFunction;
 export const transformTaskData = (data: any): Task => {
   if (!data) return null;
   
+  // Parse the name if it's a JSON string
+  let name = data.name;
+  try {
+    if (typeof name === 'string' && name.startsWith('{')) {
+      const parsed = JSON.parse(name);
+      name = parsed.name;
+    }
+  } catch (e) {
+    // Keep original name if parsing fails
+    console.error('Error parsing task name:', e);
+  }
+  
   return {
     id: data.id,
     phaseId: data.phase_id,
     area: data.area,
-    name: data.name,
-    isComplete: data.is_complete,
+    name: name,
+    isComplete: data.is_complete || data.status === 'complete',
     status: data.status as TaskStatus,
     hours: data.hours,
     eta: data.eta,
     notes: data.notes,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    phaseNumber: data.phases?.phase_number,
+    phaseName: data.phases?.phase_name,
+    jobId: data.phases?.job_id,
+    jobNumber: data.phases?.jobs?.job_number,
+    projectName: data.phases?.jobs?.project_name,
   };
 };
 
@@ -270,7 +286,7 @@ export async function addTasksToPhaseArea(
   }
 }
 
-// Add a helper to create a single task
+// Add a helper to create a single task with proper metadata
 export async function createTask(
   phaseId: string,
   area: string,
@@ -291,24 +307,10 @@ export async function createTask(
   try {
     console.log(`Creating task "${name}" in area ${area} with options:`, options);
     
-    // Sanitize task name - ensure it's a simple string, not a JSON object
-    let sanitizedName = name;
-    
-    // If the name is already a JSON string that contains a name property, extract it
-    if (name.startsWith('{') && name.includes('name')) {
-      try {
-        const parsed = JSON.parse(name);
-        sanitizedName = parsed.name || name;
-      } catch (e) {
-        // If parsing fails, keep the original name
-        sanitizedName = name;
-      }
-    }
-
     const taskData = {
       phase_id: phaseId,
       area,
-      name: sanitizedName,
+      name,
       status: options?.status || 'not-started',
       hours: options?.hours,
       eta: options?.eta,
@@ -318,7 +320,18 @@ export async function createTask(
     const { data, error } = await supabase
       .from('tasks')
       .insert(taskData)
-      .select()
+      .select(`
+        *,
+        phases:phase_id (
+          phase_number,
+          phase_name,
+          job_id,
+          jobs:job_id (
+            job_number,
+            project_name
+          )
+        )
+      `)
       .single();
 
     if (error) {
@@ -327,14 +340,10 @@ export async function createTask(
     }
 
     // If assigneeIds are provided, create task assignments
-    if (options?.assigneeIds && options.assigneeIds.length > 0) {
-      console.log(`Assigning ${options.assigneeIds.length} users to task ${data.id}`);
-      
+    if (options?.assigneeIds?.length) {
       const currentUser = (await supabase.auth.getUser()).data.user;
       
       for (const userId of options.assigneeIds) {
-        console.log(`Creating assignment for user ${userId}`);
-        
         const { error: assignmentError } = await supabase
           .from('task_assignments')
           .insert({
@@ -349,7 +358,6 @@ export async function createTask(
       }
     }
 
-    // Map the response to our Task interface
     return transformTaskData(data);
   } catch (error) {
     console.error('Error in createTask:', error);

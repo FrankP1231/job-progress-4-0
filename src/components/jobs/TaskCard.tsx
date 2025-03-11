@@ -1,14 +1,21 @@
-
 import React, { useMemo, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { CheckCircle, Circle, Clock, AlertCircle, User } from 'lucide-react';
-import { Job, Task } from '@/lib/types';
+import { CheckCircle, Circle, Clock, AlertCircle, User, ChevronDown } from 'lucide-react';
+import { Job, Task, TaskStatus } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getTasksForJob, getActiveUserForTask } from '@/lib/supabase/task-helpers';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { updateTaskStatus } from '@/lib/supabase/task-status';
+import { toast } from 'sonner';
 
 interface TaskCardProps {
   job: Job;
@@ -16,6 +23,9 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
+  const queryClient = useQueryClient();
+  const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
+  
   const { 
     data: jobTasks, 
     isLoading: tasksLoading,
@@ -150,6 +160,33 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
     );
   };
 
+  const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    try {
+      setUpdatingTaskId(taskId);
+      await updateTaskStatus(taskId, newStatus);
+      
+      // Get job ID to invalidate job query
+      if (job.id) {
+        const phase = job.phases.find(p => 
+          p.weldingLabor.tasks?.some(t => t.id === taskId) ||
+          p.sewingLabor.tasks?.some(t => t.id === taskId) ||
+          p.installation.tasks?.some(t => t.id === taskId)
+        );
+        
+        if (phase) {
+          await refreshTasksData(queryClient, job.id, phase.id);
+        }
+      }
+      
+      toast.success('Task status updated');
+    } catch (error) {
+      console.error('Error updating task status:', error);
+      toast.error('Failed to update task status');
+    } finally {
+      setUpdatingTaskId(null);
+    }
+  };
+
   if (tasksLoading) {
     return (
       <Card>
@@ -198,9 +235,37 @@ const TaskCard: React.FC<TaskCardProps> = ({ job, maxHeight = "300px" }) => {
                       <p className="font-medium">{parseTaskName(task)}</p>
                       <div className="flex items-center gap-2">
                         <ActiveUserDisplay taskId={task.id} />
-                        <Badge variant={task.status === 'in-progress' ? 'secondary' : 'outline'}>
-                          {task.status === 'in-progress' ? 'In Progress' : 'Not Started'}
-                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex items-center gap-1"
+                              disabled={!!updatingTaskId}
+                            >
+                              {task.status === 'in-progress' ? 'In Progress' : 
+                               task.status === 'complete' ? 'Complete' : 'Not Started'}
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(task.id, 'not-started')}
+                            >
+                              Not Started
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(task.id, 'in-progress')}
+                            >
+                              In Progress
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleStatusChange(task.id, 'complete')}
+                            >
+                              Complete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     <div className="flex items-center mt-1 space-x-2 text-xs text-muted-foreground">

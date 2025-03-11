@@ -38,18 +38,16 @@ const TaskAddDialog: React.FC<TaskAddDialogProps> = ({
   }, [isOpen]);
 
   const handleAddNewTask = async (e: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!newTaskName.trim()) return;
 
     try {
-      const hours = isLaborArea && laborHours ? Number(laborHours) : undefined;
+      const hours = laborHours ? parseFloat(laborHours) : undefined;
       await onAddTask(
-        newTaskName.trim(), 
-        selectedUsers.length > 0 ? selectedUsers : undefined,
+        newTaskName.trim(),
+        selectedUsers,
         hours
       );
       

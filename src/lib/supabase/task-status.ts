@@ -1,4 +1,3 @@
-
 import { supabase } from './client';
 import { Task, TaskStatus } from '../types';
 import { transformTaskData } from './task-helpers';
@@ -8,7 +7,7 @@ import { logActivity } from './activityLogUtils';
 // Function to calculate status based on tasks
 export const calculateAreaStatus = (tasks: Task[] = []): TaskStatus => {
   if (!tasks || tasks.length === 0) {
-    return 'not-started';
+    return 'not-needed';
   }
   
   const completeTasks = tasks.filter(task => task.isComplete || task.status === 'complete');
@@ -132,6 +131,8 @@ export const refreshTasksData = async (
   // Invalidate task queries
   if (phaseId) {
     queryClient.invalidateQueries({ queryKey: ['tasks', phaseId] });
+    queryClient.invalidateQueries({ queryKey: ['jobTasks', jobId] });
+    queryClient.invalidateQueries({ queryKey: ['allTasks'] });
     
     // If we have a phase, invalidate the phase query
     queryClient.invalidateQueries({ queryKey: ['phase', jobId, phaseId] });
@@ -142,9 +143,7 @@ export const refreshTasksData = async (
     queryClient.invalidateQueries({ queryKey: ['job', jobId] });
   }
   
-  // Always invalidate the all-tasks query
-  queryClient.invalidateQueries({ queryKey: ['allTasks'] });
-  
-  // Invalidate production queries
+  // Always invalidate these queries
   queryClient.invalidateQueries({ queryKey: ['productionPhases'] });
+  queryClient.invalidateQueries({ queryKey: ['tasks'] });
 };
