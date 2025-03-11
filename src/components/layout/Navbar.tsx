@@ -12,7 +12,7 @@ import {
   Wrench,
   CheckSquare,
   User,
-  Users
+  Settings
 } from 'lucide-react';
 import {
   Sheet,
@@ -143,15 +143,7 @@ const Navbar: React.FC = () => {
                   </Link>
                 </SheetClose>
                 
-                {/* Only show Users menu for admins */}
-                {isAdmin && (
-                  <SheetClose asChild>
-                    <Link to="/admin/users" className="flex items-center py-2">
-                      <Users className="mr-2 h-5 w-5" />
-                      Manage Users
-                    </Link>
-                  </SheetClose>
-                )}
+                {/* Admin link moved to profile menu */}
                 
                 <SheetClose asChild>
                   <Link to="/profile" className="flex items-center py-2">
@@ -219,15 +211,7 @@ const Navbar: React.FC = () => {
             Production
           </Link>
           
-          {/* Only show Users menu for admins */}
-          {isAdmin && (
-            <Link
-              to="/admin/users"
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Users
-            </Link>
-          )}
+          {/* Removed Users menu from top nav */}
         </nav>
         
         {/* Add the search bar */}
@@ -267,6 +251,17 @@ const Navbar: React.FC = () => {
                   My Profile
                 </Link>
               </DropdownMenuItem>
+              
+              {/* Add Administration link (only for admins) */}
+              {isAdmin && (
+                <DropdownMenuItem asChild>
+                  <Link to="/admin" className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Administration
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />

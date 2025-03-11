@@ -11,6 +11,7 @@ import Layout from "./components/layout/Layout";
 import LoginPage from "./components/auth/LoginPage";
 import AuthPage from "./components/auth/AuthPage";
 import BadgeProfilePage from "./components/profile/BadgeProfilePage";
+import AdministrationPage from "./components/admin/AdministrationPage";
 import UsersManagementPage from "./components/admin/UsersManagementPage";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -60,7 +61,11 @@ const App = () => {
                   
                   {/* Protected routes */}
                   <Route path="/profile" element={<BadgeProfilePage />} />
+                  
+                  {/* Administration routes */}
+                  <Route path="/admin" element={<AdministrationPage />} />
                   <Route path="/admin/users" element={<UsersManagementPage />} />
+                  
                   <Route path="/dashboard" element={<DashboardPage />} />
                   <Route path="/projects" element={<ProjectsPage />} />
                   <Route path="/tasks" element={<TasksPage />} />
