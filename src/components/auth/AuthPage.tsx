@@ -12,37 +12,32 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, AlertCircle, Briefcase, User as UserIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserRole, WorkArea } from '@/lib/types';
-
 const AuthPage: React.FC = () => {
-  const { user, login } = useAuth();
+  const {
+    user,
+    login
+  } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [workArea, setWorkArea] = useState<WorkArea | ''>('');
   const [role, setRole] = useState<UserRole | ''>('');
-  
   const [signupSuccess, setSignupSuccess] = useState(false);
-  
   if (user.isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email || !password) {
       toast.error('Please enter both email and password');
       return;
     }
-    
     try {
       setIsLoading(true);
       const success = await login(email, password);
-      
       if (success) {
         navigate('/');
       }
@@ -52,15 +47,12 @@ const AuthPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!email || !password || !firstName || !lastName || !workArea || !role) {
       toast.error('Please fill in all fields');
       return;
     }
-    
     try {
       setIsLoading(true);
       console.log("Signing up with data:", {
@@ -71,8 +63,9 @@ const AuthPage: React.FC = () => {
         work_area: workArea,
         role: role
       });
-      
-      const { error } = await supabase.auth.signUp({
+      const {
+        error
+      } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -81,16 +74,13 @@ const AuthPage: React.FC = () => {
             last_name: lastName,
             work_area: workArea,
             role: role
-          },
-        },
+          }
+        }
       });
-      
       if (error) {
         throw error;
       }
-      
       setSignupSuccess(true);
-      
       setEmail('');
       setPassword('');
       setFirstName('');
@@ -104,41 +94,51 @@ const AuthPage: React.FC = () => {
       setIsLoading(false);
     }
   };
-
   const getAvailableRoles = () => {
     switch (workArea) {
       case 'Welding':
-        return [
-          { value: 'Lead Welder', label: 'Lead Welder' },
-          { value: 'Welder', label: 'Welder' },
-          { value: 'Welder\'s Helper', label: 'Welder\'s Helper' }
-        ];
+        return [{
+          value: 'Lead Welder',
+          label: 'Lead Welder'
+        }, {
+          value: 'Welder',
+          label: 'Welder'
+        }, {
+          value: 'Welder\'s Helper',
+          label: 'Welder\'s Helper'
+        }];
       case 'Sewing':
-        return [
-          { value: 'Sewer', label: 'Sewer' }
-        ];
+        return [{
+          value: 'Sewer',
+          label: 'Sewer'
+        }];
       case 'Installation':
-        return [
-          { value: 'Lead Installer', label: 'Lead Installer' },
-          { value: 'Installer', label: 'Installer' },
-          { value: 'Installer\'s Helper', label: 'Installer\'s Helper' }
-        ];
+        return [{
+          value: 'Lead Installer',
+          label: 'Lead Installer'
+        }, {
+          value: 'Installer',
+          label: 'Installer'
+        }, {
+          value: 'Installer\'s Helper',
+          label: 'Installer\'s Helper'
+        }];
       case 'Front Office':
-        return [
-          { value: 'Front Office', label: 'Front Office' }
-        ];
+        return [{
+          value: 'Front Office',
+          label: 'Front Office'
+        }];
       case 'Back Office':
-        return [
-          { value: 'Back Office', label: 'Back Office' }
-        ];
+        return [{
+          value: 'Back Office',
+          label: 'Back Office'
+        }];
       default:
         return [];
     }
   };
-  
   const renderSignupSuccess = () => {
-    return (
-      <div className="text-center py-8">
+    return <div className="text-center py-8">
         <div className="flex justify-center mb-4">
           <CheckCircle2 className="h-16 w-16 text-green-500" />
         </div>
@@ -154,22 +154,15 @@ const AuthPage: React.FC = () => {
             Back to Sign Up
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   };
-  
-  return (
-    <div className="flex items-center justify-center min-h-screen p-4">
+  return <div className="flex items-center justify-center min-h-screen p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <img 
-              src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" 
-              alt="USA Canvas Logo" 
-              className="h-12" 
-            />
+            <img src="/lovable-uploads/f153bcda-a503-407d-8c91-07659a793378.png" alt="USA Canvas Logo" className="h-12" />
           </div>
-          <CardTitle className="text-2xl">USA Canvas Job Tracking</CardTitle>
+          <CardTitle className="text-2xl">Job Tracking</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
           </CardDescription>
@@ -185,26 +178,13 @@ const AuthPage: React.FC = () => {
               <CardContent className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
+                  <Input id="email" type="email" placeholder="your.email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                  <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
                 </div>
               </CardContent>
               <CardFooter>
@@ -216,65 +196,35 @@ const AuthPage: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="signup">
-            {signupSuccess ? (
-              renderSignupSuccess()
-            ) : (
-              <form onSubmit={handleSignup}>
+            {signupSuccess ? renderSignupSuccess() : <form onSubmit={handleSignup}>
                 <CardContent className="space-y-4 pt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                      />
+                      <Input id="firstName" value={firstName} onChange={e => setFirstName(e.target.value)} required />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                      />
+                      <Input id="lastName" value={lastName} onChange={e => setLastName(e.target.value)} required />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signupEmail">Email</Label>
-                    <Input
-                      id="signupEmail"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
+                    <Input id="signupEmail" type="email" placeholder="your.email@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signupPassword">Password</Label>
-                    <Input
-                      id="signupPassword"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
+                    <Input id="signupPassword" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
                   </div>
                   
                   <div className="space-y-2">
                     <Label className="flex items-center" htmlFor="workArea">
                       <Briefcase className="h-4 w-4 mr-2" /> Work Area
                     </Label>
-                    <Select 
-                      value={workArea} 
-                      onValueChange={(value) => {
-                        setWorkArea(value as WorkArea);
-                        setRole(''); // Reset role when work area changes
-                      }}
-                      required
-                    >
+                    <Select value={workArea} onValueChange={value => {
+                  setWorkArea(value as WorkArea);
+                  setRole(''); // Reset role when work area changes
+                }} required>
                       <SelectTrigger>
                         <SelectValue placeholder="Select your work area" />
                       </SelectTrigger>
@@ -292,28 +242,19 @@ const AuthPage: React.FC = () => {
                     <Label className="flex items-center" htmlFor="role">
                       <UserIcon className="h-4 w-4 mr-2" /> Role
                     </Label>
-                    <Select 
-                      value={role} 
-                      onValueChange={(value) => setRole(value as UserRole)}
-                      disabled={!workArea}
-                      required
-                    >
+                    <Select value={role} onValueChange={value => setRole(value as UserRole)} disabled={!workArea} required>
                       <SelectTrigger>
                         <SelectValue placeholder={workArea ? "Select your role" : "Select work area first"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {getAvailableRoles().map(role => (
-                          <SelectItem key={role.value} value={role.value}>
+                        {getAvailableRoles().map(role => <SelectItem key={role.value} value={role.value}>
                             {role.label}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
-                    {!workArea && (
-                      <p className="text-sm text-muted-foreground">
+                    {!workArea && <p className="text-sm text-muted-foreground">
                         Please select a work area first
-                      </p>
-                    )}
+                      </p>}
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -321,13 +262,10 @@ const AuthPage: React.FC = () => {
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </CardFooter>
-              </form>
-            )}
+              </form>}
           </TabsContent>
         </Tabs>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default AuthPage;
